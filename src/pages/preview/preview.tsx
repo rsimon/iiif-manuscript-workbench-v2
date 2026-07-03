@@ -1,7 +1,9 @@
 export const Preview = () => {
 
   return (
-    <div>Preview and Export</div>
+    <main className="bg-muted grow">
+      
+    </main>
   )
 
 }

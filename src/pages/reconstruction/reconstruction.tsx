@@ -1,7 +1,9 @@
 export const Reconstruction = () => {
 
   return (
-    <div>Reconstruction</div>
+    <main className="bg-muted grow">
+      
+    </main>
   )
 
 }

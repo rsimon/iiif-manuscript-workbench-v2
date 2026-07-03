@@ -1,7 +1,9 @@
 export const Sources = () => {
 
   return (
-    <div>Sources</div>
+    <main className="bg-muted grow">
+      
+    </main>
   )
 
 }

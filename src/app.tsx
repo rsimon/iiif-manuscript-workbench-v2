@@ -1,4 +1,5 @@
-import { Route, Switch } from 'wouter';
+import { Route, Router, Redirect } from 'wouter';
+import { useHashLocation } from 'wouter/use-hash-location';
 import { AppHeader } from '@/layout/app-header';
 import { TooltipProvider } from '@/shadcn/tooltip';
 import { Sources } from './pages/sources';
@@ -9,17 +10,17 @@ export const App = () => {
 
   return (
     <TooltipProvider>
-      <header>
-        <AppHeader />
-      </header>
+      <Router hook={useHashLocation}>
+        <div className="flex flex-col min-h-screen">
+          <AppHeader />
 
-      <main>
-        <Switch>
-          <Route path="sources" component={Sources} />
-          <Route path="reconstruction" component={Reconstruction} />
-          <Route path="preview" component={Preview} />
-        </Switch>
-      </main>
+          <Route path="/" component={() => <Redirect to="/sources" replace />} />
+          
+          <Route path="/sources" component={Sources} />
+          <Route path="/reconstruction" component={Reconstruction} />
+          <Route path="/preview" component={Preview} />
+        </div>
+      </Router>
     </TooltipProvider>
   )
 
