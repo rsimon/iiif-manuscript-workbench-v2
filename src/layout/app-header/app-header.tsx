@@ -19,7 +19,7 @@ const NavItem = (props: NavItemProps) => {
     <Link 
       href={props.href}
       className={cn(
-        'px-2 py-1.25 rounded-md',
+        'px-2.5 py-1.5 flex items-center rounded',
         location === props.href ? 'bg-primary text-white' : undefined
       )}>{props.children}</Link>
   )
@@ -29,7 +29,8 @@ const NavItem = (props: NavItemProps) => {
 export const AppHeader = () => {
 
   return (
-    <header className="flex justify-between items-center py-1.5 px-4 border-b text-sm">
+    <header className="flex justify-between items-center py-1.5 px-4 border-b text-sm 
+      relative shadow-[0_0_8px_-2px_rgba(0,0,0,0.12),0_0_1px_rgba(0,0,0,0.2)]">
       <div className="flex gap-6 items-center">
         <IIIFIcon 
           color 

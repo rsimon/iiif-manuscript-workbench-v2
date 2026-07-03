@@ -15,7 +15,7 @@ export const App = () => {
           <AppHeader />
 
           <Route path="/" component={() => <Redirect to="/sources" replace />} />
-          
+
           <Route path="/sources" component={Sources} />
           <Route path="/reconstruction" component={Reconstruction} />
           <Route path="/preview" component={Preview} />
