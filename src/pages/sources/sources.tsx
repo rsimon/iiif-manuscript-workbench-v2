@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Panel, Separator } from 'react-resizable-panels';
-import { EmptySources } from './empty-sources';
-import { SourceToolbar } from './source-toolbar';
 import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel-group';
+import { SourcePreview } from './source-preview';
+import { SourceTree } from './source-tree';
 
 export const Sources = () => {
   const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
@@ -14,18 +14,13 @@ export const Sources = () => {
           className="bg-white border-r"
           minSize={200}
           defaultSize={300}>
-          <div className="flex flex-col h-full">
-            <SourceToolbar />
-            <EmptySources />
-          </div>
+          <SourceTree />
         </Panel>
 
         <Separator />
         
-        <Panel className="min-h-full grow p-4">
-          <button onClick={() => setIsRightPanelOpen(!isRightPanelOpen)}>
-            {isRightPanelOpen ? 'Close panel' : 'Open panel'}
-          </button>
+        <Panel className="min-h-full grow">
+          <SourcePreview />
         </Panel>
 
         <Separator />

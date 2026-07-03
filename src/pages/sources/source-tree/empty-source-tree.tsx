@@ -1,7 +1,7 @@
 import { Library } from 'lucide-react';
 import { Button } from '@/shadcn/button';
 
-export const EmptySources = () => {
+export const EmptySourceTree = () => {
   
   return (
     <div className="grow flex flex-col gap-6 items-center justify-center p-6 text-center">

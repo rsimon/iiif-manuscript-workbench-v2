@@ -128,3 +128,7 @@
     @apply font-sans;
     }
 }
+
+.openseadragon-canvas {
+  outline: none;
+}

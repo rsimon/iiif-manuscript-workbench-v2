@@ -1,7 +1,7 @@
 import { PanelActionButton } from '@/components/panel-action-button';
 import { ListChevronsDownUp, ListChevronsUpDown, SquarePlus, Trash2 } from 'lucide-react';
 
-export const SourceToolbar = () => {
+export const SourceTreeToolbar = () => {
 
   return (
     <div className="flex gap-1 p-1.5 items-center justify-end border-b">
