@@ -5,7 +5,7 @@ import { SourcePreview } from './source-preview';
 import { SourceTree } from './source-tree';
 
 export const Sources = () => {
-  const [isRightPanelOpen, setIsRightPanelOpen] = useState(false);
+  const [isInspectorOpen, setInspectorOpen] = useState(false);
 
   return (
     <main className="grow flex flex-col">
@@ -20,17 +20,19 @@ export const Sources = () => {
         <Separator />
         
         <Panel className="min-h-full grow">
-          <SourcePreview />
+          <SourcePreview 
+            isInspectorOpen={isInspectorOpen}
+            setInspectorOpen={setInspectorOpen} />
         </Panel>
 
         <Separator />
 
         <AnimatedPanel 
-          open={isRightPanelOpen}
-          onOpenChange={setIsRightPanelOpen}
+          open={isInspectorOpen}
+          onOpenChange={setInspectorOpen}
           minSize={40}
           openSize={300}
-          className="bg-amber-300">
+          className="bg-white border-l">
 
         </AnimatedPanel>
       </AnimatedPanelGroup>

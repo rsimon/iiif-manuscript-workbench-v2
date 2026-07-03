@@ -1,7 +1,16 @@
 import { useEffect, useRef } from 'react';
 import OpenSeadragon from 'openseadragon';
+import { Button } from '@/shadcn/button';
 
-export const SourcePreview = () => {
+interface SourcePreviewProps {
+
+  isInspectorOpen: boolean;
+
+  setInspectorOpen(open: boolean): void;
+
+}
+
+export const SourcePreview = (props: SourcePreviewProps) => {
 
   const elementRef = useRef<HTMLDivElement>(null);
 
@@ -31,7 +40,15 @@ export const SourcePreview = () => {
   }, []);
   
   return (
-    <div ref={elementRef} className="size-full bg-neutral-100" /> 
+    <div className="size-full relative">
+      <div ref={elementRef} className="size-full bg-neutral-100" /> 
+
+      <Button 
+        className="absolute top-6 right-6"
+        onClick={() => props.setInspectorOpen(!props.isInspectorOpen)}>
+        {props.isInspectorOpen ? 'Close' : 'Open'}
+      </Button>
+    </div>
   )
   
 }
