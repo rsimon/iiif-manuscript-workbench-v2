@@ -20,7 +20,7 @@ const NavItem = (props: NavItemProps) => {
       href={props.href}
       className={cn(
         'px-2.5 h-12 flex items-center border-b-4 border-transparent text-sm',
-        location === props.href ? 'border-[#0073A3]' : 'text-muted-foreground/60'
+        location === props.href ? 'border-[#0073A3]' : 'font-light text-muted-foreground/60'
       )}>{props.children}</Link>
   )
 
