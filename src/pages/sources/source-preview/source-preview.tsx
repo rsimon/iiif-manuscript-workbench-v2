@@ -1,6 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
-import { Button } from '@/shadcn/button';
+import { SourcePreviewControls } from './source-preview-controls';
+
+const ViewerContext = createContext<OpenSeadragon.Viewer | null>(null);
+
+export const useViewer = () => useContext(ViewerContext);
 
 interface SourcePreviewProps {
 
@@ -11,8 +15,9 @@ interface SourcePreviewProps {
 }
 
 export const SourcePreview = (props: SourcePreviewProps) => {
-
   const elementRef = useRef<HTMLDivElement>(null);
+
+  const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
 
   useEffect(() => {
     if (!elementRef.current) return;
@@ -34,21 +39,24 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       }
     });
 
+    setViewer(v);
+
     return () => {
       v.destroy();
+      setViewer(null);
     };
   }, []);
-  
-  return (
-    <div className="size-full relative">
-      <div ref={elementRef} className="size-full bg-neutral-100" /> 
 
-      <Button 
-        className="absolute top-6 right-6"
-        onClick={() => props.setInspectorOpen(!props.isInspectorOpen)}>
-        {props.isInspectorOpen ? 'Close' : 'Open'}
-      </Button>
-    </div>
+  return (
+    <ViewerContext.Provider value={viewer}>
+      <div className="size-full relative">
+        <div ref={elementRef} className="size-full bg-neutral-100" />
+
+        <SourcePreviewControls 
+          isInspectorOpen={props.isInspectorOpen} 
+          setInspectorOpen={props.setInspectorOpen} />
+      </div>
+    </ViewerContext.Provider>
   )
-  
+
 }
