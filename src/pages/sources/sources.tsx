@@ -1,6 +1,6 @@
-import { Button } from '@/shadcn/button';
-import { Library } from 'lucide-react';
 import { Group, Panel, Separator } from 'react-resizable-panels';
+import { EmptySources } from './empty-sources';
+import { SourceToolbar } from './source-toolbar';
 
 export const Sources = () => {
 
@@ -10,19 +10,9 @@ export const Sources = () => {
         <Panel 
           className="bg-white border-r"
           defaultSize={300}>
-          <div className="flex h-full flex-col gap-8 items-center justify-center p-6 text-center">
-            <div className="flex flex-col items-center">
-              <Library 
-                className="mb-2 h-8 w-8 text-muted-foreground" />
-
-              <p className="text-sm text-muted-foreground">
-                No source manifests
-              </p>
-            </div>
-
-            <Button>
-              Import from URL
-            </Button>
+          <div className="flex flex-col h-full">
+            <SourceToolbar />
+            <EmptySources />
           </div>
         </Panel>
 
