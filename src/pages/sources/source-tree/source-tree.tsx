@@ -1,18 +1,45 @@
 import { useState } from 'react';
-import { EmptySourceTree } from './empty-source-tree';
-import { SourceTreeToolbar } from './source-tree-toolbar';
+import { useAppStore } from '@/store/app-store';
 import { ImportManifestDialog } from '../import-manifest';
+import { useSourcesStore } from '../sources-store';
+import { EmptySourceTree } from './empty-source-tree';
+import { ManifestTreeItem } from './source-tree-item';
+import { SourceTreeToolbar } from './source-tree-toolbar';
 
 export const SourceTree = () => {
+  const sources = useAppStore(state => state.sources);
 
-   const [showImportDialog, setShowImportDialog] = useState(false);
+  const expanded = useSourcesStore(state => state.expanded);
+  const toggle = useSourcesStore(state => state.toggleSourceExpanded);
+
+  const selection = useSourcesStore(state => state.selection);
+  const setSelection = useSourcesStore(state => state.setSelection);
+
+  const [showImportDialog, setShowImportDialog] = useState(false);
 
   return (
     <div className="flex flex-col h-full">
       <SourceTreeToolbar />
 
-      <EmptySourceTree 
-        onImport={() => setShowImportDialog(true)} />
+      {sources.length === 0 ? (
+        <EmptySourceTree 
+          onImport={() => setShowImportDialog(true)} />
+      ) : sources.map(source => (
+        <ManifestTreeItem
+          key={source.url}
+          source={source}
+          isExpanded={expanded.has(source.manifest.id)}
+          isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
+          selectedCanvasId={selection?.manifestId}
+          onSelectManifest={() => setSelection({ manifestId: source.manifest.id })}
+          onSelectCanvas={canvasId => setSelection({ manifestId: source.manifest.id, canvasId })}
+          onToggleExpanded={() => toggle(source.manifest.id)}
+          onRemove={() => {}} // removeSourceManifest(source.id)}
+          onAddToReconstruction={canvas => {
+            // addCanvasToReconstruction(source.id, canvas)
+          }} />
+        ))
+      }
 
       <ImportManifestDialog 
         open={showImportDialog} 
