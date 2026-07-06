@@ -6,7 +6,7 @@ import { Alert, AlertDescription } from '@/shadcn/alert';
 import { Button } from '@/shadcn/button';
 import { Input } from '@/shadcn/input';
 import { Label } from '@/shadcn/label';
-import { useWorkspaceStore } from '@/store';
+import { useAppStore } from '@/store/app-store';
 import { crawlCollection } from './crawl-collection';
 import {
   Dialog,
@@ -36,8 +36,7 @@ type DialogStep =
   | { phase: 'bulk-import'; progress: number; total: number; current?: string };
 
 export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
-  const project = useWorkspaceStore(state => state.project);
-  const addSourceManifest = useWorkspaceStore(state => state.addSourceManifest);
+  const addSource = useAppStore(state => state.addSource);
 
   const [url, setUrl] = useState('');
   const [step, setStep] = useState<DialogStep>({ phase: 'input' });
@@ -79,7 +78,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
         throw new Error('Not a valid IIIF presentation or collection manifest');
 
       if (result.type === 'manifest') {
-        addSourceManifest(url, result.resource);
+        addSource(url, result.resource);
         resetDialog();
         props.onOpenChange(false);
         return;
@@ -121,7 +120,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
       setStep({ phase: 'bulk-import', progress, total, current });
       return throttledParseURL(manifest.id).then(result => {
         if (result.type === 'manifest') {
-          addSourceManifest(manifest.id, result.resource);
+          addSource(manifest.id, result.resource);
         } else {
           throw new Error('Not a valid IIIF presentation manifest'); 
         }
@@ -229,15 +228,6 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
-          {!project && (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                Please create a project first before importing manifests.
-              </AlertDescription>
-            </Alert>
-          )}
         </div>
         
         <DialogFooter>
@@ -249,9 +239,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
                 Cancel
               </Button>
               
-              <Button 
-                disabled={!project}
-                onClick={onImport}>
+              <Button onClick={onImport}>
                 Import
               </Button>
             </>
