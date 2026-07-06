@@ -1,5 +1,5 @@
 import { PanelActionButton } from '@/components/panel-action-button';
-import { ListChevronsDownUp, ListChevronsUpDown, SquarePlus, Trash2 } from 'lucide-react';
+import { ListChevronsDownUp, ListChevronsUpDown } from 'lucide-react';
 
 export const SourceTreeToolbar = () => {
 
@@ -13,16 +13,6 @@ export const SourceTreeToolbar = () => {
       <PanelActionButton
         tooltip="Expand all">
         <ListChevronsUpDown />
-      </PanelActionButton>
-
-      <PanelActionButton
-        tooltip="Import IIIF presentation manifest">
-        <SquarePlus />
-      </PanelActionButton>
-
-      <PanelActionButton
-        tooltip="Clear all sources">
-        <Trash2 />
       </PanelActionButton>
     </div>
   )

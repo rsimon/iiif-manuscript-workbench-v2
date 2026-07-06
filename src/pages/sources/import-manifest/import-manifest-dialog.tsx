@@ -146,9 +146,9 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
     <Dialog 
       open={props.open} 
       onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg p-4">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader className="space-y-2">
-          <DialogTitle className="flex items-center gap-2 font-bold">
+          <DialogTitle className="flex items-center gap-2">
             <ImagePlus className="size-4" strokeWidth={2.25} />
             Import IIIF Manifest
           </DialogTitle>

@@ -1,7 +1,13 @@
 import { Library } from 'lucide-react';
 import { Button } from '@/shadcn/button';
 
-export const EmptySourceTree = () => {
+interface EmptySourceTreeProps {
+
+  onImport(): void;
+
+}
+
+export const EmptySourceTree = (props: EmptySourceTreeProps) => {
   
   return (
     <div className="grow flex flex-col gap-6 items-center justify-center p-6 text-center">
@@ -14,7 +20,7 @@ export const EmptySourceTree = () => {
         </p>
       </div>
 
-      <Button>
+      <Button onClick={props.onImport}>
         Import from URL
       </Button>
     </div>
