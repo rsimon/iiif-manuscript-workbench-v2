@@ -30,7 +30,7 @@ export const AppHeader = () => {
 
   return (
     <header className="flex justify-between items-center px-4 text-sm 
-      relative z-10 shadow-[0_0_1px_rgba(0,0,0,0.6)]">
+      relative z-10 shadow-[0_0_1px_rgba(0,0,0,0.5)]">
       <IIIFIcon 
         color 
         className="size-8 mb-0.5" />

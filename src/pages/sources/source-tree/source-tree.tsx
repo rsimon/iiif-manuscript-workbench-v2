@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import { useAppStore } from '@/store/app-store';
-import { ImportManifestDialog } from '../import-manifest';
+import { ImportManifestDialog } from '@/dialogs/import-manifest';
 import { useSourcesStore } from '../sources-store';
 import { EmptySourceTree } from './empty-source-tree';
-import { ManifestTreeItem } from './source-tree-item';
+import { SourceTreeItem } from './source-tree-item';
 import { SourceTreeToolbar } from './source-tree-toolbar';
 
 export const SourceTree = () => {
@@ -25,8 +25,8 @@ export const SourceTree = () => {
         <EmptySourceTree 
           onImport={() => setShowImportDialog(true)} />
       ) : sources.map(source => (
-        <ManifestTreeItem
-          key={source.url}
+        <SourceTreeItem
+          key={source.manifest.id}
           source={source}
           isExpanded={expanded.has(source.manifest.id)}
           isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}

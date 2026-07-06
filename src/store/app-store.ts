@@ -13,8 +13,8 @@ interface AppStore {
   reconstruction: ReconstructionCanvas[];
 
   // Actions: sources
-  addSource: (url: string, manifest: CozyManifest) => void; 
-  removeSource: (manifestId: string) => void; 
+  addSource: (url: string, manifest: CozyManifest) => void;
+  removeSource: (manifestId: string) => void;
   removeAllSources: () => void;
 
   // Actions: reconstruction
@@ -95,7 +95,7 @@ export const useAppStore = create<AppStore>()(
         reconstruction: []
       }))
     }), {
-      name: 'manuscript-workbench-storage',
+      name: 'iiif-workbench-state',
       version: 2,
       storage: createJSONStorage(() => localStorage),
 

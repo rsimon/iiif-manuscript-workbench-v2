@@ -32,7 +32,7 @@ interface ManifestTreeItemProps {
 
 }
 
-export const ManifestTreeItem = (props: ManifestTreeItemProps) => {
+export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   const { manifest } = props.source;
 
   return (

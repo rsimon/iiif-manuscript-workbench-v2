@@ -1,10 +1,11 @@
 import { Route, Router, Redirect } from 'wouter';
 import { useHashLocation } from 'wouter/use-hash-location';
 import { AppHeader } from '@/layout/app-header';
+import { Splash } from '@/layout/splash';
 import { TooltipProvider } from '@/shadcn/tooltip';
-import { Sources } from './pages/sources';
-import { Reconstruction } from './pages/reconstruction';
-import { Preview } from './pages/preview';
+import { Sources } from '@/pages/sources';
+import { Reconstruction } from '@/pages/reconstruction';
+import { Preview } from '@/pages/preview';
 
 export const App = () => {
 
@@ -21,6 +22,8 @@ export const App = () => {
           <Route path="/preview" component={Preview} />
         </div>
       </Router>
+
+      <Splash />
     </TooltipProvider>
   )
 
