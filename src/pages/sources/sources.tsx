@@ -9,9 +9,9 @@ export const Sources = () => {
 
   return (
     <main className="grow flex flex-col">
-      <AnimatedPanelGroup className="bg-muted flex grow h-full min-h-0">
+      <AnimatedPanelGroup className="flex grow h-full min-h-0">
         <Panel 
-          className="bg-white border-r"
+          className="border-r"
           minSize={200}
           defaultSize={300}>
           <SourceTree />

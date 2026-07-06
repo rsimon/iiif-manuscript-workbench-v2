@@ -28,7 +28,7 @@ const SPLASH_CONTENT = [{
 
 export const Splash = () => {
   const dismissed = useSplashStore(state => state.dismissed);
-  const dismiss = useSplashStore(state => state.dismiss);
+  const setDismissed = useSplashStore(state => state.setDismissed);
 
   const [open, setOpen] = useState(!dismissed);
 
@@ -43,10 +43,15 @@ export const Splash = () => {
 
   return (
     <>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="min-w-xl gap-4">
-          <DialogTitle className="tracking-wide">
-            IIIF Manuscript Workbench
+      <Dialog 
+        open={open} 
+        onOpenChange={setOpen}>
+        <DialogContent
+          className="min-w-2xl gap-3"
+          showCloseButton={false}>
+          <DialogTitle 
+            className="tracking-wide text-xl">
+            Welcome to the IIIF Manuscript Workbench
           </DialogTitle>
 
           <p className="text-muted-foreground leading-relaxed">
@@ -54,17 +59,19 @@ export const Splash = () => {
             a single manifest that opens in any IIIF viewer.
           </p>
 
-          <div className="py-10 px-14">
+          <div className="pt-20 pb-28 px-14">
             <Carousel>
-              <CarouselContent className="px-4">
+              <CarouselContent className="p-2">
                 {SPLASH_CONTENT.map(({ title, content }) => (
                   <CarouselItem
                     key={title}
                     className="leading-relaxed">
-                    <h3 className="font-medium">{title}</h3>
-                    <p>
-                      {content}
-                    </p>
+                    <div className="p-4 rounded-md border h-full">
+                      <h3 className="font-medium">{title}</h3>
+                      <p>
+                        {content}
+                      </p>
+                    </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
@@ -74,12 +81,21 @@ export const Splash = () => {
           </div>
 
           {hasSources ? (
-            <Button
-              size="lg"
-              className="h-11"
-              onClick={() => setOpen(false)}>
-              Resume your reconstruction
-            </Button>
+            <div className="flex flex-col w-full">
+              <Button
+                size="lg"
+                className="h-11 grow"
+                onClick={() => setOpen(false)}>
+                Resume your reconstruction
+              </Button>
+
+              <Button
+                size="lg"
+                variant="link"
+                className="h-11 grow">
+                Start a new reconstruction
+              </Button>
+            </div>
           ) : (
             <Button
               size="lg"
@@ -93,7 +109,7 @@ export const Splash = () => {
             <Label className="text-xs font-normal text-muted-foreground">
               <Checkbox
                 checked={dismissed}
-                onCheckedChange={dismiss} />
+                onCheckedChange={setDismissed} />
               Don't show this message again
             </Label>
           </DialogFooter>

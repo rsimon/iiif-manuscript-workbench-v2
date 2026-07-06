@@ -36,39 +36,31 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   const { manifest } = props.source;
 
   return (
-    <div className="mb-1">
+    <div className="p-1 text-sm border-b">
       <div
-        className={cn(
-          'flex cursor-pointer items-center gap-1 rounded px-2 py-1.5 text-sm transition-colors',
-          props.isSelected
-            ? 'bg-accent text-accent-foreground'
-            : 'hover:bg-accent/80'
-        )}
+        className="flex gap-0.5" 
         onClick={props.onSelectManifest}>
-
-        <button
+        <Button
+          variant="ghost"
           onClick={(e) => {
             e.stopPropagation();
             props.onToggleExpanded();
           }}
-          className="cursor-pointer flex h-5 w-5 items-center justify-center rounded hover:bg-secondary">
+          className="cursor-pointer flex items-center justify-center rounded hover:bg-secondary">
           {props.isExpanded ? (
             <ChevronDown className="h-3.5 w-3.5" />
           ) : (
             <ChevronRight className="h-3.5 w-3.5" />
           )}
-        </button>
+        </Button>
 
-        <div className="flex-1 overflow-hidden whitespace-nowrap font-medium flex gap-2 justify-between items-center">
-          <span className="truncate">{manifest.getLabel()}</span>
-          <span className="shrink-0 text-muted-foreground text-xs">
-            <Images className="size-3.5 inline mb-0.5 mr-px" /> {manifest.canvases.length}
-          </span>          
+        <div className="flex-1 whitespace-nowrap truncate font-medium flex gap-2 justify-between items-center">
+          {manifest.getLabel()}  
         </div>
       </div>
 
       {props.isExpanded && manifest.canvases.length > 0 && (
-        <div className="ml-4 mt-0.5 space-y-0.5 border-l border-panel-border pl-2">
+        <div className="ml-2.5 pl-1.5 border-l">
           {manifest.canvases.map(canvas => (
             <CanvasTreeItem
               key={canvas.id}
@@ -104,10 +96,10 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
     <div
       draggable
       className={cn(
-        'group flex cursor-pointer items-center justify-between gap-2 rounded p-1 text-sm transition-colors overflow-hidden',
+        'p-1.5 rounded group flex cursor-pointer items-center justify-between gap-2 text-sm transition-colors overflow-hidden',
         isSelected
-          ? 'bg-neutral-300 text-accent-foreground'
-          : 'hover:bg-neutral-200/80'
+          ? 'bg-accent text-accent-foreground'
+          : 'hover:bg-accent/80'
       )}
       onClick={onSelect}
       onDragStart={e => {
@@ -125,7 +117,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
         <img 
           src={canvas.getThumbnailURL(80)}
           alt={`${canvas.getLabel()} preview image`}
-          className="size-7 rounded shadow-xs object-cover"
+          className="size-9 rounded shadow-xs object-cover"
           loading="lazy" />
 
         <span className="flex-1 truncate text-xs">{canvas.getLabel()}</span>

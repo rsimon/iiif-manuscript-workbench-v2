@@ -1,8 +1,9 @@
-import { Button } from '@/shadcn/button';
+import { Button, buttonVariants } from '@/shadcn/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { type ButtonProps } from '@base-ui/react';
+import type { VariantProps } from 'class-variance-authority';
 
-interface PanelActionButtonProps extends ButtonProps {
+type PanelActionButtonProps = ButtonProps & VariantProps<typeof buttonVariants> & {
 
   tooltip: string;
 
@@ -17,8 +18,6 @@ export const PanelActionButton = (props: PanelActionButtonProps) => {
         render={
           <Button
             variant="ghost"
-            size="icon-sm"
-            className="size-8 -ml-1"
             {...rest}>
             {props.children}
           </Button>

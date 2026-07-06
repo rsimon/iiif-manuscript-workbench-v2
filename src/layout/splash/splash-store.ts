@@ -5,7 +5,7 @@ interface SplashState {
 
   dismissed: boolean;
 
-  dismiss: () => void;
+  setDismissed: (dismissed: boolean) => void;
 
 }
 
@@ -13,7 +13,7 @@ export const useSplashStore = create<SplashState>()(
   persist(
     set => ({
       dismissed: false,
-      dismiss: () => set({ dismissed: true }),
+      setDismissed: dismissed => set({ dismissed }),
     }),
     { name: 'iiif-workbench-splash' }
   )

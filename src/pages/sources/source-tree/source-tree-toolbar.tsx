@@ -7,9 +7,10 @@ export const SourceTreeToolbar = () => {
   const expandAll = useSourcesStore(state => state.expandAll);
 
   return (
-    <div className="flex gap-1 p-1.5 items-center justify-end border-b">
+    <div className="p-1.5 flex justify-start items-center border-b bg-white">
       <PanelActionButton
         tooltip="Collapse all"
+        size="icon-sm"
         onClick={collapseAll}>
         <ListChevronsDownUp />
       </PanelActionButton>
