@@ -15,6 +15,6 @@ export const useSplashStore = create<SplashState>()(
       dismissed: false,
       dismiss: () => set({ dismissed: true }),
     }),
-    { name: 'splash-dialog' }
+    { name: 'iiif-workbench-splash' }
   )
 )
