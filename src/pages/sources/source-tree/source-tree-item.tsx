@@ -45,9 +45,9 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
             )}
           </Button>
 
-          <Label 
+          <Label
             htmlFor={`toggle-${manifest.id}`}
-            className="flex-1 min-w-0 text-foreground font-normal truncate uppercase">
+            className="block flex-1 min-w-0 text-foreground font-normal truncate uppercase">
             {manifest.getLabel()}
           </Label>
         </div>
