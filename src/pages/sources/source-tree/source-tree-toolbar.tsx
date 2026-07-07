@@ -2,6 +2,7 @@ import { ListChevronsDownUp, ListChevronsUpDown } from 'lucide-react';
 import { Label } from '@/shadcn/label';
 import { PanelActionButton } from '@/components/panel-action-button';
 import { Switch } from '@/shadcn/switch';
+import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 
@@ -41,7 +42,10 @@ export const SourceTreeToolbar = () => {
       <div className="flex items-center gap-1.5">
         <Label
           htmlFor="show-in-reconstruction"
-          className="text-xs font-normal text-muted-foreground/80 hover:text-primary hover:bg-transparent">
+          className={cn(
+            'cursor-pointer text-xs font-normal',
+            showInReconstructionOnly ? 'text-primary' : 'text-muted-foreground/80 '
+          )}>
           Only selected
         </Label>
 
