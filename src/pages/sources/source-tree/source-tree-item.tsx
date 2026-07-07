@@ -1,17 +1,11 @@
 import { useMemo } from 'react';
-import { ChevronDown, ChevronRight, Ellipsis } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
 import { Checkbox } from '@/shadcn/checkbox';
 import { cn, withStopPropagation } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { SourceManifest } from '@/types';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuTrigger 
-} from '@/shadcn/dropdown-menu';
 import { 
   Tooltip, 
   TooltipContent, 
@@ -128,7 +122,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
   return (
     <div
       className={cn(
-        'p-2 rounded group flex cursor-default items-center justify-between gap-2 text-sm transition-colors overflow-hidden',
+        'p-2 rounded group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
         props.isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/60'
       )}
       onClick={props.onSelect}>
@@ -147,12 +141,14 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
           <div onClick={e => e.stopPropagation()}>
             <Tooltip>
               <TooltipTrigger 
-                className="absolute -top-1.5 -right-2">
-                <Checkbox
-                  id={`check-${props.canvas.id}`}
-                  className="cursor-pointer size-4.5 border-foreground/35 bg-white rounded-full" 
-                  checked={props.isInReconstruction} 
-                  onCheckedChange={props.onSetInReconstruction} />
+                className="absolute -top-1.5 -right-2"
+                render={
+                  <Checkbox
+                    id={`check-${props.canvas.id}`}
+                    className="cursor-pointer size-4.5 border-foreground/35 bg-white rounded-full" 
+                    checked={props.isInReconstruction} 
+                    onCheckedChange={props.onSetInReconstruction} />
+                }>
               </TooltipTrigger>
 
               <TooltipContent>
@@ -164,31 +160,6 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
 
         <span className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</span>
       </div>
-
-      <DropdownMenu>
-        <DropdownMenuTrigger 
-          onClick={e => e.stopPropagation()}
-          render={
-            <Button
-              variant="ghost"
-              size="icon-sm"
-              className={cn(
-                'group-hover:opacity-100',
-                props.isSelected ? 'opacity-100' : 'opacity-0'
-              )}>
-              <Ellipsis className="size-4" />
-            </Button>
-          }>
-        </DropdownMenuTrigger>
-
-        <DropdownMenuContent className="w-40">
-          <DropdownMenuItem
-
-            className="text-xs">
-            Add to Reconstruction
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </div>
   )
 
