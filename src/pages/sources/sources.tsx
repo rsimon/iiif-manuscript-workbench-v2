@@ -12,8 +12,8 @@ export const Sources = () => {
       <AnimatedPanelGroup className="flex grow h-full min-h-0">
         <Panel 
           className="border-r"
-          minSize={200}
-          defaultSize={300}>
+          minSize={260}
+          defaultSize={340}>
           <SourceTree />
         </Panel>
 

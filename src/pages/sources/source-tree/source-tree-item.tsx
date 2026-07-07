@@ -1,8 +1,10 @@
+import { useMemo } from 'react';
 import { ChevronDown, ChevronRight, Ellipsis } from 'lucide-react';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
 import { Checkbox } from '@/shadcn/checkbox';
-import { cn } from '@/shadcn/utils';
+import { cn, withStopPropagation } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
 import type { SourceManifest } from '@/types';
 import { 
   DropdownMenu, 
@@ -10,8 +12,12 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/shadcn/dropdown-menu';
-import { Label } from '@/shadcn/label';
-
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from '@/shadcn/tooltip';
 
 interface ManifestTreeItemProps {
 
@@ -31,25 +37,37 @@ interface ManifestTreeItemProps {
 
   onRemove(): void;
 
-  onAddToReconstruction(canvas: CozyCanvas): void;
-
 }
 
 export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   const { manifest } = props.source;
 
+  const reconstruction = useAppStore(state => state.reconstruction);
+  const addCanvas = useAppStore(state => state.addCanvasToReconstruction);
+  const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
+
+  // Canvas IDs in in this manifest that are in the reconstruction
+  const inReconstruction = useMemo(() => new Set(reconstruction
+    .filter(r => r.sourceManifestId === manifest.id)
+    .map(r => r.canvas.id)
+  ), [reconstruction, manifest]);
+
+  const onSetIsInReconstruction = (canvas: CozyCanvas, isInReconstruction: boolean) => {
+    if (isInReconstruction)
+      addCanvas(props.source.manifest.id, canvas);
+    else
+      removeCanvas(canvas.id);
+  }
+  
   return (
-    <div className="px-1.5 py-0 text-sm">
-      <div className="flex pr-1.5 rounded-md justify-between items-center">
+    <div className="px-1 py-0 text-sm">
+      <div className="flex pr-1.5 gap-1 rounded-md justify-between items-center">
         <div
-          className="flex gap-0.5" 
+          className="flex gap-0.5 min-w-0 flex-1 items-center"
           onClick={props.onSelectManifest}>
           <Button
             variant="ghost"
-            onClick={(e) => {
-              e.stopPropagation();
-              props.onToggleExpanded();
-            }}
+            onClick={withStopPropagation(() => props.onToggleExpanded())}
             className="text-muted-foreground size-8 flex items-center justify-center hover:bg-secondary">
             {props.isExpanded ? (
               <ChevronDown className="size-3.5" />
@@ -58,25 +76,32 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
             )}
           </Button>
 
-          <div className="flex-1 whitespace-nowrap text-foreground truncate uppercase flex gap-2 justify-between items-center">
-            {manifest.getLabel()} 
+          <div className="flex-1 min-w-0 text-foreground truncate uppercase">
+            {manifest.getLabel()}
           </div>
         </div>
         
-        <span className="text-primary tracking-wide text-xs">3/4</span>
+        <div className={cn(
+          'tracking-wide text-xs',
+          inReconstruction.size === 0 ? 'text-muted-foreground/80' : 'text-primary'
+        )}>
+          {inReconstruction.size}/{manifest.canvases.length}
+        </div>
       </div>
 
       {props.isExpanded && manifest.canvases.length > 0 && (
         <div className="pl-0.5 space-y-1">
+          <TooltipProvider delay={500}>
           {manifest.canvases.map(canvas => (
             <CanvasTreeItem
               key={canvas.id}
               canvas={canvas}
               isSelected={props.selectedCanvasId === canvas.id}
-              onSelect={() => props.onSelectCanvas(canvas.id)}
-              onAddToReconstruction={() => props.onAddToReconstruction(canvas)}
-            />
+              isInReconstruction={inReconstruction.has(canvas.id)}
+              onSelect={() => props.onSelectCanvas(canvas.id)} 
+              onSetInReconstruction={isAdded => onSetIsInReconstruction(canvas, isAdded)} />
           ))}
+          </TooltipProvider>
         </div>
       )}
     </div>
@@ -89,51 +114,55 @@ interface CanvasTreeItemProps {
   canvas: CozyCanvas;
 
   isSelected: boolean;
+
+  isInReconstruction: boolean;
   
   onSelect(): void;
 
-  onAddToReconstruction(): void;
+  onSetInReconstruction(inReconstruction: boolean): void;
 
 }
 
 export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
-  const { canvas, isSelected, onSelect, onAddToReconstruction } = props;
 
   return (
     <div
-      draggable
       className={cn(
-        'p-2 rounded group flex cursor-pointer items-center justify-between gap-2 text-sm transition-colors overflow-hidden',
-        isSelected
-          ? 'bg-accent text-accent-foreground'
-          : 'hover:bg-accent/60'
+        'p-2 rounded group flex cursor-default items-center justify-between gap-2 text-sm transition-colors overflow-hidden',
+        props.isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/60'
       )}
-      onClick={onSelect}
-      onDragStart={e => {
-        e.dataTransfer.setData(
-          'application/x-iiif-canvas',
-          JSON.stringify({
-            type: 'source-canvas',
-            canvasId: canvas.id
-          })
-        );
-        e.dataTransfer.effectAllowed = 'copy';
-      }}>
+      onClick={props.onSelect}>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
         <div className="relative">
-          <img 
-            src={canvas.getThumbnailURL(80)}
-            alt={`${canvas.getLabel()} preview image`}
-            className="size-10 border rounded-md shadow-xs object-cover"
+          <img
+            src={props.canvas.getThumbnailURL(80)}
+            alt={`${props.canvas.getLabel()} preview image`}
+            className={cn(
+              'size-9 rounded shadow-xs object-cover',
+              props.isInReconstruction ? 'ring-2 ring-primary/80 ring-offset-0' : undefined
+            )}
             loading="lazy" />
 
-          <Checkbox
-            id={`check-${props.canvas.id}`} 
-            className="size-4.5 border-foreground/35 absolute -top-1 -right-1.5 bg-white rounded-full" />
+          <div onClick={e => e.stopPropagation()}>
+            <Tooltip>
+              <TooltipTrigger 
+                className="absolute -top-1.5 -right-2">
+                <Checkbox
+                  id={`check-${props.canvas.id}`}
+                  className="cursor-pointer size-4.5 border-foreground/35 bg-white rounded-full" 
+                  checked={props.isInReconstruction} 
+                  onCheckedChange={props.onSetInReconstruction} />
+              </TooltipTrigger>
+
+              <TooltipContent>
+                Add {props.canvas.getLabel()} to the reconstruction
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </div>
 
-        <span className="flex-1 truncate text-xs">{canvas.getLabel()}</span>
+        <span className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</span>
       </div>
 
       <DropdownMenu>
@@ -145,7 +174,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
               size="icon-sm"
               className={cn(
                 'group-hover:opacity-100',
-                isSelected ? 'opacity-100' : 'opacity-0'
+                props.isSelected ? 'opacity-100' : 'opacity-0'
               )}>
               <Ellipsis className="size-4" />
             </Button>
@@ -154,7 +183,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
 
         <DropdownMenuContent className="w-40">
           <DropdownMenuItem
-            onClick={onAddToReconstruction}
+
             className="text-xs">
             Add to Reconstruction
           </DropdownMenuItem>

@@ -7,7 +7,7 @@ export const SourceTreeToolbar = () => {
   const expandAll = useSourcesStore(state => state.expandAll);
 
   return (
-    <div className="p-1.5 flex justify-start items-center border-b text-muted-foreground">
+    <div className="p-1.5 flex justify-start items-center border-b text-muted-foreground/80">
       <PanelActionButton
         tooltip="Collapse all"
         size="icon-sm"

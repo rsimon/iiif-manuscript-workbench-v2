@@ -20,7 +20,7 @@ interface AppStore {
   // Actions: reconstruction
   addCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
   createEmptyCanvas: (width?: number, height?: number) => void;
-  removeCanvas: (canvasId: string) => void;
+  removeCanvasFromReconstruction: (canvasId: string) => void;
   renameCanvas: (canvasId: string, label: string) => void;
   // reorderReconstruction: (activeId: string, overId: string) => void;
   resetReconstruction: () => void;
@@ -51,15 +51,20 @@ export const useAppStore = create<AppStore>()(
 
       removeAllSources: () => set({ sources: [] }),
 
-      addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction }) => ({        
-        reconstruction: [
-          ...reconstruction, 
-          {
-            sourceManifestId: sourceId,
-            canvas
-          }
-        ]
-      })),
+      addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction }) => {
+        // Don't re-add
+        if (reconstruction.find(r => r.canvas.id === canvas.id)) return {};
+
+        return {
+          reconstruction: [
+            ...reconstruction, 
+            {
+              sourceManifestId: sourceId,
+              canvas
+            }
+          ]
+        };
+      }),
 
       createEmptyCanvas: (width = 1000, height = 1000) => set(({ baseURI, reconstruction }) => ({
         reconstruction: [
@@ -78,7 +83,7 @@ export const useAppStore = create<AppStore>()(
         ]
       })),
 
-      removeCanvas: canvasId => set(({ reconstruction }) => ({
+      removeCanvasFromReconstruction: canvasId => set(({ reconstruction }) => ({
         reconstruction: reconstruction.filter(c => c.canvas.id !== canvasId)
       })),
 

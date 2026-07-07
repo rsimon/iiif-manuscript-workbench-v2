@@ -9,7 +9,6 @@ import { EmptySourceTree } from './empty-source-tree';
 import { SourceTreeItem } from './source-tree-item';
 import { SourceTreeToolbar } from './source-tree-toolbar';
 
-
 export const SourceTree = () => {
   const sources = useAppStore(state => state.sources);
 
@@ -30,22 +29,21 @@ export const SourceTree = () => {
           onImport={() => setShowImportDialog(true)} />
       ) : (
         <>
-          <ScrollArea className="grow min-h-0 py-2.5">
-            {sources.map(source => (
-              <SourceTreeItem
-                key={source.manifest.id}
-                source={source}
-                isExpanded={expanded.has(source.manifest.id)}
-                isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
-                selectedCanvasId={selection?.canvasId}
-                onSelectManifest={() => setSelection({ manifestId: source.manifest.id })}
-                onSelectCanvas={canvasId => setSelection({ manifestId: source.manifest.id, canvasId })}
-                onToggleExpanded={() => toggle(source.manifest.id)}
-                onRemove={() => {}} // removeSourceManifest(source.id)}
-                onAddToReconstruction={canvas => {
-                  // addCanvasToReconstruction(source.id, canvas)
-                }} />
-              ))}
+          <ScrollArea className="grow min-h-0">
+            <div className="py-2.5">
+              {sources.map(source => (
+                <SourceTreeItem
+                  key={source.manifest.id}
+                  source={source}
+                  isExpanded={expanded.has(source.manifest.id)}
+                  isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
+                  selectedCanvasId={selection?.canvasId}
+                  onSelectManifest={() => setSelection({ manifestId: source.manifest.id })}
+                  onSelectCanvas={canvasId => setSelection({ manifestId: source.manifest.id, canvasId })}
+                  onToggleExpanded={() => toggle(source.manifest.id)}
+                  onRemove={() => {}} />
+                ))}
+              </div>
             </ScrollArea>
 
             <div className="p-2.5 pb-1 border-t">

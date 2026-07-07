@@ -20,7 +20,7 @@ const NavItem = (props: NavItemProps) => {
       href={props.href}
       className={cn(
         'px-2.5 h-12 flex items-center border-b-4 border-transparent text-sm',
-        location === props.href ? 'border-b-primary' : 'font-light text-muted-foreground/60'
+        location === props.href ? 'border-b-primary' : 'text-muted-foreground/80'
       )}>{props.children}</Link>
   )
 
@@ -41,7 +41,7 @@ export const AppHeader = () => {
         <NavItem href="/preview">3. Preview and Export</NavItem>
       </nav>
 
-      <div className="text-muted-foreground flex gap-4 items-center">
+      <div className="text-muted-foreground/80 flex gap-4 items-center">
         <div className="cursor-pointer hover:underline hover:text-primary">Help</div>
         <div className="cursor-pointer hover:underline hover:text-primary">About</div>
       </div>
