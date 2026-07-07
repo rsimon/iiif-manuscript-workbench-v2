@@ -2,6 +2,7 @@ import { ChevronDown, ChevronRight } from 'lucide-react';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
 import { Checkbox } from '@/shadcn/checkbox';
+import { Label } from '@/shadcn/label';
 import { cn, withStopPropagation } from '@/shadcn/utils';
 import type { SourceManifest } from '@/types';
 import {
@@ -20,24 +21,20 @@ interface ManifestTreeItemProps {
 
   isSelected: boolean;
 
-  onSelectManifest(): void;
-
   onToggleExpanded(): void;
 
 }
 
-// Renders just the manifest header row. The canvas rows for an expanded
-// manifest are rendered separately by the caller (as virtualized list items).
 export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   const { manifest } = props.source;
 
   return (
-    <div className="px-1 py-0 text-sm bg-white/80 backdrop-blur">
+    <div className="py-0 text-sm bg-white/80 backdrop-blur">
       <div className="flex pr-2.5 gap-1 rounded-md justify-between items-center">
         <div
-          className="flex gap-0.5 min-w-0 flex-1 items-center"
-          onClick={props.onSelectManifest}>
+          className="flex gap-0.5 min-w-0 flex-1 items-center">
           <Button
+            id={`toggle-${manifest.id}`}
             variant="ghost"
             onClick={withStopPropagation(() => props.onToggleExpanded())}
             className="text-muted-foreground size-8 flex items-center justify-center hover:bg-secondary">
@@ -48,9 +45,11 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
             )}
           </Button>
 
-          <div className="flex-1 min-w-0 text-foreground truncate uppercase">
+          <Label 
+            htmlFor={`toggle-${manifest.id}`}
+            className="flex-1 min-w-0 text-foreground font-normal truncate uppercase">
             {manifest.getLabel()}
-          </div>
+          </Label>
         </div>
 
         <div className={cn(
@@ -84,8 +83,8 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
   return (
     <div
       className={cn(
-        'p-2 rounded group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
-        props.isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent/60'
+        'p-2 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
+        props.isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent'
       )}
       onClick={props.onSelect}>
 

@@ -13,8 +13,8 @@ export const SourceTreeToolbar = () => {
   const collapseAll = useSourcesStore(state => state.collapseAll);
   const expandAll = useSourcesStore(state => state.expandAll);
 
-  const showSelectedOnly = useSourcesStore(state => state.showSelectedOnly);
-  const setShowSelectedOnly = useSourcesStore(state => state.setShowSelectedOnly);
+  const showInReconstructionOnly = useSourcesStore(state => state.showInReconstructionOnly);
+  const setShowInReconstructionOnly = useSourcesStore(state => state.setShowInReconstructionOnly);
 
   const onToggleExpand = () => {
     if (isAllExpanded) 
@@ -39,10 +39,10 @@ export const SourceTreeToolbar = () => {
 
       <div className="flex items-center">
         <Toggle
-          className="text-xs font-normal text-muted-foreground/80 hover:text-primary 
-            aria-pressed:bg-transparent aria-pressed:text-primary"
-          pressed={showSelectedOnly}
-          onPressedChange={setShowSelectedOnly}>
+          className="text-xs font-normal text-muted-foreground/80 hover:text-primary hover:bg-transparent 
+          aria-pressed:bg-transparent aria-pressed:text-primary aria-pressed:font-medium"
+          pressed={showInReconstructionOnly}
+          onPressedChange={setShowInReconstructionOnly}>
           Only selected
         </Toggle>
       </div>

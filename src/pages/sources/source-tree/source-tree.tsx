@@ -27,6 +27,8 @@ export const SourceTree = () => {
   const selection = useSourcesStore(state => state.selection);
   const setSelection = useSourcesStore(state => state.setSelection);
 
+  const showInReconstructionOnly = useSourcesStore(state => state.showInReconstructionOnly);
+
   const [showImportDialog, setShowImportDialog] = useState(false);
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
@@ -43,11 +45,18 @@ export const SourceTree = () => {
     }, new Map())
   , [reconstruction]);
 
+  const visibleCanvases = useMemo(() =>
+    showInReconstructionOnly 
+      ? sources.map(s => s.manifest.canvases.filter(canvas =>
+        reconstruction.some(r => r.canvas.id === canvas.id)))
+      : sources.map(s => s.manifest.canvases)
+    , [sources, showInReconstructionOnly, inReconstructionByManifest]);
+
   // No. of visible canvas rows per manifest
   const groupCounts = useMemo(() =>
-    sources.map(source =>
-      expanded.has(source.manifest.id) ? source.manifest.canvases.length : 0
-    ), [sources, expanded]);
+    sources.map((source, idx) =>
+      expanded.has(source.manifest.id) ? visibleCanvases[idx].length : 0
+    ), [sources, expanded, visibleCanvases]);
 
   // No. of items before each group, to map the flat GroupedVirtuoso index
   // back to a canvas index inside the manifest
@@ -77,7 +86,6 @@ export const SourceTree = () => {
         isExpanded={expanded.has(source.manifest.id)}
         isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
         inReconstruction={count}
-        onSelectManifest={() => setSelection({ manifestId: source.manifest.id })}
         onToggleExpanded={() => toggle(source.manifest.id)} />
     )
   }
@@ -86,7 +94,7 @@ export const SourceTree = () => {
     const source = sources[groupIdx];
 
     const canvasIndex = idx - groupOffsets[groupIdx];
-    const canvas = source.manifest.canvases[canvasIndex];
+    const canvas = visibleCanvases[groupIdx][canvasIndex];
 
     const isInReconstruction = inReconstructionByManifest.get(source.manifest.id)?.has(canvas.id) ?? false;
                     
@@ -112,7 +120,7 @@ export const SourceTree = () => {
       ) : (
         <>
           <ScrollArea className="grow min-h-0" viewportRef={setViewportEl}>
-            <div className="py-2.5">
+            <div className="py-2.5 pl-1.5 pr-2.5">
               <TooltipProvider delay={500}>
                 <GroupedVirtuoso
                   customScrollParent={viewportEl ?? undefined}

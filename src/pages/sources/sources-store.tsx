@@ -7,7 +7,7 @@ interface SourcesStore {
 
   expanded: Set<string>;
 
-  showSelectedOnly: boolean;
+  showInReconstructionOnly: boolean;
 
   // Actions: selection
   setSelection: (selection?: SourceSelection) => void;
@@ -18,7 +18,7 @@ interface SourcesStore {
   toggleSourceExpanded: (manifestId: string) => void;
   
   // Actions: view filtering
-  setShowSelectedOnly: (showSelectedOnly: boolean) => void;
+  setShowInReconstructionOnly: (showInReconstructionOnly: boolean) => void;
 
 }
 
@@ -26,7 +26,7 @@ interface SourceSelection {
 
   manifestId: string;
 
-  canvasId?: string;
+  canvasId: string;
 
 }
 
@@ -36,7 +36,7 @@ export const useSourcesStore = create<SourcesStore>()(set => ({
 
   expanded: new Set(),
 
-  showSelectedOnly: false,
+  showInReconstructionOnly: false,
 
   setSelection: selection => set(() => ({ selection })),
 
@@ -50,6 +50,6 @@ export const useSourcesStore = create<SourcesStore>()(set => ({
     expanded: new Set([...expanded, manifestId])
   }),
 
-  setShowSelectedOnly: showSelectedOnly => set({ showSelectedOnly  })
+  setShowInReconstructionOnly: showInReconstructionOnly => set({ showInReconstructionOnly  })
 
 }));
