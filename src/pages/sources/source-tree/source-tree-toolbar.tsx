@@ -46,7 +46,7 @@ export const SourceTreeToolbar = () => {
             'cursor-pointer text-xs font-normal',
             showInReconstructionOnly ? 'text-primary' : 'text-muted-foreground/80 '
           )}>
-          Only selected
+          Show included only
         </Label>
 
         <Switch 

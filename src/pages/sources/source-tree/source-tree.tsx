@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Trash2, Upload } from 'lucide-react';
+import { Upload } from 'lucide-react';
 import { GroupedVirtuoso } from 'react-virtuoso';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Badge } from '@/shadcn/badge';
@@ -136,13 +136,13 @@ export const SourceTree = () => {
             </div>
           </ScrollArea>
 
-          <div className="p-2.5 pb-1 border-t">
+          <div className="p-2.5 border-t">
             <Button 
               disabled={reconstruction.length === 0}
               className="w-full font-normal"
               size="lg"
               onClick={() => setShowImportDialog(true)}>
-              Continue to Compose 
+              Continue to Reconstruction 
               <Badge 
                 className="bg-white/25">
                 {reconstruction.length}
@@ -154,12 +154,6 @@ export const SourceTree = () => {
               variant="outline"
               onClick={() => setShowImportDialog(true)}>
               <Upload /> Import IIIF
-            </Button>
-
-            <Button 
-              variant="link"
-              className="w-full text-xs font-normal text-muted-foreground/80">
-              <Trash2 className="size-4 mb-0.5" /> Reset project
             </Button>
           </div>
         </>

@@ -47,7 +47,7 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   }
 
   return (
-    <div className="py-1.5 text-sm bg-white/80 backdrop-blur">
+    <div className="py-2 text-sm bg-white/80 backdrop-blur">
       <div className="flex pr-1.5 gap-1 rounded-md justify-between items-center">
         <div
           className="flex gap-0.5 min-w-0 flex-1 items-center">
@@ -107,41 +107,38 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
   return (
     <div
       className={cn(
-        'ml-5 p-2 pr-3 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
-        props.isSelected ? 'bg-muted text-accent-foreground' : 'hover:bg-muted'
+        'ml-5 p-2 pr-3 pl-2 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
+        props.isSelected ? 'bg-neutral-200/60 text-accent-foreground' : 'hover:bg-neutral-200/60'
       )}
       onClick={props.onSelect}>
 
-      <div className="flex items-center gap-2 min-w-0 flex-1">
+      <div className="flex items-center gap-3 min-w-0 flex-1 relative">
+        <div onClick={e => e.stopPropagation()}>
+          <Tooltip>
+            <TooltipTrigger 
+              tabIndex={-1}>
+              <Checkbox
+                id={`check-${props.canvas.id}`}
+                className="cursor-pointer border-foreground/25 bg-white" 
+                checked={props.isInReconstruction} 
+                onCheckedChange={props.onSetInReconstruction} />
+            </TooltipTrigger>
+
+            <TooltipContent
+              side="right"
+              sideOffset={10}>
+              Add {props.canvas.getLabel()} to the reconstruction
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
         <img
           src={props.canvas.getThumbnailURL(80)}
           alt={`${props.canvas.getLabel()} preview image`}
-          className={cn(
-            'size-9 rounded-sm shadow-xs object-cover',
-            props.isInReconstruction ? 'ring-2 ring-primary ring-offset-0' : undefined
-          )}
+          className="size-9 rounded-sm shadow-xs object-cover ring-1 ring-foreground/10"
           loading="lazy" />
 
         <span className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</span>
-      </div>
-
-      <div onClick={e => e.stopPropagation()}>
-        <Tooltip>
-          <TooltipTrigger 
-            tabIndex={-1}>
-            <Checkbox
-              id={`check-${props.canvas.id}`}
-              className="cursor-pointer border-foreground/25 bg-white" 
-              checked={props.isInReconstruction} 
-              onCheckedChange={props.onSetInReconstruction} />
-          </TooltipTrigger>
-
-          <TooltipContent
-            side="right"
-            sideOffset={10}>
-            Add {props.canvas.getLabel()} to the reconstruction
-          </TooltipContent>
-        </Tooltip>
       </div>
     </div>
   )

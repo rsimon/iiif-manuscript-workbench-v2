@@ -48,7 +48,7 @@ export const AppHeader = () => {
         <NavItem 
           href="/reconstruction"
           className="flex gap-1">
-          <span>2. Compose</span> <Badge variant="secondary">{reconstruction}</Badge>
+          <span>2. Reconstruct</span> <Badge variant="secondary" className="font-normal">{reconstruction}</Badge>
         </NavItem>
 
         <NavItem href="/preview">
