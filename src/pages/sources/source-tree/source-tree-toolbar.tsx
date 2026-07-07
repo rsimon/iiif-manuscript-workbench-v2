@@ -1,6 +1,7 @@
 import { ListChevronsDownUp, ListChevronsUpDown } from 'lucide-react';
+import { Label } from '@/shadcn/label';
 import { PanelActionButton } from '@/components/panel-action-button';
-import { Toggle } from '@/shadcn/toggle';
+import { Switch } from '@/shadcn/switch';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 
@@ -24,7 +25,7 @@ export const SourceTreeToolbar = () => {
   }
 
   return (
-    <div className="border-b text-muted-foreground/80 flex justify-between p-1.5">
+    <div className="border-b text-muted-foreground/80 flex justify-between p-1 pr-3.5">
       <div className="flex items-center">
         <PanelActionButton
           tooltip={isAllExpanded ? 'Collapse all' : 'Expand all'}
@@ -37,14 +38,18 @@ export const SourceTreeToolbar = () => {
         </PanelActionButton>
       </div>
 
-      <div className="flex items-center">
-        <Toggle
-          className="text-xs font-normal text-muted-foreground/80 hover:text-primary hover:bg-transparent 
-          aria-pressed:bg-transparent aria-pressed:text-primary aria-pressed:font-medium"
-          pressed={showInReconstructionOnly}
-          onPressedChange={setShowInReconstructionOnly}>
+      <div className="flex items-center gap-1.5">
+        <Label
+          htmlFor="show-in-reconstruction"
+          className="text-xs font-normal text-muted-foreground/80 hover:text-primary hover:bg-transparent">
           Only selected
-        </Toggle>
+        </Label>
+
+        <Switch 
+          id="show-in-reconstruction" 
+          size="sm"
+          checked={showInReconstructionOnly}
+          onCheckedChange={setShowInReconstructionOnly} />
       </div>
     </div>
   )

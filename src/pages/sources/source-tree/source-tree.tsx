@@ -120,7 +120,7 @@ export const SourceTree = () => {
       ) : (
         <>
           <ScrollArea className="grow min-h-0" viewportRef={setViewportEl}>
-            <div className="py-2.5 pl-1.5 pr-2.5">
+            <div className="py-2.5 pl-1 pr-2.5">
               <TooltipProvider delay={500}>
                 <GroupedVirtuoso
                   customScrollParent={viewportEl ?? undefined}

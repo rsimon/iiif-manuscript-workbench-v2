@@ -30,7 +30,7 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
 
   return (
     <div className="py-0 text-sm bg-white/80 backdrop-blur">
-      <div className="flex pr-2.5 gap-1 rounded-md justify-between items-center">
+      <div className="flex pr-1.5 gap-1 rounded-md justify-between items-center">
         <div
           className="flex gap-0.5 min-w-0 flex-1 items-center">
           <Button
@@ -47,7 +47,7 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
 
           <Label
             htmlFor={`toggle-${manifest.id}`}
-            className="block flex-1 min-w-0 text-foreground font-normal truncate uppercase">
+            className="block flex-1 min-w-0 text-foreground font-normal truncate">
             {manifest.getLabel()}
           </Label>
         </div>
@@ -84,7 +84,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
     <div
       className={cn(
         'p-2 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
-        props.isSelected ? 'bg-accent text-accent-foreground' : 'hover:bg-accent'
+        props.isSelected ? 'bg-muted text-accent-foreground' : 'hover:bg-muted'
       )}
       onClick={props.onSelect}>
 
