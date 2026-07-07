@@ -44,6 +44,7 @@ export const Splash = () => {
   return (
     <>
       <Dialog 
+        modal
         open={open} 
         onOpenChange={setOpen}>
         <DialogContent
