@@ -150,7 +150,7 @@ export const SourceTree = () => {
 
             <Button 
               variant="link"
-              className="w-full text-xs font-normal text-muted-foreground">
+              className="w-full text-xs font-normal text-muted-foreground/80">
               <Trash2 className="size-4 mb-0.5" /> Reset project
             </Button>
           </div>
