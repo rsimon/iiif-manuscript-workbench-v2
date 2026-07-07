@@ -4,6 +4,7 @@ import { Button } from '@/shadcn/button';
 import { Checkbox } from '@/shadcn/checkbox';
 import { Label } from '@/shadcn/label';
 import { cn, withStopPropagation } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
 import type { SourceManifest } from '@/types';
 import {
   Tooltip,
@@ -28,8 +29,25 @@ interface ManifestTreeItemProps {
 export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   const { manifest } = props.source;
 
+  const allChecked = props.inReconstruction === manifest.canvases.length;
+  const someChecked = props.inReconstruction > 0 && !allChecked;
+
+  const addCanvases = useAppStore(state => state.addCanvasesToReconstruction);
+  const removeCanvases = useAppStore(state => state.removeCanvasesFromReconstruction);
+
+  const onClickCheckbox = () => {
+    if (allChecked) {
+      removeCanvases(manifest.canvases.map(c => c.id));
+    } else {
+      addCanvases(manifest.canvases.map(canvas => ({ 
+        sourceId: manifest.id,
+        canvas
+      })));
+    }
+  }
+
   return (
-    <div className="py-0 text-sm bg-white/80 backdrop-blur">
+    <div className="py-1.5 text-sm bg-white/80 backdrop-blur">
       <div className="flex pr-1.5 gap-1 rounded-md justify-between items-center">
         <div
           className="flex gap-0.5 min-w-0 flex-1 items-center">
@@ -37,13 +55,19 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
             id={`toggle-${manifest.id}`}
             variant="ghost"
             onClick={withStopPropagation(() => props.onToggleExpanded())}
-            className="text-muted-foreground size-8 flex items-center justify-center hover:bg-secondary">
+            className="text-muted-foreground size-7 flex items-center justify-center hover:bg-secondary">
             {props.isExpanded ? (
               <ChevronDown className="size-3.5" />
             ) : (
               <ChevronRight className="size-4" />
             )}
           </Button>
+
+          <Checkbox
+            className="mr-1.25 mb-px" 
+            indeterminate={someChecked}
+            checked={allChecked}
+            onCheckedChange={onClickCheckbox} />
 
           <Label
             htmlFor={`toggle-${manifest.id}`}
@@ -83,7 +107,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
   return (
     <div
       className={cn(
-        'p-2 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
+        'ml-5 p-2 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
         props.isSelected ? 'bg-muted text-accent-foreground' : 'hover:bg-muted'
       )}
       onClick={props.onSelect}>
@@ -94,7 +118,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
             src={props.canvas.getThumbnailURL(80)}
             alt={`${props.canvas.getLabel()} preview image`}
             className={cn(
-              'size-9 rounded shadow-xs object-cover',
+              'size-9 rounded-sm shadow-xs object-cover',
               props.isInReconstruction ? 'ring-2 ring-primary/80 ring-offset-0' : undefined
             )}
             loading="lazy" />

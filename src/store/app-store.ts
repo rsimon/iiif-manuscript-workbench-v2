@@ -19,8 +19,10 @@ interface AppStore {
 
   // Actions: reconstruction
   addCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
+  addCanvasesToReconstruction: (arg: { sourceId: string, canvas: CozyCanvas}[]) => void;
   createEmptyCanvas: (width?: number, height?: number) => void;
   removeCanvasFromReconstruction: (canvasId: string) => void;
+  removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
   renameCanvas: (canvasId: string, label: string) => void;
   // reorderReconstruction: (activeId: string, overId: string) => void;
   resetReconstruction: () => void;
@@ -66,6 +68,21 @@ export const useAppStore = create<AppStore>()(
         };
       }),
 
+      addCanvasesToReconstruction: arg => set(({ reconstruction }) => {
+        const toAdd = arg.filter(t => !reconstruction.some(r => r.canvas.id === t.canvas.id));
+        if (toAdd.length === 0) return {};
+
+        return {
+          reconstruction: [
+            ...reconstruction,
+            ...toAdd.map(t => ({
+              sourceManifestId: t.sourceId,
+              canvas: t.canvas
+            }))
+          ]
+        }
+      }),
+
       createEmptyCanvas: (width = 1000, height = 1000) => set(({ baseURI, reconstruction }) => ({
         reconstruction: [
           ...reconstruction,
@@ -85,6 +102,10 @@ export const useAppStore = create<AppStore>()(
 
       removeCanvasFromReconstruction: canvasId => set(({ reconstruction }) => ({
         reconstruction: reconstruction.filter(c => c.canvas.id !== canvasId)
+      })),
+
+      removeCanvasesFromReconstruction: canvasIds => set(({ reconstruction }) => ({
+        reconstruction: reconstruction.filter(c => !canvasIds.includes(c.canvas.id))
       })),
 
       renameCanvas: (canvasId, label) => set(({ reconstruction }) => ({

@@ -1,4 +1,4 @@
-import { CheckIcon } from "lucide-react"
+import { Check, Minus } from "lucide-react"
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 
 import { cn } from "./utils"
@@ -8,7 +8,7 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        "peer size-4 flex items-center justify-center shrink-0 rounded border border-input shadow-xs outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 data-checked:bg-primary data-checked:text-primary-foreground data-checked:border-primary dark:bg-input/30 dark:data-checked:bg-primary",
+        "peer size-4 flex items-center justify-center shrink-0 rounded border border-input shadow-xs outline-none transition-shadow focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:border-ring disabled:cursor-not-allowed disabled:opacity-50 data-checked:bg-primary data-checked:text-primary-foreground data-checked:border-primary data-indeterminate:bg-primary data-indeterminate:text-primary-foreground data-indeterminate:border-primary dark:bg-input/30 dark:data-checked:bg-primary",
         className
       )}
       {...props}
@@ -16,8 +16,15 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
       <CheckboxPrimitive.Indicator
         data-slot="checkbox-indicator"
         className="flex items-center justify-center text-current"
-      >
-        <CheckIcon className="size-3.5" />
+        render={(props, state) => (
+          <span {...props}>
+            {state.indeterminate ? (
+              <Minus className="size-3" strokeWidth={2.5} />
+            ) : (
+              <Check className="size-3" strokeWidth={2.5} />
+            )}
+          </span>
+        )}>
       </CheckboxPrimitive.Indicator>
     </CheckboxPrimitive.Root>
   )
