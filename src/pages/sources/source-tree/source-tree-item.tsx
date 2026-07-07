@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight, Ellipsis, Images } from 'lucide-react';
+import { ChevronDown, ChevronRight, Ellipsis } from 'lucide-react';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
 import { cn } from '@/shadcn/utils';
@@ -36,31 +36,35 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   const { manifest } = props.source;
 
   return (
-    <div className="p-1 text-sm border-b">
-      <div
-        className="flex gap-0.5" 
-        onClick={props.onSelectManifest}>
-        <Button
-          variant="ghost"
-          onClick={(e) => {
-            e.stopPropagation();
-            props.onToggleExpanded();
-          }}
-          className="cursor-pointer flex items-center justify-center rounded hover:bg-secondary">
-          {props.isExpanded ? (
-            <ChevronDown className="h-3.5 w-3.5" />
-          ) : (
-            <ChevronRight className="h-3.5 w-3.5" />
-          )}
-        </Button>
+    <div className="px-1.5 py-0 text-sm">
+      <div className="flex pr-1.5 rounded-md justify-between items-center">
+        <div
+          className="flex gap-0.5" 
+          onClick={props.onSelectManifest}>
+          <Button
+            variant="ghost"
+            onClick={(e) => {
+              e.stopPropagation();
+              props.onToggleExpanded();
+            }}
+            className="text-muted-foreground size-8 flex items-center justify-center hover:bg-secondary">
+            {props.isExpanded ? (
+              <ChevronDown className="size-3.5" />
+            ) : (
+              <ChevronRight className="size-4" />
+            )}
+          </Button>
 
-        <div className="flex-1 whitespace-nowrap truncate font-medium flex gap-2 justify-between items-center">
-          {manifest.getLabel()}  
+          <div className="flex-1 whitespace-nowrap text-foreground truncate uppercase flex gap-2 justify-between items-center">
+            {manifest.getLabel()} 
+          </div>
         </div>
+        
+        <span className="text-primary tracking-wide text-xs">3/4</span>
       </div>
 
       {props.isExpanded && manifest.canvases.length > 0 && (
-        <div className="ml-2.5 pl-1.5 border-l">
+        <div className="pl-0.5 space-y-1">
           {manifest.canvases.map(canvas => (
             <CanvasTreeItem
               key={canvas.id}
@@ -99,7 +103,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
         'p-1.5 rounded group flex cursor-pointer items-center justify-between gap-2 text-sm transition-colors overflow-hidden',
         isSelected
           ? 'bg-accent text-accent-foreground'
-          : 'hover:bg-accent/80'
+          : 'hover:bg-accent/60'
       )}
       onClick={onSelect}
       onDragStart={e => {

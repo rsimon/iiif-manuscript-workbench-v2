@@ -20,7 +20,7 @@ const NavItem = (props: NavItemProps) => {
       href={props.href}
       className={cn(
         'px-2.5 h-12 flex items-center border-b-4 border-transparent text-sm',
-        location === props.href ? 'border-[#0073A3]' : 'font-light text-muted-foreground/60'
+        location === props.href ? 'border-b-primary' : 'font-light text-muted-foreground/60'
       )}>{props.children}</Link>
   )
 
@@ -35,7 +35,7 @@ export const AppHeader = () => {
         color 
         className="size-8 mb-0.5" />
 
-      <nav className="flex items-center gap-3">
+      <nav className="flex items-center gap-3 pt-0.5">
         <NavItem href="/sources">1. Select Sources</NavItem>
         <NavItem href="/reconstruction">2. Compose</NavItem>
         <NavItem href="/preview">3. Preview and Export</NavItem>

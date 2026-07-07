@@ -1,12 +1,14 @@
 import { useState } from 'react';
+import { Trash2 } from 'lucide-react';
+import { Button } from '@/shadcn/button';
+import { ScrollArea } from '@/shadcn/scroll-area';
 import { ImportManifestDialog } from '@/dialogs/import-manifest';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 import { EmptySourceTree } from './empty-source-tree';
 import { SourceTreeItem } from './source-tree-item';
 import { SourceTreeToolbar } from './source-tree-toolbar';
-import { Button } from '@/shadcn/button';
-import { Import, Trash2 } from 'lucide-react';
+
 
 export const SourceTree = () => {
   const sources = useAppStore(state => state.sources);
@@ -28,14 +30,14 @@ export const SourceTree = () => {
           onImport={() => setShowImportDialog(true)} />
       ) : (
         <>
-          <div className="grow bg-muted">
+          <ScrollArea className="grow py-2.5">
             {sources.map(source => (
               <SourceTreeItem
                 key={source.manifest.id}
                 source={source}
                 isExpanded={expanded.has(source.manifest.id)}
                 isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
-                selectedCanvasId={selection?.manifestId}
+                selectedCanvasId={selection?.canvasId}
                 onSelectManifest={() => setSelection({ manifestId: source.manifest.id })}
                 onSelectCanvas={canvasId => setSelection({ manifestId: source.manifest.id, canvasId })}
                 onToggleExpanded={() => toggle(source.manifest.id)}
@@ -44,11 +46,12 @@ export const SourceTree = () => {
                   // addCanvasToReconstruction(source.id, canvas)
                 }} />
               ))}
-            </div>
+            </ScrollArea>
 
             <div className="p-2.5 pb-1 border-t">
               <Button 
-                className="w-full font-normal">
+                className="w-full font-normal"
+                onClick={() => setShowImportDialog(true)}>
                 Import IIIF
               </Button>
 
