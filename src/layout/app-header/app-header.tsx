@@ -2,17 +2,20 @@ import type { ReactNode } from 'react';
 import { Link, useLocation} from 'wouter';
 import { cn  } from '@/shadcn/utils';
 import { IIIFIcon } from '@/components/iiif-icon';
+import { useAppStore } from '@/store/app-store';
+import { Badge } from '@/shadcn/badge';
 
 interface NavItemProps {
   
   href: string;
+
+  className?: string;
 
   children: ReactNode;
 
 }
 
 const NavItem = (props: NavItemProps) => {
-
   const [location] = useLocation();
 
   return (
@@ -20,13 +23,15 @@ const NavItem = (props: NavItemProps) => {
       href={props.href}
       className={cn(
         'px-2.5 h-12 flex items-center border-b-4 border-transparent text-sm',
-        location === props.href ? 'border-b-primary' : 'text-muted-foreground/80'
+        location === props.href ? 'border-b-primary' : 'text-muted-foreground/80',
+        props.className
       )}>{props.children}</Link>
   )
 
 }
 
 export const AppHeader = () => {
+  const reconstruction = useAppStore(state => state.reconstruction.length);
 
   return (
     <header className="flex justify-between items-center px-4 text-sm 
@@ -36,9 +41,19 @@ export const AppHeader = () => {
         className="size-8 mb-0.5" />
 
       <nav className="flex items-center gap-3 pt-0.5">
-        <NavItem href="/sources">1. Select Sources</NavItem>
-        <NavItem href="/reconstruction">2. Compose</NavItem>
-        <NavItem href="/preview">3. Preview and Export</NavItem>
+        <NavItem href="/sources">
+          1. Select Sources
+        </NavItem>
+        
+        <NavItem 
+          href="/reconstruction"
+          className="flex gap-1">
+          <span>2. Compose</span> <Badge variant="secondary">{reconstruction}</Badge>
+        </NavItem>
+
+        <NavItem href="/preview">
+          3. Preview and Export
+        </NavItem>
       </nav>
 
       <div className="text-muted-foreground/80 flex gap-4 items-center">
