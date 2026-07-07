@@ -8,7 +8,7 @@ export const Sources = () => {
   const [isInspectorOpen, setInspectorOpen] = useState(false);
 
   return (
-    <main className="grow flex flex-col">
+    <main className="grow min-h-0 flex flex-col">
       <AnimatedPanelGroup className="flex grow h-full min-h-0">
         <Panel 
           className="border-r"

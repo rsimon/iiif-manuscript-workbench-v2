@@ -12,7 +12,7 @@ export const App = () => {
   return (
     <TooltipProvider>
       <Router hook={useHashLocation}>
-        <div className="flex flex-col min-h-screen">
+        <div className="flex flex-col h-screen overflow-hidden">
           <AppHeader />
 
           <Route path="/" component={() => <Redirect to="/sources" replace />} />

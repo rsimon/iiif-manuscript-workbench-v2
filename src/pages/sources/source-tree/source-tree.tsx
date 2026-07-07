@@ -30,7 +30,7 @@ export const SourceTree = () => {
           onImport={() => setShowImportDialog(true)} />
       ) : (
         <>
-          <ScrollArea className="grow py-2.5">
+          <ScrollArea className="grow min-h-0 py-2.5">
             {sources.map(source => (
               <SourceTreeItem
                 key={source.manifest.id}

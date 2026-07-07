@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronRight, Ellipsis } from 'lucide-react';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
+import { Checkbox } from '@/shadcn/checkbox';
 import { cn } from '@/shadcn/utils';
 import type { SourceManifest } from '@/types';
 import { 
@@ -9,6 +10,8 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from '@/shadcn/dropdown-menu';
+import { Label } from '@/shadcn/label';
+
 
 interface ManifestTreeItemProps {
 
@@ -100,7 +103,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
     <div
       draggable
       className={cn(
-        'p-1.5 rounded group flex cursor-pointer items-center justify-between gap-2 text-sm transition-colors overflow-hidden',
+        'p-2 rounded group flex cursor-pointer items-center justify-between gap-2 text-sm transition-colors overflow-hidden',
         isSelected
           ? 'bg-accent text-accent-foreground'
           : 'hover:bg-accent/60'
@@ -117,12 +120,18 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
         e.dataTransfer.effectAllowed = 'copy';
       }}>
 
-      <div className="flex items-center gap-2 overflow-hidden">
-        <img 
-          src={canvas.getThumbnailURL(80)}
-          alt={`${canvas.getLabel()} preview image`}
-          className="size-9 rounded shadow-xs object-cover"
-          loading="lazy" />
+      <div className="flex items-center gap-2">
+        <div className="relative">
+          <img 
+            src={canvas.getThumbnailURL(80)}
+            alt={`${canvas.getLabel()} preview image`}
+            className="size-10 border rounded-md shadow-xs object-cover"
+            loading="lazy" />
+
+          <Checkbox
+            id={`check-${props.canvas.id}`} 
+            className="size-4.5 border-foreground/35 absolute -top-1 -right-1.5 bg-white rounded-full" />
+        </div>
 
         <span className="flex-1 truncate text-xs">{canvas.getLabel()}</span>
       </div>
