@@ -55,7 +55,7 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   
   return (
     <div className="px-1 py-0 text-sm">
-      <div className="flex pr-1.5 gap-1 rounded-md justify-between items-center">
+      <div className="flex pr-2.5 gap-1 rounded-md justify-between items-center">
         <div
           className="flex gap-0.5 min-w-0 flex-1 items-center"
           onClick={props.onSelectManifest}>
