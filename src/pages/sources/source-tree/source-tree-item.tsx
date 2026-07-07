@@ -86,15 +86,15 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
       {props.isExpanded && manifest.canvases.length > 0 && (
         <div className="pl-0.5 space-y-1">
           <TooltipProvider delay={500}>
-          {manifest.canvases.map(canvas => (
-            <CanvasTreeItem
-              key={canvas.id}
-              canvas={canvas}
-              isSelected={props.selectedCanvasId === canvas.id}
-              isInReconstruction={inReconstruction.has(canvas.id)}
-              onSelect={() => props.onSelectCanvas(canvas.id)} 
-              onSetInReconstruction={isAdded => onSetIsInReconstruction(canvas, isAdded)} />
-          ))}
+            {manifest.canvases.map(canvas => (
+              <CanvasTreeItem
+                key={canvas.id}
+                canvas={canvas}
+                isSelected={props.selectedCanvasId === canvas.id}
+                isInReconstruction={inReconstruction.has(canvas.id)}
+                onSelect={() => props.onSelectCanvas(canvas.id)} 
+                onSetInReconstruction={isAdded => onSetIsInReconstruction(canvas, isAdded)} />
+            ))}
           </TooltipProvider>
         </div>
       )}
@@ -142,16 +142,17 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
             <Tooltip>
               <TooltipTrigger 
                 className="absolute -top-1.5 -right-2"
-                render={
-                  <Checkbox
-                    id={`check-${props.canvas.id}`}
-                    className="cursor-pointer size-4.5 border-foreground/35 bg-white rounded-full" 
-                    checked={props.isInReconstruction} 
-                    onCheckedChange={props.onSetInReconstruction} />
-                }>
+                tabIndex={-1}>
+                <Checkbox
+                  id={`check-${props.canvas.id}`}
+                  className="cursor-pointer size-4.5 border-foreground/35 bg-white rounded-full" 
+                  checked={props.isInReconstruction} 
+                  onCheckedChange={props.onSetInReconstruction} />
               </TooltipTrigger>
 
-              <TooltipContent>
+              <TooltipContent
+                side="right"
+                sideOffset={10}>
                 Add {props.canvas.getLabel()} to the reconstruction
               </TooltipContent>
             </Tooltip>
