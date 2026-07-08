@@ -47,7 +47,7 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
   }
 
   return (
-    <div className="py-2 text-sm bg-white/80 backdrop-blur">
+    <div className="py-1 text-sm bg-white/80 backdrop-blur">
       <div className="flex pr-1.5 gap-1 rounded-md justify-between items-center">
         <div
           className="flex gap-0.5 min-w-0 flex-1 items-center">
@@ -107,7 +107,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
   return (
     <div
       className={cn(
-        'ml-5 p-2 pr-3 pl-2 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
+        'ml-5 p-1 pr-3 pl-2 rounded-md group flex cursor-default items-center justify-between gap-2 text-sm transition-colors',
         props.isSelected ? 'bg-neutral-200/60 text-accent-foreground' : 'hover:bg-neutral-200/60'
       )}
       onClick={props.onSelect}>
