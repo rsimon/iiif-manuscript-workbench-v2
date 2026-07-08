@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import { SourcePreviewControls } from './source-preview-controls';
 import { useSourcesStore } from '../sources-store';
@@ -26,6 +26,18 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
+
+  const canvas = useMemo(() => {
+    if (!selection) return;
+
+    const { manifestId, canvasId } = selection;
+    
+    const manifest = sources.find(s => s.manifest.id === manifestId)?.manifest;
+
+    return canvasId
+      ? manifest?.canvases.find(c => c.id === canvasId)
+      : manifest?.canvases[0];
+  }, [selection, sources]);
 
   useEffect(() => {
     if (!elementRef.current) return;
@@ -56,20 +68,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   }, []);
 
   useEffect(() => {
-    if (!viewer) return;
-
-    const manifestId = selection?.manifestId;
-    const canvasId = selection?.canvasId;
-    
-    const manifest = manifestId 
-      ? sources.find(s => s.manifest.id === manifestId)?.manifest
-      : undefined;
-
-    const canvas = canvasId 
-      ? manifest?.canvases.find(c => c.id === canvasId)
-      : manifest?.canvases[0];
-
-    if (!manifest || !canvas) return;
+    if (!viewer || !canvas) return;
 
     const addImage = (image: CozyImageResource) => new Promise<void>(resolve => {
       const tileSource = image.type === 'dynamic' || image.type === 'level0' 
@@ -102,7 +101,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     return () => {
       viewer.world.removeAll();
     }
-  }, [viewer, selection, sources]);
+  }, [viewer, canvas]);
 
   return (
     <ViewerContext.Provider value={viewer}>
@@ -114,7 +113,11 @@ export const SourcePreview = (props: SourcePreviewProps) => {
           isInspectorOpen={props.isInspectorOpen} 
           setInspectorOpen={props.setInspectorOpen} />
 
-        <SourcePreviewToolbar />
+        {canvas && (
+          <SourcePreviewToolbar 
+            sourceId={selection!.manifestId}
+            canvas={canvas} />
+        )}
       </div>
     </ViewerContext.Provider>
   )
