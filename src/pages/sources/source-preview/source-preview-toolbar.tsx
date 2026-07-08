@@ -3,7 +3,6 @@ import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { Separator } from '@/shadcn/separator';
-import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 import { 
@@ -11,6 +10,7 @@ import {
   IconChevronLeft, 
   IconChevronRight, 
   IconDimensions, 
+  IconFilter, 
   IconPlus, 
   IconRulerMeasure 
 } from '@tabler/icons-react';
@@ -64,8 +64,8 @@ interface SourcePreviewToolbarProps {
 export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
   const isFiltered = useSourcesStore(state => state.showInReconstructionOnly);
 
-  const hasNext = props.selectedPageIndex < props.totalPageCount;
-  const hasPrev = props.selectedPageIndex > 1;
+  const hasNext = props.selectedPageIndex < props.totalPageCount - 1;
+  const hasPrev = props.selectedPageIndex > 0;
 
   const addToReconstruction = useAppStore(state => state.addCanvasToReconstruction);
   const removeFromReconstruction = useAppStore(state => state.removeCanvasFromReconstruction);
@@ -84,16 +84,21 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
             <IconChevronLeft />
           </Button>
 
-          <div className={cn(
-            'text-xs space-x-1.5'
-          )}>
+          <div className="text-xs flex gap-1.5 items-center">
             <span>{props.selectedCanvas.getLabel()}</span>
-            <span className="text-muted-foreground/80 space-x-1.5"> 
-              <span>·</span> 
-              <span className="tracking-wider">
-                {props.selectedPageIndex}/{props.totalPageCount}
+            {isFiltered ? (
+              <div className="ml-0.5 flex items-center gap-1 bg-accent py-1 px-2 pr-2.5 rounded-full text-primary">
+                <IconFilter className="size-3.5" /> 
+                <span>{props.selectedPageIndex + 1}/{props.totalPageCount}</span>
+              </div>
+            ) : (
+              <span className="text-muted-foreground/80 space-x-1.5"> 
+                <span>·</span> 
+                <span className="tracking-wider">
+                  {props.selectedPageIndex + 1}/{props.totalPageCount}
+                </span>
               </span>
-            </span>
+            )}
           </div>
 
           <Button
