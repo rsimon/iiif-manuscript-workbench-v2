@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import { SourcePreviewControls } from './source-preview-controls';
-import type { CozyCanvas, CozyImageResource, CozyManifest } from 'cozy-iiif';
+import type { CozyImageResource } from 'cozy-iiif';
 import { SourcePreviewToolbar } from './source-preview-toolbar';
-import type { SourceManifest } from '@/types';
+import { useSourceNavigation } from '../use-source-navigation';
 
 const ViewerContext = createContext<OpenSeadragon.Viewer | null>(null);
 
@@ -11,21 +11,9 @@ export const useViewer = () => useContext(ViewerContext);
 
 interface SourcePreviewProps {
 
-  isFiltered: boolean;
-
   isInspectorOpen: boolean;
 
-  currentManifest?: CozyManifest;
-  
-  currentCanvas?: CozyCanvas;
-
-  visibleCanvases: { source: SourceManifest, canvases: CozyCanvas[] }[];
-
   setInspectorOpen(open: boolean): void;
-
-  onSelectNext(): void;
-
-  onSelectPrevious(): void;
 
 }
 
@@ -33,6 +21,16 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
+
+  const { 
+    selectedCanvas,
+    selectedManifest,
+    isInReconstruction,
+    selectNext,
+    selectPrevious,
+    currentSelectedIndex,
+    visibleCanvases
+  } = useSourceNavigation();
 
   useEffect(() => {
     const el = elementRef.current;
@@ -83,7 +81,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   }, []);
 
   useEffect(() => {
-    if (!viewer || !props.currentCanvas) return;
+    if (!viewer || !selectedCanvas) return;
 
     const addImage = (image: CozyImageResource) => new Promise<void>(resolve => {
       const tileSource = image.type === 'dynamic' || image.type === 'level0' 
@@ -91,9 +89,9 @@ export const SourcePreview = (props: SourcePreviewProps) => {
         : image.url;
 
       if (image.target) {
-        const x = image.target.x / props.currentCanvas!.width;
-        const y = image.target.y / props.currentCanvas!.width;
-        const width = image.target.w / props.currentCanvas!.width;
+        const x = image.target.x / selectedCanvas!.width;
+        const y = image.target.y / selectedCanvas!.width;
+        const width = image.target.w / selectedCanvas!.width;
 
         viewer.addTiledImage({ 
           tileSource,
@@ -107,8 +105,8 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       }
     });
 
-    Promise.all(props.currentCanvas.images.map(addImage)).then(() => {
-      const aspectRatio = props.currentCanvas!.width / props.currentCanvas!.height;
+    Promise.all(selectedCanvas.images.map(addImage)).then(() => {
+      const aspectRatio = selectedCanvas!.width / selectedCanvas!.height;
       const canvasRect = new OpenSeadragon.Rect(0, 0, 1, 1 / aspectRatio);
       viewer.viewport.fitBounds(canvasRect, true);
     });
@@ -116,7 +114,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     return () => {
       viewer.world.removeAll();
     }
-  }, [viewer, props.currentCanvas]);
+  }, [viewer, selectedCanvas]);
 
   return (
     <ViewerContext.Provider value={viewer}>
@@ -128,14 +126,15 @@ export const SourcePreview = (props: SourcePreviewProps) => {
           isInspectorOpen={props.isInspectorOpen} 
           setInspectorOpen={props.setInspectorOpen} />
 
-        {(props.currentManifest && props.currentCanvas) && (
+        {(selectedManifest && selectedCanvas) && (
           <SourcePreviewToolbar 
-            isFiltered={props.isFiltered}
-            visibleCanvases={props.visibleCanvases}
-            currentManifest={props.currentManifest}
-            currentCanvas={props.currentCanvas} 
-            onNext={props.onSelectNext} 
-            onPrev={props.onSelectPrevious} />
+            isInReconstruction={isInReconstruction(selectedManifest.id, selectedCanvas.id)}
+            selectedCanvas={selectedCanvas}
+            selectedManifest={selectedManifest} 
+            selectedPageIndex={currentSelectedIndex}
+            totalPageCount={visibleCanvases.length}
+            onNext={selectNext} 
+            onPrevious={selectPrevious} />
         )}
       </div>
     </ViewerContext.Provider>

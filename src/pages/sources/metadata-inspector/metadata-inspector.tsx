@@ -1,6 +1,6 @@
 import { ScrollArea } from '@/shadcn/scroll-area';
-import { useSelectedSource } from '../sources-store';
 import { IconBook } from '@tabler/icons-react';
+import { useSelectedSource } from '../sources-store';
 import { MetadataSection } from './metadata-section';
 
 export const MetadataInspector = () => {

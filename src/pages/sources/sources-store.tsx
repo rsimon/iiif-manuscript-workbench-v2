@@ -58,6 +58,7 @@ export const useSourcesStore = create<SourcesStore>()(set => ({
 
 export const useSelectedSource = () => {
   const sources = useAppStore(state => state.sources);
+  
   const selection = useSourcesStore(state => state.selection);
 
   return useMemo(() => {

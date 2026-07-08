@@ -13,19 +13,9 @@ import { useSourcesStore } from '../sources-store';
 import { EmptySourceTree } from './empty-source-tree';
 import { CanvasTreeItem, SourceTreeItem } from './source-tree-item';
 import { SourceTreeToolbar } from './source-tree-toolbar';
-import type { SourceManifest } from '@/types';
+import { useSourceNavigation } from '../use-source-navigation';
 
-interface SourceTreeProps {
-
-  // Canvas IDs in the reconstruction, by manifest ID
-  inReconstructionByManifest: Map<string, Set<string>>;
-
-  // Canvases visible after possible filtering, by manifest ID
-  visibleCanvases: { source: SourceManifest, canvases: CozyCanvas[] }[];
-
-}
-
-export const SourceTree = (props: SourceTreeProps) => {
+export const SourceTree = () => {
   const sources = useAppStore(state => state.sources);
 
   const reconstruction = useAppStore(state => state.reconstruction);
@@ -42,11 +32,17 @@ export const SourceTree = (props: SourceTreeProps) => {
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
+  const { 
+    filteredSources,
+    countCanvasesInReconstruction, 
+    isInReconstruction 
+  } = useSourceNavigation();
+
   // No. of visible canvas rows per manifest
   const groupCounts = useMemo(() =>
     sources.map((source, idx) =>
-      !collapsed.has(source.manifest.id) ? props.visibleCanvases[idx].canvases.length : 0
-    ), [sources, collapsed, props.visibleCanvases]);
+      !collapsed.has(source.manifest.id) ? filteredSources[idx].canvases.length : 0
+    ), [sources, filteredSources, collapsed]);
 
   // No. of items before each group, to map the flat GroupedVirtuoso index
   // back to a canvas index inside the manifest
@@ -68,14 +64,12 @@ export const SourceTree = (props: SourceTreeProps) => {
 
   const renderManifestGroup = (idx: number) => {
     const source = sources[idx];
-    const count = props.inReconstructionByManifest.get(source.manifest.id)?.size ?? 0;
-
     return (
       <SourceTreeItem
         source={source}
         isCollapsed={collapsed.has(source.manifest.id)}
         isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
-        inReconstruction={count}
+        inReconstruction={countCanvasesInReconstruction(source.manifest.id)}
         onToggleExpanded={() => toggle(source.manifest.id)} />
     )
   }
@@ -84,16 +78,14 @@ export const SourceTree = (props: SourceTreeProps) => {
     const source = sources[groupIdx];
 
     const canvasIndex = idx - groupOffsets[groupIdx];
-    const canvas = props.visibleCanvases[groupIdx].canvases[canvasIndex];
-
-    const isInReconstruction = props.inReconstructionByManifest.get(source.manifest.id)?.has(canvas.id) ?? false;
-                    
+    const canvas = filteredSources[groupIdx].canvases[canvasIndex];
+       
     return (
       <div className={cn('pl-0.5', canvasIndex > 0 && 'pt-1')}>
         <CanvasTreeItem
           canvas={canvas}
           isSelected={selection?.manifestId === source.manifest.id && selection?.canvasId === canvas.id}
-          isInReconstruction={isInReconstruction}
+          isInReconstruction={isInReconstruction(source.manifest.id, canvas.id)}
           onSelect={() => setSelection({ manifestId: source.manifest.id, canvasId: canvas.id })}
           onSetInReconstruction={isAdded => onSetCanvasInReconstruction(source.manifest.id, canvas, isAdded)} />
       </div>
