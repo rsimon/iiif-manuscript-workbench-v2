@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { useAppStore } from '@/store/app-store';
 
@@ -53,3 +54,23 @@ export const useSourcesStore = create<SourcesStore>()(set => ({
   setShowInReconstructionOnly: showInReconstructionOnly => set({ showInReconstructionOnly  })
 
 }));
+
+export const useSelectedSource = () => {
+  const sources = useAppStore(state => state.sources);
+  const selection = useSourcesStore(state => state.selection);
+
+  return useMemo(() => {
+    if (!selection) return {};
+
+    const { manifestId, canvasId } = selection;
+
+    const manifest = sources.find(s => s.manifest.id === manifestId)?.manifest;
+
+    const canvas = canvasId
+      ? manifest?.canvases.find(c => c.id === canvasId)
+      : manifest?.canvases[0];
+
+    return { manifest, canvas };
+  }, [selection, sources]);
+  
+}

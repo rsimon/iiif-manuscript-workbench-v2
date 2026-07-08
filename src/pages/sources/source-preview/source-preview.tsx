@@ -1,8 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import { SourcePreviewControls } from './source-preview-controls';
-import { useSourcesStore } from '../sources-store';
-import { useAppStore } from '@/store/app-store';
+import { useSelectedSource, useSourcesStore } from '../sources-store';
 import type { CozyImageResource } from 'cozy-iiif';
 import { SourcePreviewToolbar } from './source-preview-toolbar';
 
@@ -19,25 +18,13 @@ interface SourcePreviewProps {
 }
 
 export const SourcePreview = (props: SourcePreviewProps) => {
-  const sources = useAppStore(state => state.sources);
-
   const selection = useSourcesStore(state => state.selection);
+
+  const { canvas } = useSelectedSource();
 
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
-
-  const canvas = useMemo(() => {
-    if (!selection) return;
-
-    const { manifestId, canvasId } = selection;
-    
-    const manifest = sources.find(s => s.manifest.id === manifestId)?.manifest;
-
-    return canvasId
-      ? manifest?.canvases.find(c => c.id === canvasId)
-      : manifest?.canvases[0];
-  }, [selection, sources]);
 
   useEffect(() => {
     if (!elementRef.current) return;
