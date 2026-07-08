@@ -107,7 +107,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
 
     Promise.all(selectedCanvas.images.map(addImage)).then(() => {
       const aspectRatio = selectedCanvas!.width / selectedCanvas!.height;
-      const canvasRect = new OpenSeadragon.Rect(0, 0, 1, 1 / aspectRatio);
+      const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
       viewer.viewport.fitBounds(canvasRect, true);
     });
 
