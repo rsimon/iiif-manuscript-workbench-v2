@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { create } from 'zustand';
 import { useAppStore } from '@/store/app-store';
+import type { SourceManifest } from '@/types';
 
 interface SourcesStore {
 
@@ -74,3 +75,24 @@ export const useSelectedSource = () => {
   }, [selection, sources]);
   
 }
+
+// Helper: automatically selects the first available canvas
+const autoSelect = (sources: SourceManifest[]) => {
+  const { selection, setSelection } = useSourcesStore.getState();
+  if (selection || sources.length === 0) return;
+
+  const first = sources[0];
+  setSelection(first
+    ? { manifestId: first.manifest.id, canvasId: first.manifest.canvases[0]?.id }
+    : undefined
+  );
+}
+
+// Autoselect once after the store hydrates
+autoSelect(useAppStore.getState().sources);
+
+// Autoselect after the store changes from no sources to >1 source
+useAppStore.subscribe((state, prevState) => {
+  if (prevState.sources.length === 0 && state.sources.length > 0)
+    autoSelect(state.sources);
+});

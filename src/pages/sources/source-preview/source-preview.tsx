@@ -27,6 +27,26 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
 
   useEffect(() => {
+    const el = elementRef.current;
+    if (!el) return;
+
+    // react-resizable-panels expands each Separator's drag hit target a few
+    // pixels into neighboring Panel content, and only calls preventDefault()
+    // (not stopPropagation()) when a pointerdown starts a resize there. That
+    // leaves the same pointerdown free to also reach OpenSeadragon's own
+    // canvas underneath, which starts panning instead. Listening in the
+    // capture phase - so this runs after the Separator's own capture-phase
+    // listener on the Group has already run - lets us detect that the drag
+    // was claimed and stop it from reaching OpenSeadragon at all.
+    const onPointerDownCapture = (e: PointerEvent) => {
+      if (e.defaultPrevented) e.stopPropagation();
+    };
+
+    el.addEventListener('pointerdown', onPointerDownCapture, true);
+    return () => el.removeEventListener('pointerdown', onPointerDownCapture, true);
+  }, []);
+
+  useEffect(() => {
     if (!elementRef.current) return;
 
     const v = OpenSeadragon({
