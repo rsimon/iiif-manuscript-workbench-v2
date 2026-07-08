@@ -11,17 +11,16 @@ export const Sources = () => {
   return (
     <main className="grow min-h-0 flex flex-col">
       <AnimatedPanelGroup className="flex grow h-full min-h-0">
-        <Panel 
-          className="border-r"
+        <Panel
           minSize={260}
           defaultSize={340}>
           <SourceTree />
         </Panel>
 
-        <Separator />
-        
+        <Separator className="w-px bg-border" />
+
         <Panel className="min-h-full grow">
-          <SourcePreview 
+          <SourcePreview
             isInspectorOpen={isInspectorOpen}
             setInspectorOpen={setInspectorOpen} />
         </Panel>
