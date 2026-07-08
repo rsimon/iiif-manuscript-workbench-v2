@@ -13,11 +13,12 @@ export const Sources = () => {
       <AnimatedPanelGroup className="flex grow h-full min-h-0">
         <Panel
           minSize={260}
-          defaultSize={340}>
+          defaultSize={340}
+          className="border-r">
           <SourceTree />
         </Panel>
 
-        <Separator className="w-px bg-border" />
+        <Separator />
 
         <Panel className="min-h-full grow">
           <SourcePreview

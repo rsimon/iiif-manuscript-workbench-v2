@@ -30,17 +30,15 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     const el = elementRef.current;
     if (!el) return;
 
-    // react-resizable-panels expands each Separator's drag hit target a few
+    // react-resizable-panel expands each Separator's drag hit target a few
     // pixels into neighboring Panel content, and only calls preventDefault()
-    // (not stopPropagation()) when a pointerdown starts a resize there. That
-    // leaves the same pointerdown free to also reach OpenSeadragon's own
-    // canvas underneath, which starts panning instead. Listening in the
-    // capture phase - so this runs after the Separator's own capture-phase
-    // listener on the Group has already run - lets us detect that the drag
-    // was claimed and stop it from reaching OpenSeadragon at all.
+    // when a pointerdown starts a resize there. That interferes with OSD!
+    // Listening in the capture phase lets us detect that the drag
+    // was claimed and stop it from reaching OSD at all.
     const onPointerDownCapture = (e: PointerEvent) => {
-      if (e.defaultPrevented) e.stopPropagation();
-    };
+      if (e.defaultPrevented) 
+        e.stopPropagation();
+    }
 
     el.addEventListener('pointerdown', onPointerDownCapture, true);
     return () => el.removeEventListener('pointerdown', onPointerDownCapture, true);
@@ -113,8 +111,8 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   return (
     <ViewerContext.Provider value={viewer}>
       <div 
+        ref={elementRef}
         className="size-full relative bg-slate-50 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-        <div ref={elementRef} className="size-full" />
 
         <SourcePreviewControls 
           isInspectorOpen={props.isInspectorOpen} 
