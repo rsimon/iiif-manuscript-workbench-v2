@@ -51,10 +51,7 @@ export const AppHeader = () => {
           <span>2. Reconstruct</span>
           <Badge 
             variant="secondary" 
-            className={cn(
-              'font-normal',
-              reconstruction > 0 ? 'bg-primary text-white' : undefined
-            )}>
+            className="font-normal">
             {reconstruction}
           </Badge>
         </NavItem>
