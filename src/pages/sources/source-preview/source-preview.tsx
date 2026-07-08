@@ -1,9 +1,9 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import { SourcePreviewControls } from './source-preview-controls';
-import { useSelectedSource, useSourcesStore } from '../sources-store';
-import type { CozyImageResource } from 'cozy-iiif';
+import type { CozyCanvas, CozyImageResource, CozyManifest } from 'cozy-iiif';
 import { SourcePreviewToolbar } from './source-preview-toolbar';
+import type { SourceManifest } from '@/types';
 
 const ViewerContext = createContext<OpenSeadragon.Viewer | null>(null);
 
@@ -11,17 +11,25 @@ export const useViewer = () => useContext(ViewerContext);
 
 interface SourcePreviewProps {
 
+  isFiltered: boolean;
+
   isInspectorOpen: boolean;
 
+  currentManifest?: CozyManifest;
+  
+  currentCanvas?: CozyCanvas;
+
+  visibleCanvases: { source: SourceManifest, canvases: CozyCanvas[] }[];
+
   setInspectorOpen(open: boolean): void;
+
+  onSelectNext(): void;
+
+  onSelectPrevious(): void;
 
 }
 
 export const SourcePreview = (props: SourcePreviewProps) => {
-  const selection = useSourcesStore(state => state.selection);
-
-  const { canvas } = useSelectedSource();
-
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
@@ -75,7 +83,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   }, []);
 
   useEffect(() => {
-    if (!viewer || !canvas) return;
+    if (!viewer || !props.currentCanvas) return;
 
     const addImage = (image: CozyImageResource) => new Promise<void>(resolve => {
       const tileSource = image.type === 'dynamic' || image.type === 'level0' 
@@ -83,9 +91,9 @@ export const SourcePreview = (props: SourcePreviewProps) => {
         : image.url;
 
       if (image.target) {
-        const x = image.target.x / canvas!.width;
-        const y = image.target.y / canvas!.width;
-        const width = image.target.w / canvas!.width;
+        const x = image.target.x / props.currentCanvas!.width;
+        const y = image.target.y / props.currentCanvas!.width;
+        const width = image.target.w / props.currentCanvas!.width;
 
         viewer.addTiledImage({ 
           tileSource,
@@ -99,8 +107,8 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       }
     });
 
-    Promise.all(canvas.images.map(addImage)).then(() => {
-      const aspectRatio = canvas!.width / canvas!.height;
+    Promise.all(props.currentCanvas.images.map(addImage)).then(() => {
+      const aspectRatio = props.currentCanvas!.width / props.currentCanvas!.height;
       const canvasRect = new OpenSeadragon.Rect(0, 0, 1, 1 / aspectRatio);
       viewer.viewport.fitBounds(canvasRect, true);
     });
@@ -108,7 +116,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     return () => {
       viewer.world.removeAll();
     }
-  }, [viewer, canvas]);
+  }, [viewer, props.currentCanvas]);
 
   return (
     <ViewerContext.Provider value={viewer}>
@@ -120,10 +128,14 @@ export const SourcePreview = (props: SourcePreviewProps) => {
           isInspectorOpen={props.isInspectorOpen} 
           setInspectorOpen={props.setInspectorOpen} />
 
-        {canvas && (
+        {(props.currentManifest && props.currentCanvas) && (
           <SourcePreviewToolbar 
-            sourceId={selection!.manifestId}
-            canvas={canvas} />
+            isFiltered={props.isFiltered}
+            visibleCanvases={props.visibleCanvases}
+            currentManifest={props.currentManifest}
+            currentCanvas={props.currentCanvas} 
+            onNext={props.onSelectNext} 
+            onPrev={props.onSelectPrevious} />
         )}
       </div>
     </ViewerContext.Provider>

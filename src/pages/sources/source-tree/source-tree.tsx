@@ -13,8 +13,19 @@ import { useSourcesStore } from '../sources-store';
 import { EmptySourceTree } from './empty-source-tree';
 import { CanvasTreeItem, SourceTreeItem } from './source-tree-item';
 import { SourceTreeToolbar } from './source-tree-toolbar';
+import type { SourceManifest } from '@/types';
 
-export const SourceTree = () => {
+interface SourceTreeProps {
+
+  // Canvas IDs in the reconstruction, by manifest ID
+  inReconstructionByManifest: Map<string, Set<string>>;
+
+  // Canvases visible after possible filtering, by manifest ID
+  visibleCanvases: { source: SourceManifest, canvases: CozyCanvas[] }[];
+
+}
+
+export const SourceTree = (props: SourceTreeProps) => {
   const sources = useAppStore(state => state.sources);
 
   const reconstruction = useAppStore(state => state.reconstruction);
@@ -27,36 +38,15 @@ export const SourceTree = () => {
   const selection = useSourcesStore(state => state.selection);
   const setSelection = useSourcesStore(state => state.setSelection);
 
-  const showInReconstructionOnly = useSourcesStore(state => state.showInReconstructionOnly);
-
   const [showImportDialog, setShowImportDialog] = useState(false);
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
-  // Map: canvasIds in reconstruction, by manifest ID
-  const inReconstructionByManifest = useMemo(() => 
-    reconstruction.reduce<Map<string, Set<string>>>((map, r) => {
-      if (!r.sourceManifestId) return map;
-
-      const set = map.get(r.sourceManifestId) || new Set();
-      set.add(r.canvas.id);
-      map.set(r.sourceManifestId, set);
-      return map;
-    }, new Map())
-  , [reconstruction]);
-
-  const visibleCanvases = useMemo(() =>
-    showInReconstructionOnly 
-      ? sources.map(s => s.manifest.canvases.filter(canvas =>
-        reconstruction.some(r => r.canvas.id === canvas.id)))
-      : sources.map(s => s.manifest.canvases)
-    , [sources, showInReconstructionOnly, inReconstructionByManifest]);
-
   // No. of visible canvas rows per manifest
   const groupCounts = useMemo(() =>
     sources.map((source, idx) =>
-      !collapsed.has(source.manifest.id) ? visibleCanvases[idx].length : 0
-    ), [sources, collapsed, visibleCanvases]);
+      !collapsed.has(source.manifest.id) ? props.visibleCanvases[idx].canvases.length : 0
+    ), [sources, collapsed, props.visibleCanvases]);
 
   // No. of items before each group, to map the flat GroupedVirtuoso index
   // back to a canvas index inside the manifest
@@ -78,7 +68,7 @@ export const SourceTree = () => {
 
   const renderManifestGroup = (idx: number) => {
     const source = sources[idx];
-    const count = inReconstructionByManifest.get(source.manifest.id)?.size ?? 0;
+    const count = props.inReconstructionByManifest.get(source.manifest.id)?.size ?? 0;
 
     return (
       <SourceTreeItem
@@ -94,9 +84,9 @@ export const SourceTree = () => {
     const source = sources[groupIdx];
 
     const canvasIndex = idx - groupOffsets[groupIdx];
-    const canvas = visibleCanvases[groupIdx][canvasIndex];
+    const canvas = props.visibleCanvases[groupIdx].canvases[canvasIndex];
 
-    const isInReconstruction = inReconstructionByManifest.get(source.manifest.id)?.has(canvas.id) ?? false;
+    const isInReconstruction = props.inReconstructionByManifest.get(source.manifest.id)?.has(canvas.id) ?? false;
                     
     return (
       <div className={cn('pl-0.5', canvasIndex > 0 && 'pt-1')}>

@@ -1,12 +1,51 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Panel, Separator } from 'react-resizable-panels';
 import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel-group';
-import { SourcePreview } from './source-preview';
-import { SourceTree } from './source-tree';
+import { useAppStore } from '@/store/app-store';
 import { MetadataInspector } from './metadata-inspector';
+import { SourcePreview } from './source-preview';
+import { useSelectedSource, useSourcesStore } from './sources-store';
+import { SourceTree } from './source-tree';
 
 export const Sources = () => {
   const [isInspectorOpen, setInspectorOpen] = useState(false);
+
+  const sources = useAppStore(state => state.sources);
+  const reconstruction = useAppStore(state => state.reconstruction);
+
+  const { manifest, canvas } = useSelectedSource();
+
+  const showInReconstructionOnly = useSourcesStore(state => state.showInReconstructionOnly);
+
+  // Map: canvasIds in reconstruction, by manifest ID
+  const inReconstructionByManifest = useMemo(() => 
+    reconstruction.reduce<Map<string, Set<string>>>((map, r) => {
+      if (!r.sourceManifestId) return map;
+
+      const set = map.get(r.sourceManifestId) || new Set();
+      set.add(r.canvas.id);
+      map.set(r.sourceManifestId, set);
+      return map;
+    }, new Map())
+  , [reconstruction]);
+
+  // Visible canvases (in the sources tree and preview pagination)
+  const visibleCanvases = useMemo(() =>
+    showInReconstructionOnly 
+      ? sources.map(s => ({
+          source: s, 
+          canvases: s.manifest.canvases.filter(canvas => reconstruction.some(r => r.canvas.id === canvas.id))
+        }))
+      : sources.map(s => ({ source: s, canvases: s.manifest.canvases }))
+    , [sources, showInReconstructionOnly, inReconstructionByManifest]);
+
+  const onSelectNext = () => {
+    
+  }
+
+  const onSelectPrevious = () => {
+
+  }
 
   return (
     <main className="grow min-h-0 flex flex-col">
@@ -15,15 +54,23 @@ export const Sources = () => {
           minSize={260}
           defaultSize={340}
           className="border-r">
-          <SourceTree />
+          <SourceTree 
+            inReconstructionByManifest={inReconstructionByManifest}
+            visibleCanvases={visibleCanvases} />
         </Panel>
 
         <Separator />
 
         <Panel className="min-h-full grow">
           <SourcePreview
+            visibleCanvases={visibleCanvases}
+            isFiltered={showInReconstructionOnly}
             isInspectorOpen={isInspectorOpen}
-            setInspectorOpen={setInspectorOpen} />
+            currentManifest={manifest}
+            currentCanvas={canvas}
+            setInspectorOpen={setInspectorOpen} 
+            onSelectNext={onSelectNext}
+            onSelectPrevious={onSelectPrevious} />
         </Panel>
 
         <Separator />
