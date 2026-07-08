@@ -1,6 +1,6 @@
 import { Button } from '@/shadcn/button';
 import { useViewer } from './source-preview';
-import { PanelRight, ZoomIn, ZoomOut } from 'lucide-react';
+import { IconLayoutSidebarRight, IconZoomIn, IconZoomOut } from '@tabler/icons-react';
 
 interface SourcePreviewControlsProps {
 
@@ -23,7 +23,7 @@ export const SourcePreviewControls = (props: SourcePreviewControlsProps) => {
         variant="ghost"
         className="bg-white border border-neutral-300/80 p-2 h-auto aspect-square"
         onClick={() => onZoom(2)}>
-        <ZoomIn className="size-4" />
+        <IconZoomIn className="size-4" />
       </Button>
 
       <Button
@@ -31,7 +31,7 @@ export const SourcePreviewControls = (props: SourcePreviewControlsProps) => {
         size="icon"
         className="bg-white border border-neutral-300/80 p-2 h-auto aspect-square"
         onClick={() => onZoom(0.5)}>
-        <ZoomOut className="size-4" />
+        <IconZoomOut className="size-4" />
       </Button>
 
       <Button
@@ -39,7 +39,7 @@ export const SourcePreviewControls = (props: SourcePreviewControlsProps) => {
         size="icon"
         className="bg-white border border-neutral-300/80 p-2 h-auto aspect-square"
         onClick={() => props.setInspectorOpen(!props.isInspectorOpen)}>
-        <PanelRight className="size-4.5" />
+        <IconLayoutSidebarRight className="size-4.5" />
       </Button>
     </div>
   )

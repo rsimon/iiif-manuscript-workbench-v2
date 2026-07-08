@@ -1,4 +1,4 @@
-import { Check, Minus } from "lucide-react"
+import { IconCheck, IconMinus } from "@tabler/icons-react";
 import { Checkbox as CheckboxPrimitive } from "@base-ui/react/checkbox"
 
 import { cn } from "./utils"
@@ -19,9 +19,9 @@ function Checkbox({ className, ...props }: CheckboxPrimitive.Root.Props) {
         render={(props, state) => (
           <span {...props}>
             {state.indeterminate ? (
-              <Minus className="size-3" strokeWidth={2.5} />
+              <IconMinus className="size-3" strokeWidth={2.5} />
             ) : (
-              <Check className="size-3" strokeWidth={2.5} />
+              <IconCheck className="size-3" strokeWidth={2.5} />
             )}
           </span>
         )}>

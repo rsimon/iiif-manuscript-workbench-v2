@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronRight } from 'lucide-react';
+import { IconChevronDown, IconChevronRight } from '@tabler/icons-react';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
 import { Checkbox } from '@/shadcn/checkbox';
@@ -57,9 +57,9 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
             onClick={withStopPropagation(() => props.onToggleExpanded())}
             className="text-muted-foreground size-7 flex items-center justify-center hover:bg-secondary">
             {props.isExpanded ? (
-              <ChevronDown className="size-3.5" />
+              <IconChevronDown />
             ) : (
-              <ChevronRight className="size-4" />
+              <IconChevronRight />
             )}
           </Button>
 

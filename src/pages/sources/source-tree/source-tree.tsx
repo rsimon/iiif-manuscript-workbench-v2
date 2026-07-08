@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Upload } from 'lucide-react';
+import { IconUpload } from '@tabler/icons-react';
 import { GroupedVirtuoso } from 'react-virtuoso';
 import type { CozyCanvas } from 'cozy-iiif';
 import { Badge } from '@/shadcn/badge';
@@ -153,7 +153,7 @@ export const SourceTree = () => {
               className="w-full font-normal mt-1.5"
               variant="outline"
               onClick={() => setShowImportDialog(true)}>
-              <Upload /> Import IIIF
+              <IconUpload /> Import IIIF
             </Button>
           </div>
         </>

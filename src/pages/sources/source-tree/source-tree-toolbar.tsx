@@ -1,4 +1,4 @@
-import { ListChevronsDownUp, ListChevronsUpDown } from 'lucide-react';
+import { IconChevronsDown, IconChevronsUp } from '@tabler/icons-react';
 import { Label } from '@/shadcn/label';
 import { PanelActionButton } from '@/components/panel-action-button';
 import { Switch } from '@/shadcn/switch';
@@ -26,15 +26,16 @@ export const SourceTreeToolbar = () => {
   }
 
   return (
-    <div className="border-b text-muted-foreground/80 flex justify-between p-1 pr-3.5">
+    <div className="border-b text-muted-foreground flex justify-between py-2 pl-1 pr-3.5">
       <div className="flex items-center">
         <PanelActionButton
           tooltip={isAllExpanded ? 'Collapse all' : 'Expand all'}
+          className="size-7"
           onClick={onToggleExpand}>
           {isAllExpanded ? (
-            <ListChevronsDownUp />
+            <IconChevronsUp className="size-4.5" />
           ) : (
-            <ListChevronsUpDown />
+            <IconChevronsDown className="size-4.5" />
           )}
         </PanelActionButton>
       </div>

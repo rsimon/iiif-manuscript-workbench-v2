@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Import } from 'lucide-react';
+import { IconUpload } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/shadcn/dialog';
 import { Checkbox } from '@/shadcn/checkbox';
@@ -102,7 +102,7 @@ export const Splash = () => {
               size="lg"
               className="gap-2.5 h-11"
               onClick={onImportFirstSource}>
-              <Import className="size-5" /> Import your first source
+              <IconUpload className="size-5" /> Import your first source
             </Button>
           )}
 

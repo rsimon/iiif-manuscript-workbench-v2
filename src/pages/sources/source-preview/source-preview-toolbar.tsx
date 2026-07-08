@@ -1,7 +1,7 @@
+import { IconTrash } from '@tabler/icons-react';
 import type { ButtonProps } from '@base-ui/react';
 import { Button } from '@/shadcn/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
-import { Trash2 } from 'lucide-react';
 
 interface SourcePreviewToolbarButtonProps extends ButtonProps {
 
@@ -40,7 +40,7 @@ export const SourcePreviewToolbar = () => {
         ring-1 ring-black/5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.10)]">
         <SourcePreviewToolbarButton
           tooltip="Delete">
-          <Trash2 className="size-4" />
+          <IconTrash className="size-4" />
         </SourcePreviewToolbarButton>
       </div>
     </div>

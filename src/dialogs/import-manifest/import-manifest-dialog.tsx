@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
-import { AlertCircle, ImagePlus, Layers, Loader2 } from 'lucide-react';
+import { IconLoader2, IconPhotoPlus, IconStack2 } from '@tabler/icons-react';
+import { IconAlertCircle } from '@tabler/icons-react';
 import pThrottle from 'p-throttle';
 import { Cozy, type CozyCollectionManifestItem } from 'cozy-iiif';
 import { Alert, AlertDescription } from '@/shadcn/alert';
@@ -149,7 +150,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
       <DialogContent className="sm:max-w-lg">
         <DialogHeader className="space-y-2">
           <DialogTitle className="flex items-center gap-2">
-            <ImagePlus className="size-4" strokeWidth={2.25} />
+            <IconPhotoPlus className="size-4" strokeWidth={2.25} />
             Import IIIF Manifest
           </DialogTitle>
 
@@ -187,7 +188,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
             </div>
           ) : step.phase === 'crawling' ? (
             <Alert>
-              <Loader2 className="size-4 animate-spin" />
+              <IconLoader2 className="size-4 animate-spin" />
               <AlertDescription>
                 Resolving collection{' '}
                 {step.foundCount > 0 && (
@@ -200,7 +201,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
             </Alert>
           ) : step.phase === 'confirm' ? (
             <Alert>
-              <Layers className="size-4" />
+              <IconStack2 className="size-4" />
               <AlertDescription>
                 This collection contains{' '}
                 <span className="font-semibold">{step.manifests.length.toLocaleString()}</span>{' '}
@@ -210,7 +211,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
             </Alert>
           ) : (
             <Alert>
-              <Layers className="size-4" />
+              <IconStack2 className="size-4" />
               <AlertDescription className="overflow-hidden">
                 Importing {step.progress} of {step.total}
                 <div className="font-light whitespace-nowrap truncate mt-2">
@@ -224,7 +225,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
             <Alert 
               variant="destructive"
               className="rounded">
-              <AlertCircle className="h-4 w-4" />
+              <IconAlertCircle className="size-4" />
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}

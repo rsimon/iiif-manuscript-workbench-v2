@@ -1,4 +1,4 @@
-import { Library } from 'lucide-react';
+import { IconBook } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 
 interface EmptySourceTreeProps {
@@ -12,7 +12,7 @@ export const EmptySourceTree = (props: EmptySourceTreeProps) => {
   return (
     <div className="grow flex flex-col gap-6 items-center justify-center p-6 text-center">
       <div className="flex flex-col items-center">
-        <Library 
+        <IconBook 
           className="mb-2 h-8 w-8 text-muted-foreground" />
 
         <p className="text-sm text-muted-foreground">
