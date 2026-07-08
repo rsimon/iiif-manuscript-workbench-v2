@@ -3,6 +3,7 @@ import { Panel, Separator } from 'react-resizable-panels';
 import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel-group';
 import { SourcePreview } from './source-preview';
 import { SourceTree } from './source-tree';
+import { MetadataInspector } from './metadata-inspector';
 
 export const Sources = () => {
   const [isInspectorOpen, setInspectorOpen] = useState(false);
@@ -33,7 +34,7 @@ export const Sources = () => {
           minSize={40}
           openSize={300}
           className="bg-white border-l">
-
+          <MetadataInspector />
         </AnimatedPanel>
       </AnimatedPanelGroup>
     </main>
