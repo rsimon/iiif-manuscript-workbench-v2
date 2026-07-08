@@ -14,7 +14,7 @@ export const EmptySourceTree = (props: EmptySourceTreeProps) => {
       <div className="flex flex-col items-center">
         <IconBooks
           className="size-20 text-muted-foreground opacity-80"
-          stroke={1} />
+          stroke={0.7} />
 
         <p className="text-sm text-muted-foreground">
           No source manifests
