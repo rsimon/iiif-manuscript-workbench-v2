@@ -3,14 +3,12 @@ import { Label } from '@/shadcn/label';
 import { PanelActionButton } from '@/components/panel-action-button';
 import { Switch } from '@/shadcn/switch';
 import { cn } from '@/shadcn/utils';
-import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 
 export const SourceTreeToolbar = () => {
-  const numSources = useAppStore(state => state.sources.length);
-  const numExpanded = useSourcesStore(state => state.expanded.size);
+  const numCollapsed = useSourcesStore(state => state.collapsed.size);
 
-  const isAllExpanded = numSources === numExpanded;
+  const isAllExpanded = numCollapsed === 0;
 
   const collapseAll = useSourcesStore(state => state.collapseAll);
   const expandAll = useSourcesStore(state => state.expandAll);

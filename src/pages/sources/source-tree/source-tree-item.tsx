@@ -18,7 +18,7 @@ interface ManifestTreeItemProps {
 
   inReconstruction: number;
 
-  isExpanded: boolean;
+  isCollapsed: boolean;
 
   isSelected: boolean;
 
@@ -56,10 +56,10 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
             variant="ghost"
             onClick={withStopPropagation(() => props.onToggleExpanded())}
             className="text-muted-foreground size-7 flex items-center justify-center hover:bg-secondary">
-            {props.isExpanded ? (
-              <IconChevronDown />
-            ) : (
+            {props.isCollapsed ? (
               <IconChevronRight />
+            ) : (
+              <IconChevronDown />
             )}
           </Button>
 

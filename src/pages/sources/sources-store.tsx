@@ -7,7 +7,7 @@ interface SourcesStore {
 
   selection?: SourceSelection;
 
-  expanded: Set<string>;
+  collapsed: Set<string>;
 
   showInReconstructionOnly: boolean;
 
@@ -36,20 +36,20 @@ export const useSourcesStore = create<SourcesStore>()(set => ({
 
   selection: undefined,
 
-  expanded: new Set(),
+  collapsed: new Set(),
 
   showInReconstructionOnly: false,
 
   setSelection: selection => set(() => ({ selection })),
 
-  collapseAll: () => set(() => ({ expanded: new Set() })),
+  expandAll: () => set(() => ({ collapsed: new Set() })),
 
-  expandAll: () => set(() => ({ expanded: new Set(useAppStore.getState().sources.map(s => s.manifest.id)) })),
+  collapseAll: () => set(() => ({ collapsed: new Set(useAppStore.getState().sources.map(s => s.manifest.id)) })),
 
-  toggleSourceExpanded: manifestId => set(({ expanded }) => expanded.has(manifestId) ? {
-    expanded: new Set([...expanded].filter(id => id !== manifestId))
+  toggleSourceExpanded: manifestId => set(({ collapsed }) => collapsed.has(manifestId) ? {
+    collapsed: new Set([...collapsed].filter(id => id !== manifestId))
   } : {
-    expanded: new Set([...expanded, manifestId])
+    collapsed: new Set([...collapsed, manifestId])
   }),
 
   setShowInReconstructionOnly: showInReconstructionOnly => set({ showInReconstructionOnly  })

@@ -21,7 +21,7 @@ export const SourceTree = () => {
   const addCanvas = useAppStore(state => state.addCanvasToReconstruction);
   const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
 
-  const expanded = useSourcesStore(state => state.expanded);
+  const collapsed = useSourcesStore(state => state.collapsed);
   const toggle = useSourcesStore(state => state.toggleSourceExpanded);
 
   const selection = useSourcesStore(state => state.selection);
@@ -55,8 +55,8 @@ export const SourceTree = () => {
   // No. of visible canvas rows per manifest
   const groupCounts = useMemo(() =>
     sources.map((source, idx) =>
-      expanded.has(source.manifest.id) ? visibleCanvases[idx].length : 0
-    ), [sources, expanded, visibleCanvases]);
+      !collapsed.has(source.manifest.id) ? visibleCanvases[idx].length : 0
+    ), [sources, collapsed, visibleCanvases]);
 
   // No. of items before each group, to map the flat GroupedVirtuoso index
   // back to a canvas index inside the manifest
@@ -83,7 +83,7 @@ export const SourceTree = () => {
     return (
       <SourceTreeItem
         source={source}
-        isExpanded={expanded.has(source.manifest.id)}
+        isCollapsed={collapsed.has(source.manifest.id)}
         isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
         inReconstruction={count}
         onToggleExpanded={() => toggle(source.manifest.id)} />
