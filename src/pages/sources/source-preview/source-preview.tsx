@@ -52,6 +52,8 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       showNavigationControl: false,
       maxZoomPixelRatio: Infinity,
       minZoomImageRatio: 0,
+      animationTime: 0.5,
+      springStiffness: 10,
       gestureSettingsMouse: {
         clickToZoom: false,
         dblClickToZoom: true
@@ -111,8 +113,8 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   return (
     <ViewerContext.Provider value={viewer}>
       <div 
-        ref={elementRef}
         className="size-full relative bg-slate-50 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
+        <div ref={elementRef} className="size-full" />
 
         <SourcePreviewControls 
           isInspectorOpen={props.isInspectorOpen} 
