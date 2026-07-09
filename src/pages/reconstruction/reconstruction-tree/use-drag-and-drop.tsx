@@ -89,7 +89,7 @@ export const useDragAndDrop = () => {
     const [without, dragged] = take(list, payload);
     if (!dragged) return list;
   
-    return without.map(c => {
+    return without.map((c, idx) => {
       if (c.id !== targetId) return c;
   
       return c.type === 'composite'
@@ -97,7 +97,7 @@ export const useDragAndDrop = () => {
         : {
             type: 'composite' as const,
             id: `${baseURI}/${crypto.randomUUID()}`,
-            label: c.label,
+            label: `Leaf ${idx + 1}`,
             sources: [c.source, dragged]
           };
     });
