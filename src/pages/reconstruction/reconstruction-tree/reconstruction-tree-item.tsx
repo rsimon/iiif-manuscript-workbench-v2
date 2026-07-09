@@ -151,7 +151,7 @@ interface CompositeChildItemProps {
 const CompositeChildItem = (props: CompositeChildItemProps) => {
   const { compositeId, source } = props;
 
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLLIElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
@@ -171,19 +171,18 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
   }, [compositeId, source.canvas.id]);
 
   return (
-    <li 
+    <li
+      ref={ref}
       className={cn(
-          'flex items-stretch -ml-1 rounded-md border bg-muted',
-          isDragging ? 'opacity-40' : undefined
-        )}
+        'flex items-stretch -ml-1 rounded-md border bg-muted',
+        isDragging ? 'opacity-40' : undefined
+      )}
       style={{ viewTransitionName: viewTransitionName(source.canvas.id) }}>
       <div
         ref={handleRef}
         aria-hidden="true"
         onMouseDown={withStopPropagation()}
-        className={cn(
-          'flex cursor-grab select-none pl-1.5 items-start pt-2.5',
-        )}>
+        className="flex cursor-grab select-none pl-1.5 items-start pt-2.5">
         <IconGripVertical
           className="size-3.5 text-muted-foreground" />
       </div>

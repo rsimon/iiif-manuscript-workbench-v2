@@ -15,7 +15,7 @@ export type FallbackDropTarget = { kind: 'list-fallback'; id: string; index: num
 
 // Must match the root list's `gap-2` in reconstruction-tree.tsx, so the
 // reorder line renders centered between cards.
-export const ITEM_GAP = '12px';
+export const ITEM_GAP = '8px';
 
 export const useDragAndDrop = () => {
 
