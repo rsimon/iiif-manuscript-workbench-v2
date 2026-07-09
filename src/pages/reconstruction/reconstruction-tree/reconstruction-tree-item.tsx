@@ -24,8 +24,6 @@ interface ReconstructionTreeItemProps {
 export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
   const { item, index, pinnedEdge } = props;
 
-  const sources = useAppStore(state => state.sources);
-
   const ref = useRef<HTMLLIElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
 
@@ -81,65 +79,53 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
         isDragging ? 'opacity-40' : undefined
       )}
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
-      <div>
-        <div className="flex items-stretch">
-          <div
-            ref={handleRef}
-            aria-hidden="true"
-            className="flex items-center cursor-grab select-none pl-1">
-            <IconGripVertical
-              className="size-4 text-muted-foreground" />
-          </div>
-
-          {item.type === 'original' ? (
-            <div className="flex gap-2 p-1.5 min-w-0">
-              <img
-                src={item.source.canvas.getThumbnailURL(80)}
-                alt={`${item.label} preview image`}
-                className="size-12 rounded-sm shadow-xs object-cover ring-1 ring-foreground/20"
-                loading="lazy" />
-
-              <div className="flex flex-col gap-0.5 justify-start min-w-0">
-                <span className="min-w-0 truncate text-sm">
-                  {props.item.label}
-                </span>
-                <span className="text-muted-foreground text-xs">
-                  {sources.find(s => s.manifest.id === item.source.sourceManifestId)?.manifest.getLabel()}
-                </span>
-              </div>
-            </div>
-          ) : (
-            <div className="flex gap-2">
-              <IconStack2 /> {item.label} <span style={{ marginLeft: 8, color: '#999', fontSize: '0.8em' }}>
-                {item.sources.length} canvases
-              </span>
-            </div>
-          )}
+      <div className="flex items-stretch">
+        <div
+          ref={handleRef}
+          aria-hidden="true"
+          className={cn(
+            'flex cursor-grab select-none pl-1',
+            item.type === 'original' ? 'items-center' : 'items-start pt-2'
+          )}>
+          <IconGripVertical
+            className="size-4 text-muted-foreground" />
         </div>
 
-        {instruction ? (
-          <TreeDropIndicator instruction={instruction} />
-        ) : pinnedEdge ? (
-          <LineIndicator edge={pinnedEdge} gap={ITEM_GAP} />
-        ) : null}
+        {item.type === 'original' ? (
+          <TreeItemContent 
+            source={item.source}
+            label={item.label} />
+        ) : (
+          <div className="p-1.5 pr-2.5 grow">
+            <div className="flex gap-2 items-center pb-1">
+              <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
+              <span className="text-sm">{item.label}</span>
+              <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
+            </div>
+
+            {item.sources.length > 0 ? (
+              <ul className="py-1.5 px-0 flex flex-col gap-1.5" >
+                {item.sources.map(source => (
+                  <CompositeChildItem
+                    key={source.canvas.id}
+                    compositeId={item.id}
+                    source={source} />
+                ))}
+              </ul>
+            ) : (
+              <div className="border border-dashed">
+                Empty composite — drop canvases here
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {item.type === 'composite' && (
-        item.sources.length > 0 ? (
-          <ul className="p-2 pl-6 flex flex-col gap-1 bg-blue-400" >
-            {item.sources.map(source => (
-              <CompositeChildItem
-                key={source.canvas.id}
-                compositeId={item.id}
-                source={source} />
-            ))}
-          </ul>
-        ) : (
-          <div className="border border-dashed">
-            Empty composite — drop canvases here
-          </div>
-        )
-      )}
+      {instruction ? (
+        <TreeDropIndicator instruction={instruction} />
+      ) : pinnedEdge ? (
+        <LineIndicator edge={pinnedEdge} gap={ITEM_GAP} />
+      ) : null}
     </li>
   )
 
@@ -157,7 +143,7 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
   const { compositeId, source } = props;
 
   const ref = useRef<HTMLDivElement>(null);
-  const handleRef = useRef<SVGSVGElement>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
 
@@ -176,20 +162,60 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
   }, [compositeId, source.canvas.id]);
 
   return (
-    <li style={{ viewTransitionName: viewTransitionName(source.canvas.id) }}>
-      <div
-        ref={ref}
-        className={cn(
-          'flex items-center gap-2 border border-amber-500',
+    <li 
+      className={cn(
+          'flex items-stretch -ml-1 rounded-md border bg-muted',
           isDragging ? 'opacity-40' : undefined
+        )}
+      style={{ viewTransitionName: viewTransitionName(source.canvas.id) }}>
+      <div
+        ref={handleRef}
+        aria-hidden="true"
+        className={cn(
+          'flex cursor-grab select-none px-1 items-center',
         )}>
         <IconGripVertical
-          ref={handleRef}
-          aria-hidden="true"
-          className="size-4 shrink-0 cursor-grab text-muted-foreground select-none" />
-        {source.canvas.getLabel()}
+          className="size-4 text-muted-foreground" />
       </div>
+
+      <TreeItemContent 
+        source={source}
+        label={source.canvas.getLabel()} />
     </li>
+  )
+
+}
+
+interface TreeItemContentProps {
+
+  label: string; 
+
+  source: SourceCanvas;
+
+}
+
+const TreeItemContent = (props: TreeItemContentProps) => {
+  const { label, source } = props;
+
+  const sources = useAppStore(state => state.sources);
+
+  return (
+    <div className="flex gap-2 min-w-0 px-2 py-2">
+      <img
+        src={source.canvas.getThumbnailURL(80)}
+        alt={`${label} preview image`}
+        className="size-9 rounded-sm shadow-xs object-cover ring-1 ring-foreground/20"
+        loading="lazy" />
+
+      <div className="flex flex-col gap-0.5 justify-start min-w-0">
+        <span className="min-w-0 truncate text-sm">
+          {label}
+        </span>
+        <span className="text-muted-foreground text-xs">
+          {sources.find(s => s.manifest.id === source.sourceManifestId)?.manifest.getLabel()}
+        </span>
+      </div>
+    </div>
   )
 
 }

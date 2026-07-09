@@ -91,7 +91,7 @@ export const ReconstructionTree = () => {
   }, [canvases, onChange, extractChild, mergeInto, reorderRoot]);
 
   return (
-    <ul ref={listRef} className="h-full flex flex-col gap-2 p-2.5">
+    <ul ref={listRef} className="h-full flex flex-col gap-1.5 p-2.5 bg-neutral-100">
       {canvases.map((item, index) => (
         <ReconstructionTreeItem
           key={item.id}

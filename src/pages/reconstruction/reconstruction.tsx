@@ -9,8 +9,8 @@ export const Reconstruction = () => {
       <Group>
         <Panel
           minSize={240}
-          defaultSize={300}
-          className="border-r">
+          defaultSize={360}
+          className="border-r border-neutral-300/80">
           <ReconstructionTree />
         </Panel>
 
