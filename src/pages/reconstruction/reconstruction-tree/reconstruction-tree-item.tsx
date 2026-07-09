@@ -2,13 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { IconGripVertical, IconStack2 } from '@tabler/icons-react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
-import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/tree-item';
+import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { attachInstruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
-import { viewTransitionName, type DragPayload } from './use-drag-and-drop';
+import { ITEM_GAP, TreeDropIndicator, viewTransitionName } from './use-drag-and-drop';
+import type { DragPayload } from './use-drag-and-drop';
 
 interface ReconstructionTreeItemProps {
 
@@ -16,15 +17,17 @@ interface ReconstructionTreeItemProps {
 
   index: number;
 
+  pinnedEdge?: 'top' | 'bottom';
+
 }
 
 export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
-  const { item, index } = props;
+  const { item, index, pinnedEdge } = props;
 
   const sources = useAppStore(state => state.sources);
 
   const ref = useRef<HTMLLIElement>(null);
-  const handleRef = useRef<SVGSVGElement>(null);
+  const handleRef = useRef<HTMLDivElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const [instruction, setInstruction] = useState<Instruction | null>(null);
@@ -74,19 +77,22 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
     <li
       ref={ref}
       className={cn(
-        'relative p-1.5 border rounded-md shadow-xs bg-white',
+        'relative border rounded-md shadow-xs bg-white',
         isDragging ? 'opacity-40' : undefined
       )}
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
       <div>
-        <div className="flex items-start gap-2">
-          <IconGripVertical
+        <div className="flex items-stretch">
+          <div
             ref={handleRef}
             aria-hidden="true"
-            className="mt-1 size-4 shrink-0 cursor-grab text-muted-foreground select-none" />
+            className="flex items-center cursor-grab select-none pl-1">
+            <IconGripVertical
+              className="size-4 text-muted-foreground" />
+          </div>
 
           {item.type === 'original' ? (
-            <div className="flex gap-2 min-w-0">
+            <div className="flex gap-2 p-1.5 min-w-0">
               <img
                 src={item.source.canvas.getThumbnailURL(80)}
                 alt={`${item.label} preview image`}
@@ -111,7 +117,11 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
           )}
         </div>
 
-        {instruction && <DropIndicator instruction={instruction} />}
+        {instruction ? (
+          <TreeDropIndicator instruction={instruction} />
+        ) : pinnedEdge ? (
+          <LineIndicator edge={pinnedEdge} gap={ITEM_GAP} />
+        ) : null}
       </div>
 
       {item.type === 'composite' && (

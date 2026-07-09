@@ -1,12 +1,21 @@
 import { useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
+import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
+import { DropIndicator as BorderIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/border';
+import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/tree-item';
 import { useAppStore } from '@/store/app-store';
 import type { OriginalCanvas, ReconstructionCanvas, SourceCanvas } from '@/types';
 
 export type DragPayload =
   | { kind: 'root'; id: string; index: number; itemType: ReconstructionCanvas['type'] }
   | { kind: 'child'; compositeId: string; canvasId: string };
+
+export type FallbackDropTarget = { kind: 'list-fallback'; id: string; index: number; edge: 'top' | 'bottom' };
+
+// Must match the root list's `gap-2` in reconstruction-tree.tsx, so the
+// reorder line renders centered between cards.
+export const ITEM_GAP = '8px';
 
 export const useDragAndDrop = () => {
 
@@ -116,4 +125,21 @@ export const withViewTransition = (update: () => void) => {
 
 export const viewTransitionName = (id: string) =>
   `vt-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
+
+export const TreeDropIndicator = ({ instruction }: { instruction: Instruction }) => {
+  const isBlocked = instruction.type === 'instruction-blocked';
+  const resolved = isBlocked ? instruction.desired : instruction;
+  const appearance: 'default' | 'warning' = isBlocked ? 'warning' : 'default';
+
+  if (resolved.type === 'reorder-above')
+    return <LineIndicator edge="top" gap={ITEM_GAP} appearance={appearance} />;
+
+  if (resolved.type === 'reorder-below')
+    return <LineIndicator edge="bottom" gap={ITEM_GAP} appearance={appearance} />;
+
+  if (resolved.type === 'make-child')
+    return <BorderIndicator appearance={appearance} />;
+
+  return null;
+}
  

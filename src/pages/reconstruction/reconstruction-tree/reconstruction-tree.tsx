@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
-import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
+import { useEffect, useRef, useState } from 'react';
+import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
+import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
-import { useDragAndDrop, withViewTransition, type DragPayload } from './use-drag-and-drop';
+import { useDragAndDrop, withViewTransition } from './use-drag-and-drop';
+import type { DragPayload, FallbackDropTarget } from './use-drag-and-drop';
 import { ReconstructionTreeItem } from './reconstruction-tree-item';
 import { useAppStore } from '@/store/app-store';
 
@@ -12,51 +14,90 @@ export const ReconstructionTree = () => {
 
   const { extractChild, mergeInto, reorderRoot } = useDragAndDrop();
 
-  useEffect(() => monitorForElements({
-    onDrop({ source, location }) {
-      const target = location.current.dropTargets[0];
-      if (!target) return;
+  const listRef = useRef<HTMLUListElement>(null);
+  const [fallback, setFallback] = useState<FallbackDropTarget | null>(null);
 
-      const payload = source.data as unknown as DragPayload;
-      const instruction = extractInstruction(target.data);
-      if (!instruction) return;
+  useEffect(() => {
+    const element = listRef.current;
+    if (!element) return;
 
-      const targetIndex = target.data.index as number;
+    return combine(
+      monitorForElements({
+        onDrop({ source, location }) {
+          const target = location.current.dropTargets[0];
+          if (!target) return;
 
-      if (instruction.type === 'make-child') {
-        withViewTransition(() => onChange(mergeInto(canvases, target.data.id as string, payload)));
-      } else if (
-        instruction.type === 'reorder-above' ||
-        instruction.type === 'reorder-below'
-      ) {
-        if (payload.kind === 'root') {
-          const finishIndex = getReorderDestinationIndex({
-            startIndex: payload.index,
-            indexOfTarget: targetIndex,
-            closestEdgeOfTarget: instruction.type === 'reorder-above' ? 'top' : 'bottom',
-            axis: 'vertical'
+          const payload = source.data as unknown as DragPayload;
+
+          const type = target.data.kind === 'list-fallback'
+            ? (target.data.edge === 'top' ? 'reorder-above' : 'reorder-below')
+            : extractInstruction(target.data)?.type;
+
+          if (!type) return;
+
+          const targetIndex = target.data.index as number;
+
+          if (type === 'make-child') {
+            withViewTransition(() => onChange(mergeInto(canvases, target.data.id as string, payload)));
+          } else if (type === 'reorder-above' || type === 'reorder-below') {
+            if (payload.kind === 'root') {
+              const finishIndex = getReorderDestinationIndex({
+                startIndex: payload.index,
+                indexOfTarget: targetIndex,
+                closestEdgeOfTarget: type === 'reorder-above' ? 'top' : 'bottom',
+                axis: 'vertical'
+              });
+
+              if (finishIndex !== payload.index)
+                withViewTransition(() => onChange(reorderRoot(canvases, payload.index, finishIndex)));
+            } else {
+              const insertIndex = type === 'reorder-above' ? targetIndex : targetIndex + 1;
+
+              withViewTransition(() => onChange(extractChild(canvases, payload, insertIndex)));
+            }
+          }
+          // composite onto composite, or blocked instructions: no-op
+        }
+      }),
+      // Fallback drop target spanning the whole list: catches drags that land
+      // in the gaps between cards, or past the first/last card, where no
+      // individual card's own drop target is under the pointer. Without this,
+      // overshooting a card even slightly loses the drop target entirely.
+      dropTargetForElements({
+        element,
+        getData: ({ input }) => {
+          const items = Array.from(element.children) as HTMLElement[];
+          if (items.length === 0) return {};
+
+          const boundaryIndex = items.findIndex(el => {
+            const rect = el.getBoundingClientRect();
+            return input.clientY < rect.top + rect.height / 2;
           });
 
-          if (finishIndex !== payload.index)
-            withViewTransition(() => onChange(reorderRoot(canvases, payload.index, finishIndex)));
-        } else {
-          const insertIndex =
-            instruction.type === 'reorder-above' ? targetIndex : targetIndex + 1;
-
-          withViewTransition(() => onChange(extractChild(canvases, payload, insertIndex)));
-        }
-      }
-      // composite onto composite: no-op
-    }
-  }), [canvases, onChange, extractChild, mergeInto, reorderRoot]);
+          return boundaryIndex === -1
+            ? { kind: 'list-fallback', id: canvases[items.length - 1].id, index: items.length - 1, edge: 'bottom' }
+            : { kind: 'list-fallback', id: canvases[boundaryIndex].id, index: boundaryIndex, edge: 'top' };
+        },
+        onDrag: ({ self, location }) => {
+          // Only pin when no more specific (card-level) drop target is under
+          // the pointer, so a card's own hover state always takes precedence.
+          const isInnermost = location.current.dropTargets[0] === self;
+          setFallback(isInnermost && self.data.kind === 'list-fallback' ? (self.data as FallbackDropTarget) : null);
+        },
+        onDragLeave: () => setFallback(null),
+        onDrop: () => setFallback(null)
+      })
+    );
+  }, [canvases, onChange, extractChild, mergeInto, reorderRoot]);
 
   return (
-    <ul className="h-full flex flex-col gap-2 p-2.5">
+    <ul ref={listRef} className="h-full flex flex-col gap-2 p-2.5">
       {canvases.map((item, index) => (
-        <ReconstructionTreeItem 
-          key={item.id} 
-          item={item} 
-          index={index} />
+        <ReconstructionTreeItem
+          key={item.id}
+          item={item}
+          index={index}
+          pinnedEdge={fallback?.index === index ? fallback.edge : undefined} />
       ))}
     </ul>
   )
