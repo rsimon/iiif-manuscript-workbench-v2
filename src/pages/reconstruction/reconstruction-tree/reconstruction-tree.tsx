@@ -7,6 +7,8 @@ import { useDragAndDrop, withViewTransition } from './use-drag-and-drop';
 import type { DragPayload, FallbackDropTarget } from './use-drag-and-drop';
 import { ReconstructionTreeItem } from './reconstruction-tree-item';
 import { useAppStore } from '@/store/app-store';
+import { ScrollArea } from '@/shadcn/scroll-area';
+import { ReconstructionTreeToolbar } from './reconstruction-tree-toolbar';
 
 export const ReconstructionTree = () => {
   const canvases = useAppStore(state => state.reconstruction);
@@ -91,15 +93,21 @@ export const ReconstructionTree = () => {
   }, [canvases, onChange, extractChild, mergeInto, reorderRoot]);
 
   return (
-    <ul ref={listRef} className="h-full flex flex-col gap-1.5 p-2.5 bg-neutral-100">
-      {canvases.map((item, index) => (
-        <ReconstructionTreeItem
-          key={item.id}
-          item={item}
-          index={index}
-          pinnedEdge={fallback?.index === index ? fallback.edge : undefined} />
-      ))}
-    </ul>
+    <div className="flex flex-col h-full bg-neutral-100">
+      <ReconstructionTreeToolbar />
+
+      <ScrollArea className="grow min-h-0">
+        <ul ref={listRef} className="h-full flex flex-col gap-1.5 p-2.5">
+          {canvases.map((item, index) => (
+            <ReconstructionTreeItem
+              key={item.id}
+              item={item}
+              index={index}
+              pinnedEdge={fallback?.index === index ? fallback.edge : undefined} />
+          ))}
+        </ul>
+      </ScrollArea>
+    </div>
   )
 
 }
