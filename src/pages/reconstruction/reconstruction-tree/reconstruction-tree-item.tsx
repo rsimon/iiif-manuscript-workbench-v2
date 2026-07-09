@@ -91,8 +91,9 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
         <div
           ref={handleRef}
           aria-hidden="true"
-          className="flex flex-col gap-0.5 cursor-grab select-none pl-1.5 pr-1 items-center 
-          justify-start pt-2 text-muted-foreground">
+          onMouseDown={withStopPropagation()}
+          className="flex flex-col gap-0.5 cursor-grab select-none pl-1.5 pr-1 items-center
+          justify-start pt-2.5 text-muted-foreground">
           <IconGripVertical
             className="size-3.5" />
           <span className="text-xs">{index + 1}</span>
@@ -103,7 +104,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
             source={item.source}
             label={item.label} />
         ) : (
-          <div className="px-1.5 py-2.5 pr-2.5 grow">
+          <div className="px-1.5 pt-2.5 pb-1.5 pr-2.5 grow">
             <div className="flex gap-2 items-center pb-1">
               <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
               <span className="text-sm">{item.label}</span>
@@ -112,8 +113,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
 
             {item.sources.length > 0 ? (
               <ul
-                className="py-1.5 px-0 flex flex-col gap-1.5" 
-                onClick={withStopPropagation()}>
+                className="py-1.5 px-0 flex flex-col gap-2">
                 {item.sources.map(source => (
                   <CompositeChildItem
                     key={source.canvas.id}
@@ -180,11 +180,12 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
       <div
         ref={handleRef}
         aria-hidden="true"
+        onMouseDown={withStopPropagation()}
         className={cn(
-          'flex cursor-grab select-none px-1 items-center',
+          'flex cursor-grab select-none pl-1.5 items-start pt-2.5',
         )}>
         <IconGripVertical
-          className="size-4 text-muted-foreground" />
+          className="size-3.5 text-muted-foreground" />
       </div>
 
       <TreeItemContent 
@@ -213,7 +214,7 @@ const TreeItemContent = (props: TreeItemContentProps) => {
       <img
         src={source.canvas.getThumbnailURL(80)}
         alt={`${label} preview image`}
-        className="size-9 rounded-sm shadow-xs object-cover ring-1 ring-foreground/20"
+        className="w-8 h-10 rounded shadow-xs object-cover ring-1 ring-foreground/20"
         loading="lazy" />
 
       <div className="flex flex-col gap-0.5 justify-start min-w-0">
