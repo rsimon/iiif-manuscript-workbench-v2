@@ -91,12 +91,11 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
         <div
           ref={handleRef}
           aria-hidden="true"
-          className={cn(
-            'flex cursor-grab select-none pl-1',
-            item.type === 'original' ? 'items-center' : 'items-start pt-2'
-          )}>
+          className="flex flex-col gap-0.5 cursor-grab select-none pl-1.5 pr-1 items-center 
+          justify-start pt-2 text-muted-foreground">
           <IconGripVertical
-            className="size-4 text-muted-foreground" />
+            className="size-3.5" />
+          <span className="text-xs">{index + 1}</span>
         </div>
 
         {item.type === 'original' ? (
@@ -104,7 +103,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
             source={item.source}
             label={item.label} />
         ) : (
-          <div className="p-1.5 pr-2.5 grow">
+          <div className="px-1.5 py-2.5 pr-2.5 grow">
             <div className="flex gap-2 items-center pb-1">
               <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
               <span className="text-sm">{item.label}</span>
@@ -210,7 +209,7 @@ const TreeItemContent = (props: TreeItemContentProps) => {
   const sources = useAppStore(state => state.sources);
 
   return (
-    <div className="flex gap-2 min-w-0 px-2 py-2">
+    <div className="flex gap-2 min-w-0 px-2 py-2.5">
       <img
         src={source.canvas.getThumbnailURL(80)}
         alt={`${label} preview image`}
