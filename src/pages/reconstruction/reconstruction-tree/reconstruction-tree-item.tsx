@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { IconStack2 } from '@tabler/icons-react';
+import { IconGripVertical, IconStack2 } from '@tabler/icons-react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/tree-item';
@@ -13,7 +13,7 @@ import { viewTransitionName, type DragPayload } from './use-drag-and-drop';
 interface ReconstructionTreeItemProps {
 
   item: ReconstructionCanvas;
-  
+
   index: number;
 
 }
@@ -23,18 +23,20 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
 
   const sources = useAppStore(state => state.sources);
 
-  const ref = useRef<HTMLDivElement>(null);
+  const ref = useRef<HTMLLIElement>(null);
+  const handleRef = useRef<SVGSVGElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const [instruction, setInstruction] = useState<Instruction | null>(null);
- 
+
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
- 
+
     return combine(
       draggable({
         element,
+        dragHandle: handleRef.current ?? undefined,
         getInitialData: (): DragPayload =>
           ({ kind: 'root', id: item.id, index, itemType: item.type }),
         onDragStart: () => setIsDragging(true),
@@ -44,14 +46,14 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
         element,
         getData: ({ input, element, source }) => {
           const payload = source.data as unknown as DragPayload;
- 
+
           // Composites may never become children: block the middle zone
           // when a composite is being dragged.
           const block: Instruction['type'][] =
             payload.kind === 'root' && payload.itemType === 'composite'
               ? ['make-child']
               : [];
- 
+
           return attachInstruction({ id: item.id, index }, {
             input,
             element,
@@ -70,43 +72,48 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
 
   return (
     <li
+      ref={ref}
       className={cn(
-        'relative',
+        'relative p-1.5 border rounded-md shadow-xs bg-white',
         isDragging ? 'opacity-40' : undefined
       )}
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
-      <div
-       ref={ref}
-        className="p-1.5 border rounded-md shadow-xs cursor-grab bg-white">
+      <div>
+        <div className="flex items-start gap-2">
+          <IconGripVertical
+            ref={handleRef}
+            aria-hidden="true"
+            className="mt-1 size-4 shrink-0 cursor-grab text-muted-foreground select-none" />
 
-        {item.type === 'original' ? (
-          <div className="flex gap-2">
-            <img
-              src={item.source.canvas.getThumbnailURL(80)}
-              alt={`${item.label} preview image`}
-              className="size-12 rounded-sm shadow-xs object-cover ring-1 ring-foreground/20"
-              loading="lazy" />
+          {item.type === 'original' ? (
+            <div className="flex gap-2 min-w-0">
+              <img
+                src={item.source.canvas.getThumbnailURL(80)}
+                alt={`${item.label} preview image`}
+                className="size-12 rounded-sm shadow-xs object-cover ring-1 ring-foreground/20"
+                loading="lazy" />
 
-            <div className="flex flex-col gap-0.5 justify-start">
-              <span className="min-w-0 truncate text-sm">
-                {props.item.label}
-              </span>
-              <span className="text-muted-foreground text-xs">
-                {sources.find(s => s.manifest.id === item.source.sourceManifestId)?.manifest.getLabel()}
+              <div className="flex flex-col gap-0.5 justify-start min-w-0">
+                <span className="min-w-0 truncate text-sm">
+                  {props.item.label}
+                </span>
+                <span className="text-muted-foreground text-xs">
+                  {sources.find(s => s.manifest.id === item.source.sourceManifestId)?.manifest.getLabel()}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <IconStack2 /> {item.label} <span style={{ marginLeft: 8, color: '#999', fontSize: '0.8em' }}>
+                {item.sources.length} canvases
               </span>
             </div>
-          </div>
-        ) : (
-          <div>
-            <IconStack2 /> {item.label} <span style={{ marginLeft: 8, color: '#999', fontSize: '0.8em' }}>
-              {item.sources.length} canvases
-            </span>
-          </div>
-        )}
- 
+          )}
+        </div>
+
         {instruction && <DropIndicator instruction={instruction} />}
       </div>
- 
+
       {item.type === 'composite' && (
         item.sources.length > 0 ? (
           <ul className="p-2 pl-6 flex flex-col gap-1 bg-blue-400" >
@@ -129,26 +136,28 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
 }
 
 interface CompositeChildItemProps {
- 
+
   compositeId: string;
- 
+
   source: SourceCanvas;
- 
+
 }
 
 const CompositeChildItem = (props: CompositeChildItemProps) => {
   const { compositeId, source } = props;
 
   const ref = useRef<HTMLDivElement>(null);
+  const handleRef = useRef<SVGSVGElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
- 
+
     return draggable({
       element,
+      dragHandle: handleRef.current ?? undefined,
       getInitialData: (): DragPayload =>
         ({ kind: 'child', compositeId, canvasId: source.canvas.id }),
       onDragStart: () => setIsDragging(true),
@@ -161,9 +170,13 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
       <div
         ref={ref}
         className={cn(
-          'cursor-grab border border-amber-500',
+          'flex items-center gap-2 border border-amber-500',
           isDragging ? 'opacity-40' : undefined
         )}>
+        <IconGripVertical
+          ref={handleRef}
+          aria-hidden="true"
+          className="size-4 shrink-0 cursor-grab text-muted-foreground select-none" />
         {source.canvas.getLabel()}
       </div>
     </li>
