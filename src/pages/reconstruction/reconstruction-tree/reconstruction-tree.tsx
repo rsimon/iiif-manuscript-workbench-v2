@@ -2,19 +2,13 @@ import { useEffect } from 'react';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
-import type { ReconstructionCanvas } from '@/types';
 import { useDragAndDrop, type DragPayload } from './use-drag-and-drop';
 import { ReconstructionTreeItem } from './reconstruction-tree-item';
+import { useAppStore } from '@/store/app-store';
 
-interface ReconstructionTreeProps {
-
-  canvases: ReconstructionCanvas[];
-
-  onChange(canvases: ReconstructionCanvas[]): void;
-
-}
-
-export const ReconstructionTree = (props: ReconstructionTreeProps) => {
+export const ReconstructionTree = () => {
+  const canvases = useAppStore(state => state.reconstruction);
+  const onChange = useAppStore(state => state.updateReconstruction);
 
   const { extractChild, mergeInto, reorderRoot } = useDragAndDrop();
 
@@ -30,7 +24,7 @@ export const ReconstructionTree = (props: ReconstructionTreeProps) => {
       const targetIndex = target.data.index as number;
 
       if (instruction.type === 'make-child') {
-        props.onChange(mergeInto(props.canvases, target.data.id as string, payload));
+        onChange(mergeInto(canvases, target.data.id as string, payload));
       } else if (
         instruction.type === 'reorder-above' ||
         instruction.type === 'reorder-below'
@@ -44,21 +38,21 @@ export const ReconstructionTree = (props: ReconstructionTreeProps) => {
           });
 
           if (finishIndex !== payload.index)
-            props.onChange(reorderRoot(props.canvases, payload.index, finishIndex));
+            onChange(reorderRoot(canvases, payload.index, finishIndex));
         } else {
           const insertIndex =
             instruction.type === 'reorder-above' ? targetIndex : targetIndex + 1;
 
-          props.onChange(extractChild(props.canvases, payload, insertIndex));
+          onChange(extractChild(canvases, payload, insertIndex));
         }
       }
-      // 'instruction-blocked' (composite onto composite) falls through: no-op
+      // composite onto composite: no-op
     }
-  }), [props.canvases, props.onChange, extractChild, mergeInto, reorderRoot]);
+  }), [canvases, onChange, extractChild, mergeInto, reorderRoot]);
 
   return (
     <ul className="flex flex-col gap-2">
-      {props.canvases.map((item, index) => (
+      {canvases.map((item, index) => (
         <ReconstructionTreeItem 
           key={item.id} 
           item={item} 

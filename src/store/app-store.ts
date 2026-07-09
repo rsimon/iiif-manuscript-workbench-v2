@@ -23,8 +23,8 @@ interface AppStore {
   // createEmptyCanvas: (width?: number, height?: number) => void;
   removeCanvasFromReconstruction: (canvasId: string) => void;
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
+  updateReconstruction: (updated: ReconstructionCanvas[]) => void;
   // renameCanvas: (canvasId: string, label: string) => void;
-  // reorderReconstruction: (activeId: string, overId: string) => void;
   resetReconstruction: () => void;
 
 }
@@ -119,6 +119,8 @@ export const useAppStore = create<AppStore>()(
       removeCanvasesFromReconstruction: canvasIds => set(({ reconstruction }) => ({
         reconstruction: reconstruction.filter(c => !canvasIds.includes(c.id))
       })),
+
+      updateReconstruction: reconstruction => set({ reconstruction }),
 
       /*
       renameCanvas: (canvasId, label) => set(({ reconstruction }) => ({
