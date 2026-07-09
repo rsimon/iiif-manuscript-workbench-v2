@@ -7,6 +7,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import { cn } from '@/shadcn/utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { DragPayload } from './use-drag-and-drop';
+import { IconStack2 } from '@tabler/icons-react';
 
 interface ReconstructionTreeItemProps {
 
@@ -65,20 +66,30 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
   }, [item.id, index, item.type]);
 
   return (
-    <li>
+    <li 
+      className={cn(
+        'relative px-3 py-2 border rounded-md shadow-xs cursor-grab',
+        isDragging ? 'opacity-40' : undefined
+      )}>
       <div
-        ref={ref}
-        className={cn(
-          'relative px-3 py-2 border rounded-md bg-amber-200 cursor-grab',
-          isDragging ? 'opacity-40' : undefined
-        )}>
- 
-        {item.label}
- 
-        {item.type === 'composite' && (
-          <span style={{ marginLeft: 8, color: '#999', fontSize: '0.8em' }}>
-            {item.sources.length} canvases
-          </span>
+        ref={ref}>
+
+        {item.type === 'original' ? (
+          <div>
+            <img
+              src={item.source.canvas.getThumbnailURL(80)}
+              alt={`${item.label} preview image`}
+              className="size-9 rounded-sm shadow-xs object-cover ring-1 ring-foreground/10"
+              loading="lazy" />
+
+            <span className="flex-1 min-w-0 truncate text-xs">{props.item.label}</span>
+          </div>
+        ) : (
+          <div>
+            <IconStack2 /> {item.label} <span style={{ marginLeft: 8, color: '#999', fontSize: '0.8em' }}>
+              {item.sources.length} canvases
+            </span>
+          </div>
         )}
  
         {instruction && <DropIndicator instruction={instruction} />}
