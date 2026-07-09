@@ -210,11 +210,11 @@ const TreeItemContent = (props: TreeItemContentProps) => {
   const sources = useAppStore(state => state.sources);
 
   return (
-    <div className="flex gap-2 min-w-0 px-2 py-2.5">
+    <div className="flex gap-2 min-w-0 px-2 py-2">
       <img
         src={source.canvas.getThumbnailURL(80)}
         alt={`${label} preview image`}
-        className="w-8 h-10 rounded shadow-xs object-cover ring-1 ring-foreground/20"
+        className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/20"
         loading="lazy" />
 
       <div className="flex flex-col gap-0.5 justify-start min-w-0">
