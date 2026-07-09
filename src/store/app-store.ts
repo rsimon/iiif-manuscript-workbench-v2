@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import type { ReconstructionCanvas, SourceManifest } from '@/types';
-import { /* getEmptyCanvasLabel, parseCanvas, */ parseManifest } from './app-store-utils';
+import { /* getEmptyCanvasLabel, */ parseCanvas, parseManifest } from './app-store-utils';
 
 interface AppStore {
 
@@ -149,10 +149,19 @@ export const useAppStore = create<AppStore>()(
           manifest: s.manifest.source
         })),
 
-        // reconstruction: state.reconstruction.map(r => ({
-        //   ...r,
-        //   canvas: r.canvas.source
-        // }))
+        reconstruction: state.reconstruction.map(r => r.type === 'original' ? {
+          ...r,
+          source: {
+            ...r.source,
+            canvas: r.source.canvas.source
+          }
+        } : {
+          ...r,
+          sources: r.sources.map(s => ({
+            ...s,
+            canvas: s.canvas.source
+          }))
+        })
       }),
 
       merge: (persisted: any, current: AppStore) => {
@@ -161,14 +170,25 @@ export const useAppStore = create<AppStore>()(
         return {
           ...current,
           ...persisted,
+
           sources: (persisted.sources ?? []).map((s: any) => ({
             url: s.url,
             manifest: parseManifest(s.manifest)
           })),
-          // reconstruction: (persisted.reconstruction ?? []).map((r: any) => ({
-          //   sourceManifestId: r.sourceManifestId,
-          //   canvas: parseCanvas(r.canvas)
-          // }))
+
+          reconstruction: (persisted.reconstruction ?? []).map((r: any) => r.type === 'original' ? {
+            ...r,
+            source: {
+              ...r.source,
+              canvas: parseCanvas(r.source.canvas)
+            }
+          } : {
+            ...r,
+            sources: r.sources.map((s: any) => ({
+              ...s,
+              canvas: parseCanvas(s.canvas)
+            }))
+          })
         }
       }
     }
