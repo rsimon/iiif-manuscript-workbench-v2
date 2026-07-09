@@ -51,7 +51,7 @@ export const ReconstructionTree = () => {
   }), [canvases, onChange, extractChild, mergeInto, reorderRoot]);
 
   return (
-    <ul className="flex flex-col gap-2 p-2.5">
+    <ul className="h-full flex flex-col gap-2 p-2.5">
       {canvases.map((item, index) => (
         <ReconstructionTreeItem 
           key={item.id} 

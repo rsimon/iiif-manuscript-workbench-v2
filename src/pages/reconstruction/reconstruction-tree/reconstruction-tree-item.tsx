@@ -6,6 +6,7 @@ import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indi
 import { attachInstruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { cn } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import { viewTransitionName, type DragPayload } from './use-drag-and-drop';
 
@@ -19,6 +20,8 @@ interface ReconstructionTreeItemProps {
 
 export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
   const { item, index } = props;
+
+  const sources = useAppStore(state => state.sources);
 
   const ref = useRef<HTMLDivElement>(null);
 
@@ -68,22 +71,30 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
   return (
     <li
       className={cn(
-        'relative px-3 py-2 border rounded-md shadow-xs cursor-grab',
+        'relative',
         isDragging ? 'opacity-40' : undefined
       )}
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
       <div
-        ref={ref}>
+       ref={ref}
+        className="p-1.5 border rounded-md shadow-xs cursor-grab bg-white">
 
         {item.type === 'original' ? (
-          <div>
+          <div className="flex gap-2">
             <img
               src={item.source.canvas.getThumbnailURL(80)}
               alt={`${item.label} preview image`}
-              className="size-9 rounded-sm shadow-xs object-cover ring-1 ring-foreground/10"
+              className="size-12 rounded-sm shadow-xs object-cover ring-1 ring-foreground/20"
               loading="lazy" />
 
-            <span className="flex-1 min-w-0 truncate text-xs">{props.item.label}</span>
+            <div className="flex flex-col gap-0.5 justify-start">
+              <span className="min-w-0 truncate text-sm">
+                {props.item.label}
+              </span>
+              <span className="text-muted-foreground text-xs">
+                {sources.find(s => s.manifest.id === item.source.sourceManifestId)?.manifest.getLabel()}
+              </span>
+            </div>
           </div>
         ) : (
           <div>
