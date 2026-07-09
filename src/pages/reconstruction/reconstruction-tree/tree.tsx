@@ -3,6 +3,8 @@ import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
+import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
+import { unsafeOverflowAutoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element';
 import { useDragAndDrop, withViewTransition } from './use-drag-and-drop';
 import type { DragPayload, FallbackDropTarget } from './use-drag-and-drop';
 import { ReconstructionTreeItem } from './tree-item';
@@ -43,6 +45,26 @@ export const ReconstructionTree = () => {
 
   const listRef = useRef<HTMLUListElement>(null);
   const [fallback, setFallback] = useState<FallbackDropTarget | null>(null);
+
+  const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!viewportEl) return;
+
+    return combine(
+      autoScrollForElements({ element: viewportEl }),
+      // Keeps scrolling once the pointer has moved past the panel's own
+      // edge, so a card can be dragged from the bottom of a long list to
+      // the top without first scrolling it into view by hand.
+      unsafeOverflowAutoScrollForElements({
+        element: viewportEl,
+        getOverflow: () => ({
+          forTopEdge: { top: 150 },
+          forBottomEdge: { bottom: 150 }
+        })
+      })
+    );
+  }, [viewportEl]);
 
   useEffect(() => {
     const element = listRef.current;
@@ -121,7 +143,9 @@ export const ReconstructionTree = () => {
     <div className="flex flex-col h-full bg-neutral-100">
       <ReconstructionTreeToolbar />
 
-      <ScrollArea className="grow min-h-0">
+      <ScrollArea 
+        className="grow min-h-0" 
+        viewportRef={setViewportEl}>
         <ul ref={listRef} className="h-full flex flex-col gap-1.5 p-2.5">
           {canvases.map((item, index) => (
             <ReconstructionTreeItem

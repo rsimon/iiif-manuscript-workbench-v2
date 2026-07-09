@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@atlaskit/pragmatic-drag-and-drop": "^2.0.1",
+    "@atlaskit/pragmatic-drag-and-drop-auto-scroll": "^3.0.0",
     "@atlaskit/pragmatic-drag-and-drop-hitbox": "^2.0.0",
     "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator": "^4.1.0",
     "@base-ui/react": "^1.6.0",
