@@ -5,7 +5,7 @@ import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-d
 import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import { attachInstruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
-import { cn } from '@/shadcn/utils';
+import { cn, withStopPropagation } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import { ITEM_GAP, TreeDropIndicator, viewTransitionName } from './use-drag-and-drop';
@@ -17,12 +17,16 @@ interface ReconstructionTreeItemProps {
 
   index: number;
 
+  isSelected: boolean;
+
+  onSelect(event: React.MouseEvent): void;
+
   pinnedEdge?: 'top' | 'bottom';
 
 }
 
 export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
-  const { item, index, pinnedEdge } = props;
+  const { item, index, isSelected, onSelect, pinnedEdge } = props;
 
   const ref = useRef<HTMLLIElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
@@ -76,10 +80,14 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
       ref={ref}
       className={cn(
         'relative border rounded-md shadow-xs bg-white',
+        isSelected ? 'border-primary ring-1 ring-primary bg-primary/5' : undefined,
         isDragging ? 'opacity-40' : undefined
       )}
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
-      <div className="flex items-stretch">
+      <div
+        className="flex items-stretch cursor-default"
+        onMouseDown={e => e.preventDefault()}
+        onClick={onSelect}>
         <div
           ref={handleRef}
           aria-hidden="true"
@@ -104,7 +112,9 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
             </div>
 
             {item.sources.length > 0 ? (
-              <ul className="py-1.5 px-0 flex flex-col gap-1.5" >
+              <ul
+                className="py-1.5 px-0 flex flex-col gap-1.5" 
+                onClick={withStopPropagation()}>
                 {item.sources.map(source => (
                   <CompositeChildItem
                     key={source.canvas.id}

@@ -7,12 +7,37 @@ import { useDragAndDrop, withViewTransition } from './use-drag-and-drop';
 import type { DragPayload, FallbackDropTarget } from './use-drag-and-drop';
 import { ReconstructionTreeItem } from './reconstruction-tree-item';
 import { useAppStore } from '@/store/app-store';
+import { useReconstructionStore } from '../reconstruction-store';
 import { ScrollArea } from '@/shadcn/scroll-area';
 import { ReconstructionTreeToolbar } from './reconstruction-tree-toolbar';
 
 export const ReconstructionTree = () => {
   const canvases = useAppStore(state => state.reconstruction);
   const onChange = useAppStore(state => state.updateReconstruction);
+
+  const selection = useReconstructionStore(state => state.selection) ?? [];
+  const setSelection = useReconstructionStore(state => state.setSelection);
+
+  const anchorIndexRef = useRef<number | null>(null);
+
+  const onSelect = (index: number, event: React.MouseEvent) => {
+    const item = canvases[index];
+
+    if (event.shiftKey && anchorIndexRef.current !== null) {
+      const start = Math.min(anchorIndexRef.current, index);
+      const end = Math.max(anchorIndexRef.current, index);
+      setSelection(canvases.slice(start, end + 1));
+    } else if (event.metaKey || event.ctrlKey) {
+      const isSelected = selection.some(s => s.id === item.id);
+      setSelection(isSelected
+        ? selection.filter(s => s.id !== item.id)
+        : [...selection, item]);
+      anchorIndexRef.current = index;
+    } else {
+      setSelection([item]);
+      anchorIndexRef.current = index;
+    }
+  }
 
   const { extractChild, mergeInto, reorderRoot } = useDragAndDrop();
 
@@ -103,6 +128,8 @@ export const ReconstructionTree = () => {
               key={item.id}
               item={item}
               index={index}
+              isSelected={selection.some(s => s.id === item.id)}
+              onSelect={event => onSelect(index, event)}
               pinnedEdge={fallback?.index === index ? fallback.edge : undefined} />
           ))}
         </ul>
