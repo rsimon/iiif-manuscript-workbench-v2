@@ -23,12 +23,12 @@ export const useSourceNavigation = () => {
 
   // Map: canvasIds in reconstruction, by manifest ID
   const inReconstructionByManifest = useMemo(() => 
-    reconstruction.reduce<Map<string, Set<string>>>((map, r) => {
-      if (!r.sourceManifestId) return map;
-
-      const set = map.get(r.sourceManifestId) || new Set();
-      set.add(r.canvas.id);
-      map.set(r.sourceManifestId, set);
+    reconstruction
+    .filter(r => r.type === 'original')
+    .reduce<Map<string, Set<string>>>((map, r) => {
+      const set = map.get(r.source.sourceManifestId) || new Set();
+      set.add(r.source.canvas.id);
+      map.set(r.source.sourceManifestId, set);
       return map;
     }, new Map())
   , [reconstruction]);
@@ -37,7 +37,7 @@ export const useSourceNavigation = () => {
     showInReconstructionOnly 
       ? sources.map(s => ({
           source: s, 
-          canvases: s.manifest.canvases.filter(canvas => reconstruction.some(r => r.canvas.id === canvas.id))
+          canvases: s.manifest.canvases.filter(canvas => reconstruction.some(r => r.id === canvas.id))
         }))
       : sources.map(s => ({ source: s, canvases: s.manifest.canvases }))
     , [sources, showInReconstructionOnly, inReconstructionByManifest]);

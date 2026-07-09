@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import type { ReconstructionCanvas, SourceManifest } from '@/types';
-import { getEmptyCanvasLabel, parseCanvas, parseManifest } from './app-store-utils';
+import { /* getEmptyCanvasLabel, parseCanvas, */ parseManifest } from './app-store-utils';
 
 interface AppStore {
 
@@ -20,10 +20,10 @@ interface AppStore {
   // Actions: reconstruction
   addCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
   addCanvasesToReconstruction: (arg: { sourceId: string, canvas: CozyCanvas}[]) => void;
-  createEmptyCanvas: (width?: number, height?: number) => void;
+  // createEmptyCanvas: (width?: number, height?: number) => void;
   removeCanvasFromReconstruction: (canvasId: string) => void;
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
-  renameCanvas: (canvasId: string, label: string) => void;
+  // renameCanvas: (canvasId: string, label: string) => void;
   // reorderReconstruction: (activeId: string, overId: string) => void;
   resetReconstruction: () => void;
 
@@ -55,34 +55,45 @@ export const useAppStore = create<AppStore>()(
 
       addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction }) => {
         // Don't re-add
-        if (reconstruction.find(r => r.canvas.id === canvas.id)) return {};
+        if (reconstruction.find(r => r.id === canvas.id)) return {};
 
         return {
           reconstruction: [
             ...reconstruction, 
             {
-              sourceManifestId: sourceId,
-              canvas
+              type: 'original',
+              id: canvas.id,
+              label: canvas.getLabel(),
+              source: {
+                sourceManifestId: sourceId,
+                canvas
+              }
             }
           ]
         };
       }),
 
       addCanvasesToReconstruction: arg => set(({ reconstruction }) => {
-        const toAdd = arg.filter(t => !reconstruction.some(r => r.canvas.id === t.canvas.id));
+        const toAdd = arg.filter(t => !reconstruction.some(r => r.id === t.canvas.id));
         if (toAdd.length === 0) return {};
 
         return {
           reconstruction: [
             ...reconstruction,
             ...toAdd.map(t => ({
-              sourceManifestId: t.sourceId,
-              canvas: t.canvas
+              type: 'original' as const,
+              id: t.canvas.id,
+              label: t.canvas.getLabel(),
+              source: {
+                sourceManifestId: t.sourceId,
+                canvas: t.canvas
+              }
             }))
           ]
         }
       }),
 
+      /*
       createEmptyCanvas: (width = 1000, height = 1000) => set(({ baseURI, reconstruction }) => ({
         reconstruction: [
           ...reconstruction,
@@ -99,15 +110,17 @@ export const useAppStore = create<AppStore>()(
           }
         ]
       })),
+      */
 
       removeCanvasFromReconstruction: canvasId => set(({ reconstruction }) => ({
-        reconstruction: reconstruction.filter(c => c.canvas.id !== canvasId)
+        reconstruction: reconstruction.filter(c => c.id !== canvasId)
       })),
 
       removeCanvasesFromReconstruction: canvasIds => set(({ reconstruction }) => ({
-        reconstruction: reconstruction.filter(c => !canvasIds.includes(c.canvas.id))
+        reconstruction: reconstruction.filter(c => !canvasIds.includes(c.id))
       })),
 
+      /*
       renameCanvas: (canvasId, label) => set(({ reconstruction }) => ({
         reconstruction: reconstruction.map(r => 
           r.canvas.id === canvasId ? { ...r, canvas: parseCanvas({
@@ -116,6 +129,7 @@ export const useAppStore = create<AppStore>()(
           }) } : r
         )
       })),
+      */
 
       resetReconstruction: () => set(() => ({
         reconstruction: []
@@ -133,10 +147,10 @@ export const useAppStore = create<AppStore>()(
           manifest: s.manifest.source
         })),
 
-        reconstruction: state.reconstruction.map(r => ({
-          ...r,
-          canvas: r.canvas.source
-        }))
+        // reconstruction: state.reconstruction.map(r => ({
+        //   ...r,
+        //   canvas: r.canvas.source
+        // }))
       }),
 
       merge: (persisted: any, current: AppStore) => {
@@ -149,10 +163,10 @@ export const useAppStore = create<AppStore>()(
             url: s.url,
             manifest: parseManifest(s.manifest)
           })),
-          reconstruction: (persisted.reconstruction ?? []).map((r: any) => ({
-            sourceManifestId: r.sourceManifestId,
-            canvas: parseCanvas(r.canvas)
-          }))
+          // reconstruction: (persisted.reconstruction ?? []).map((r: any) => ({
+          //   sourceManifestId: r.sourceManifestId,
+          //   canvas: parseCanvas(r.canvas)
+          // }))
         }
       }
     }
