@@ -135,7 +135,7 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
         <img
           src={props.canvas.getThumbnailURL(80)}
           alt={`${props.canvas.getLabel()} preview image`}
-          className="size-9 rounded-sm shadow-xs object-cover ring-1 ring-foreground/10"
+          className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/10"
           loading="lazy" />
 
         <span className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</span>
