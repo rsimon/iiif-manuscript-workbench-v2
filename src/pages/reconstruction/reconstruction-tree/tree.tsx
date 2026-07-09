@@ -5,11 +5,11 @@ import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tre
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { useDragAndDrop, withViewTransition } from './use-drag-and-drop';
 import type { DragPayload, FallbackDropTarget } from './use-drag-and-drop';
-import { ReconstructionTreeItem } from './reconstruction-tree-item';
+import { ReconstructionTreeItem } from './tree-item';
 import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../reconstruction-store';
 import { ScrollArea } from '@/shadcn/scroll-area';
-import { ReconstructionTreeToolbar } from './reconstruction-tree-toolbar';
+import { ReconstructionTreeToolbar } from './tree-toolbar';
 
 export const ReconstructionTree = () => {
   const canvases = useAppStore(state => state.reconstruction);

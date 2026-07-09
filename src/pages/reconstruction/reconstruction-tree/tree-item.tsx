@@ -10,6 +10,7 @@ import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import { ITEM_GAP, TreeDropIndicator, viewTransitionName } from './use-drag-and-drop';
 import type { DragPayload } from './use-drag-and-drop';
+import { ReconstructionTreeItemActions } from './tree-item-actions';
 
 interface ReconstructionTreeItemProps {
 
@@ -85,50 +86,54 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
       )}
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
       <div
-        className="flex items-stretch cursor-default"
+        className="group flex justify-between pr-1.5"
         onMouseDown={e => e.preventDefault()}
         onClick={onSelect}>
-        <div
-          ref={handleRef}
-          aria-hidden="true"
-          onMouseDown={withStopPropagation()}
-          className="flex flex-col gap-0.5 cursor-grab select-none pl-1.5 pr-1 items-center
-          justify-start pt-2.5 text-muted-foreground">
-          <IconGripVertical
-            className="size-3.5" />
-          <span className="text-xs">{index + 1}</span>
+        <div className="flex items-stretch cursor-default">
+          <div
+            ref={handleRef}
+            aria-hidden="true"
+            onMouseDown={withStopPropagation()}
+            className="flex flex-col gap-0.5 cursor-grab select-none pl-1.5 pr-1 items-center
+            justify-start pt-2.5 text-muted-foreground">
+            <IconGripVertical
+              className="size-3.5" />
+            <span className="text-xs">{index + 1}</span>
+          </div>
+
+          {item.type === 'original' ? (
+            <TreeItemContent 
+              source={item.source}
+              label={item.label} />
+          ) : (
+            <div className="px-1.5 pt-2.5 pb-1.5 pr-2.5 grow">
+              <div className="flex gap-2 items-center pb-1">
+                <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
+                <span className="text-sm">{item.label}</span>
+                <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
+              </div>
+
+              {item.sources.length > 0 ? (
+                <ul
+                  className="py-1.5 px-0 flex flex-col gap-2">
+                  {item.sources.map(source => (
+                    <CompositeChildItem
+                      key={source.canvas.id}
+                      compositeId={item.id}
+                      source={source} />
+                  ))}
+                </ul>
+              ) : (
+                <div className="border border-foreground/25 border-dashed rounded-sm my-1.5 py-2.5 px-4
+                  text-sm text-muted-foreground text-center font-light">
+                  Empty composite — drop canvases here
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {item.type === 'original' ? (
-          <TreeItemContent 
-            source={item.source}
-            label={item.label} />
-        ) : (
-          <div className="px-1.5 pt-2.5 pb-1.5 pr-2.5 grow">
-            <div className="flex gap-2 items-center pb-1">
-              <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
-              <span className="text-sm">{item.label}</span>
-              <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
-            </div>
-
-            {item.sources.length > 0 ? (
-              <ul
-                className="py-1.5 px-0 flex flex-col gap-2">
-                {item.sources.map(source => (
-                  <CompositeChildItem
-                    key={source.canvas.id}
-                    compositeId={item.id}
-                    source={source} />
-                ))}
-              </ul>
-            ) : (
-              <div className="border border-foreground/25 border-dashed rounded-sm my-1.5 py-2.5 px-4
-                text-sm text-muted-foreground text-center font-light">
-                Empty composite — drop canvases here
-              </div>
-            )}
-          </div>
-        )}
+        <ReconstructionTreeItemActions />
       </div>
 
       {instruction ? (

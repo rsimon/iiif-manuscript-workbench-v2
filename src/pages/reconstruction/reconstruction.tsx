@@ -1,6 +1,6 @@
 import { Group, Panel, Separator } from 'react-resizable-panels';
 import { CanvasComposer } from './canvas-composer';
-import { ReconstructionTree } from './reconstruction-tree/reconstruction-tree';
+import { ReconstructionTree } from './reconstruction-tree/tree';
 
 export const Reconstruction = () => {
 
