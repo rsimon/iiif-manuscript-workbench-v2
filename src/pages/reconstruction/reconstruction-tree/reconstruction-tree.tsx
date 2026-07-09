@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { monitorForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
-import { useDragAndDrop, type DragPayload } from './use-drag-and-drop';
+import { useDragAndDrop, withViewTransition, type DragPayload } from './use-drag-and-drop';
 import { ReconstructionTreeItem } from './reconstruction-tree-item';
 import { useAppStore } from '@/store/app-store';
 
@@ -24,7 +24,7 @@ export const ReconstructionTree = () => {
       const targetIndex = target.data.index as number;
 
       if (instruction.type === 'make-child') {
-        onChange(mergeInto(canvases, target.data.id as string, payload));
+        withViewTransition(() => onChange(mergeInto(canvases, target.data.id as string, payload)));
       } else if (
         instruction.type === 'reorder-above' ||
         instruction.type === 'reorder-below'
@@ -38,12 +38,12 @@ export const ReconstructionTree = () => {
           });
 
           if (finishIndex !== payload.index)
-            onChange(reorderRoot(canvases, payload.index, finishIndex));
+            withViewTransition(() => onChange(reorderRoot(canvases, payload.index, finishIndex)));
         } else {
           const insertIndex =
             instruction.type === 'reorder-above' ? targetIndex : targetIndex + 1;
 
-          onChange(extractChild(canvases, payload, insertIndex));
+          withViewTransition(() => onChange(extractChild(canvases, payload, insertIndex)));
         }
       }
       // composite onto composite: no-op

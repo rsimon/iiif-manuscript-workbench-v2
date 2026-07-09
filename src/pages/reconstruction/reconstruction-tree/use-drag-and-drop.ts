@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import { useAppStore } from '@/store/app-store';
 import type { OriginalCanvas, ReconstructionCanvas, SourceCanvas } from '@/types';
@@ -101,4 +102,18 @@ export const useDragAndDrop = () => {
   }
 
 }
+
+export const withViewTransition = (update: () => void) => {
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!('startViewTransition' in document) || reducedMotion) {
+    update();
+    return;
+  }
+
+  document.startViewTransition(() => flushSync(update));
+}
+
+export const viewTransitionName = (id: string) =>
+  `vt-${id.replace(/[^a-zA-Z0-9_-]/g, '-')}`;
  

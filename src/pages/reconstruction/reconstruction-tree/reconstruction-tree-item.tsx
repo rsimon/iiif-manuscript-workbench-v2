@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { IconStack2 } from '@tabler/icons-react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { DropIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/tree-item';
@@ -6,8 +7,7 @@ import { attachInstruction, extractInstruction } from '@atlaskit/pragmatic-drag-
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { cn } from '@/shadcn/utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
-import type { DragPayload } from './use-drag-and-drop';
-import { IconStack2 } from '@tabler/icons-react';
+import { viewTransitionName, type DragPayload } from './use-drag-and-drop';
 
 interface ReconstructionTreeItemProps {
 
@@ -66,11 +66,12 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
   }, [item.id, index, item.type]);
 
   return (
-    <li 
+    <li
       className={cn(
         'relative px-3 py-2 border rounded-md shadow-xs cursor-grab',
         isDragging ? 'opacity-40' : undefined
-      )}>
+      )}
+      style={{ viewTransitionName: viewTransitionName(item.id) }}>
       <div
         ref={ref}>
 
@@ -97,14 +98,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
  
       {item.type === 'composite' && (
         item.sources.length > 0 ? (
-          <ul style={{
-            listStyle: 'none',
-            margin: '4px 0 0',
-            paddingLeft: 24,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4
-          }}>
+          <ul className="p-2 pl-6 flex flex-col gap-1 bg-blue-400" >
             {item.sources.map(source => (
               <CompositeChildItem
                 key={source.canvas.id}
@@ -113,15 +107,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
             ))}
           </ul>
         ) : (
-          <div style={{
-            margin: '4px 0 0 24px',
-            padding: '10px 12px',
-            border: '1px dashed #ccc',
-            borderRadius: 4,
-            color: '#999',
-            fontSize: '0.875em',
-            textAlign: 'center'
-          }}>
+          <div className="border border-dashed">
             Empty composite — drop canvases here
           </div>
         )
@@ -160,18 +146,13 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
   }, [compositeId, source.canvas.id]);
 
   return (
-    <li>
+    <li style={{ viewTransitionName: viewTransitionName(source.canvas.id) }}>
       <div
         ref={ref}
-        style={{
-          padding: '6px 12px',
-          border: '1px solid #ddd',
-          borderRadius: 4,
-          background: '#fafafa',
-          cursor: 'grab',
-          fontSize: '0.875em',
-          opacity: isDragging ? 0.4 : 1
-        }}>
+        className={cn(
+          'cursor-grab border border-amber-500',
+          isDragging ? 'opacity-40' : undefined
+        )}>
         {source.canvas.getLabel()}
       </div>
     </li>
