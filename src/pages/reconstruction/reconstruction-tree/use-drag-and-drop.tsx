@@ -2,8 +2,8 @@ import { useCallback } from 'react';
 import { flushSync } from 'react-dom';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
-import { DropIndicator as BorderIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/border';
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/tree-item';
+import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { OriginalCanvas, ReconstructionCanvas, SourceCanvas } from '@/types';
 
@@ -138,7 +138,13 @@ export const TreeDropIndicator = ({ instruction }: { instruction: Instruction })
     return <LineIndicator edge="bottom" gap={ITEM_GAP} appearance={appearance} />;
 
   if (resolved.type === 'make-child')
-    return <BorderIndicator appearance={appearance} />;
+    return (
+      <div
+        className={cn(
+          'absolute inset-0 rounded-md border-2 pointer-events-none',
+          appearance === 'warning' ? 'border-destructive' : 'border-primary'
+        )} />
+    );
 
   return null;
 }
