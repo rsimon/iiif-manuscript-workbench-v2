@@ -111,7 +111,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
                 className="mt-1.5" />
             </div>
           ) : (
-            <div className="px-1.5 pt-2.5 pb-1.5 pr-2.5 grow">
+            <div className="px-1.5 pt-2.5 pb-1 pr-2 grow">
               <div className="flex justify-between items-start">
                 <div className="flex gap-2 items-center pb-1">
                   <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
@@ -189,7 +189,7 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
     <li
       ref={ref}
       className={cn(
-        'flex items-stretch -ml-1 rounded-md border bg-muted',
+        'flex items-stretch -ml-1 rounded-sm border bg-muted',
         isDragging ? 'opacity-40' : undefined
       )}
       style={{ viewTransitionName: viewTransitionName(source.canvas.id) }}>
