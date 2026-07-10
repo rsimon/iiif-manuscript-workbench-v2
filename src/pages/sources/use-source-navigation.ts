@@ -24,14 +24,18 @@ export const useSourceNavigation = () => {
   // Map: canvasIds in reconstruction, by manifest ID
   const inReconstructionByManifest = useMemo(() => 
     reconstruction
-    .filter(r => r.type === 'original')
-    .reduce<Map<string, Set<string>>>((map, r) => {
-      const set = map.get(r.source.sourceManifestId) || new Set();
-      set.add(r.source.canvas.id);
-      map.set(r.source.sourceManifestId, set);
-      return map;
-    }, new Map())
-  , [reconstruction]);
+      .reduce<Map<string, Set<string>>>((map, r) => {
+        const sources = r.type === 'original' ? [r.source] : r.sources;
+        
+        sources.forEach(s => {
+          const set = map.get(s.sourceManifestId) || new Set();
+          set.add(s.canvas.id);
+          map.set(s.sourceManifestId, set);
+        });
+
+        return map;
+      }, new Map())
+    , [reconstruction]);
 
   const filteredSources: FilteredSources[] = useMemo(() =>
     showInReconstructionOnly 
