@@ -4,6 +4,8 @@ import { cn  } from '@/shadcn/utils';
 import { IIIFIcon } from '@/components/iiif-icon';
 import { useAppStore } from '@/store/app-store';
 import { Badge } from '@/shadcn/badge';
+import { Help } from './menu-help';
+import { Project } from './menu-project';
 
 interface NavItemProps {
   
@@ -65,9 +67,9 @@ export const AppHeader = () => {
         </NavItem>
       </nav>
 
-      <div className="text-muted-foreground/80 flex gap-4 items-center">
-        <div className="cursor-pointer hover:underline hover:text-primary">Help</div>
-        <div className="cursor-pointer hover:underline hover:text-primary">About</div>
+      <div className="text-muted-foreground/80 flex items-center">
+        <Project />
+        <Help />
       </div>
     </header>
   )
