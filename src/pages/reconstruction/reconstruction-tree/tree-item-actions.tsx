@@ -1,18 +1,18 @@
 import { cn, withStopPropagation } from '@/shadcn/utils';
-import { 
-  IconArrowBarToDown, 
-  IconArrowBarToUp, 
-  IconCircleMinus, 
-  IconDots, 
-  IconEye, 
-  IconPencil 
+import {
+  IconArrowBarToDown,
+  IconArrowBarToUp,
+  IconCircleMinus,
+  IconDots,
+  IconEye,
+  IconPencil
 } from '@tabler/icons-react';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/shadcn/dropdown-menu';
 
 interface ReconstructionTreeItemProps {
@@ -28,7 +28,7 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
       <DropdownMenuTrigger
         onClick={withStopPropagation(e => e.preventDefault())}
         className={cn(
-          'rounded-full p-1 opacity-0 group-hover:opacity-100 text-muted-foreground/80 hover:text-foreground cursor-pointer',
+          'rounded-full p-1 opacity-0 group-hover:opacity-100 data-popup-open:opacity-100 text-muted-foreground/80 hover:text-foreground cursor-pointer',
           props.className
         )}>
         <IconDots className="size-4" />
