@@ -86,7 +86,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
       )}
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
       <div
-        className="group flex justify-between pr-1.5"
+        className="group"
         onMouseDown={e => e.preventDefault()}
         onClick={onSelect}>
         <div className="flex items-stretch cursor-default">
@@ -102,38 +102,47 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
           </div>
 
           {item.type === 'original' ? (
-            <TreeItemContent 
-              source={item.source}
-              label={item.label} />
+            <div className="grow flex justify-between pr-1.5 items-start">
+              <TreeItemContent 
+                source={item.source}
+                label={item.label} />
+              
+              <ReconstructionTreeItemActions 
+                className="mt-1.5" />
+            </div>
           ) : (
             <div className="px-1.5 pt-2.5 pb-1.5 pr-2.5 grow">
-              <div className="flex gap-2 items-center pb-1">
-                <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
-                <span className="text-sm">{item.label}</span>
-                <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
+              <div className="flex justify-between items-start">
+                <div className="flex gap-2 items-center pb-1">
+                  <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
+                  <span className="text-sm">{item.label}</span>
+                  <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
+                </div>
+
+                <ReconstructionTreeItemActions />
               </div>
 
-              {item.sources.length > 0 ? (
-                <ul
-                  className="py-1.5 px-0 flex flex-col gap-2">
-                  {item.sources.map(source => (
-                    <CompositeChildItem
-                      key={source.canvas.id}
-                      compositeId={item.id}
-                      source={source} />
-                  ))}
-                </ul>
-              ) : (
-                <div className="border border-foreground/25 border-dashed rounded-sm my-1.5 py-2.5 px-4
-                  text-sm text-muted-foreground text-center font-light">
-                  Empty composite — drop canvases here
-                </div>
-              )}
+              <div>
+                {item.sources.length > 0 ? (
+                  <ul
+                    className="py-1.5 px-0 flex flex-col gap-2">
+                    {item.sources.map(source => (
+                      <CompositeChildItem
+                        key={source.canvas.id}
+                        compositeId={item.id}
+                        source={source} />
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="border border-foreground/25 border-dashed rounded-sm my-1.5 py-2.5 px-4
+                    text-sm text-muted-foreground text-center font-light">
+                    Empty composite — drop canvases here
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
-
-        <ReconstructionTreeItemActions />
       </div>
 
       {instruction ? (
@@ -215,7 +224,7 @@ const TreeItemContent = (props: TreeItemContentProps) => {
   const sources = useAppStore(state => state.sources);
 
   return (
-    <div className="flex gap-2 min-w-0 px-2 py-2">
+    <div className="w-full flex gap-2 min-w-0 px-2 py-2">
       <img
         src={source.canvas.getThumbnailURL(80)}
         alt={`${label} preview image`}

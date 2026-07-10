@@ -1,3 +1,4 @@
+import { cn, withStopPropagation } from '@/shadcn/utils';
 import { 
   IconArrowBarToDown, 
   IconArrowBarToUp, 
@@ -13,15 +14,23 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/shadcn/dropdown-menu';
-import { withStopPropagation } from '@/shadcn/utils';
 
-export const ReconstructionTreeItemActions = () => {
+interface ReconstructionTreeItemProps {
+
+  className?: string;
+
+}
+
+export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps) => {
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
         onClick={withStopPropagation(e => e.preventDefault())}
-        className="self-start rounded-full mt-1.5 p-1 opacity-0 group-hover:opacity-100 text-muted-foreground/80 hover:text-foreground cursor-pointer">
+        className={cn(
+          'rounded-full p-1 opacity-0 group-hover:opacity-100 text-muted-foreground/80 hover:text-foreground cursor-pointer',
+          props.className
+        )}>
         <IconDots className="size-4" />
       </DropdownMenuTrigger>
 
