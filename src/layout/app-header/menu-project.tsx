@@ -1,17 +1,31 @@
 import { IconDownload, IconFolderOpen, IconRestore, IconUpload } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 import { useAppStore } from '@/store/app-store';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuItem, 
-  DropdownMenuSeparator, 
-  DropdownMenuTrigger 
+import { useConfirm } from '@/dialogs/confirm';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger
 } from '@/shadcn/dropdown-menu';
 
 export const Project = () => {
   const reset  = useAppStore(state => state.resetAll);
-  
+
+  const confirm = useConfirm();
+
+  const onReset = () => {
+    confirm({
+      title: 'Reset project?',
+      description: 'This will remove all sources and delete the reconstruction. This action cannot be undone.',
+      confirmLabel: 'Reset project',
+      variant: 'destructive',
+    }).then(confirmed => {
+      if (confirmed) reset();
+    });
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger render={
@@ -39,10 +53,10 @@ export const Project = () => {
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem 
+        <DropdownMenuItem
           className="gap-2.5"
           variant="destructive"
-          onClick={reset}>
+          onClick={onReset}>
           <IconRestore /> Reset project
         </DropdownMenuItem>
       </DropdownMenuContent>
