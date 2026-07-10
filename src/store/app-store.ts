@@ -25,7 +25,9 @@ interface AppStore {
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
   updateReconstruction: (updated: ReconstructionCanvas[]) => void;
   // renameCanvas: (canvasId: string, label: string) => void;
-  resetReconstruction: () => void;
+
+  // Actions: combined
+  resetAll: () => void;
 
 }
 
@@ -133,8 +135,9 @@ export const useAppStore = create<AppStore>()(
       })),
       */
 
-      resetReconstruction: () => set(() => ({
-        reconstruction: []
+      resetAll: () => set(() => ({
+        reconstruction: [],
+        sources: []
       }))
     }), {
       name: 'iiif-workbench-state',
