@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Link, useLocation} from 'wouter';
 import { cn  } from '@/shadcn/utils';
 import { IIIFIcon } from '@/components/iiif-icon';
@@ -31,7 +31,11 @@ const NavItem = (props: NavItemProps) => {
 }
 
 export const AppHeader = () => {
-  const reconstruction = useAppStore(state => state.reconstruction.length);
+  const reconstruction = useAppStore(state => state.reconstruction);
+
+  const sourceCanvasCount = useMemo(() => 
+    reconstruction.flatMap(s => s.type === 'original' ? s.source : s.sources).length
+  , [reconstruction]);
 
   return (
     <header className="flex justify-between items-center px-4 text-sm 
@@ -52,7 +56,7 @@ export const AppHeader = () => {
           <Badge 
             variant="secondary" 
             className="font-normal">
-            {reconstruction}
+            {sourceCanvasCount}
           </Badge>
         </NavItem>
 

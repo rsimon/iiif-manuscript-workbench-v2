@@ -35,7 +35,8 @@ export const SourceTree = () => {
   const { 
     filteredSources,
     countCanvasesInReconstruction, 
-    isInReconstruction 
+    isInReconstruction,
+    sourceCanvasesInReconstruction
   } = useSourceNavigation();
 
   // No. of visible canvas rows per manifest
@@ -127,7 +128,7 @@ export const SourceTree = () => {
               Continue to Reconstruction 
               <Badge 
                 className="bg-white/25">
-                {reconstruction.length}
+                {sourceCanvasesInReconstruction}
               </Badge>
             </Button>
 

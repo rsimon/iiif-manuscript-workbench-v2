@@ -37,6 +37,10 @@ export const useSourceNavigation = () => {
       }, new Map())
     , [reconstruction]);
 
+  const sourceCanvasesInReconstruction = useMemo(() =>
+    [...inReconstructionByManifest.values()].reduce((total, r) => total + r.size, 0)
+  , [inReconstructionByManifest]);
+
   const filteredSources: FilteredSources[] = useMemo(() =>
     showInReconstructionOnly 
       ? sources.map(s => ({
@@ -85,7 +89,8 @@ export const useSourceNavigation = () => {
     countCanvasesInReconstruction,
     isInReconstruction,
     selectNext,
-    selectPrevious
+    selectPrevious,
+    sourceCanvasesInReconstruction
    };
   
 }
