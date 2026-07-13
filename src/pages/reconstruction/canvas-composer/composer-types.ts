@@ -3,7 +3,7 @@ import type { CozyImageResource } from 'cozy-iiif';
 
 export interface ComposerLayout {
 
-  items: ReconstructionCanvasItem[];
+  items: ComposerLayoutItem[];
 
   layoutWidth: number;
 
@@ -11,7 +11,7 @@ export interface ComposerLayout {
 
 }
 
-export interface ReconstructionCanvasItem {
+export interface ComposerLayoutItem {
 
   canvas: ReconstructionCanvas;
 

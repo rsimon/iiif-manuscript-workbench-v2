@@ -93,12 +93,17 @@ export const useDragAndDrop = () => {
       if (c.id !== targetId) return c;
   
       return c.type === 'composite'
-        ? { ...c, sources: [...c.sources, dragged] }
+        ? { 
+            ...c, 
+            sources: [...c.sources, dragged] 
+          }
         : {
             type: 'composite' as const,
             id: `${baseURI}/${crypto.randomUUID()}`,
             label: `Leaf ${idx + 1}`,
-            sources: [c.source, dragged]
+            sources: [c.source, dragged],
+            width: c.source.canvas.width,
+            height: c.source.canvas.height
           };
     });
   }, [take]);

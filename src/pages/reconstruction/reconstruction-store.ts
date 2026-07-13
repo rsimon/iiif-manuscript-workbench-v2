@@ -1,35 +1,26 @@
 import { create } from 'zustand';
 import type { ReconstructionCanvas } from '@/types';
-import type { DraggableImage } from './canvas-composer/composer-types';
 
 interface ReconstructionStore {
 
-  hover?: ReconstructionCanvas;
+  hoveredCanvas?: ReconstructionCanvas;
 
-  setHover(hover?: ReconstructionCanvas): void;
+  setHoveredCanvas(hovered?: ReconstructionCanvas): void;
 
-  selection?: ReconstructionCanvas[];
+  selection: ReconstructionCanvas[];
 
-  setSelection(selection: ReconstructionCanvas[]): void;
-
-  selectedImage?: DraggableImage;
-
-  setSelectedImage(selectedImage?: DraggableImage): void;
+  setSelection(selected: ReconstructionCanvas[]): void;
 
 }
 
 export const useReconstructionStore = create<ReconstructionStore>()(set => ({
 
-  hover: undefined,
+  hoveredCanvas: undefined,
 
   selection: [],
 
-  selectedImage: undefined,
-
-  setHover: hover => set({ hover }),
+  setHoveredCanvas: hoveredCanvas => set({ hoveredCanvas }),
 
   setSelection: selection => set({ selection }),
-
-  setSelectedImage: selectedImage => set({ selectedImage })
 
 }));

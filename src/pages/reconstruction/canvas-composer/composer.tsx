@@ -1,14 +1,13 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import OpenSeadragon from 'openseadragon';
 import { useComposerStore } from './composer-store';
-// import type { ReconstructionCanvasItem } from './composer-types';
-// import type { ReconstructionCanvas } from '@/types';
-// import { OverlayLayer } from './overlay-layer/overlay-layer';
+import { OverlayLayer } from './overlay-layer';
 
 export const CanvasComposer = () => {
   const elementRef = useRef<HTMLDivElement>(null);
 
-  const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
+  const viewer = useComposerStore(state => state.viewer);
+  const setViewer = useComposerStore(state => state.setViewer);
 
   const firstRender = useRef(true);
 
@@ -47,7 +46,7 @@ export const CanvasComposer = () => {
 
     return () => {
       viewerInstance.destroy();
-      setViewer(null);
+      setViewer(undefined);
     };
   }, []);
 
@@ -68,7 +67,6 @@ export const CanvasComposer = () => {
       }));
     })).then(() => {
       if (firstRender.current) {
-        console.log('fit', layout.layoutWidth, layout.layoutHeight);
         const aspectRatio = layout.layoutWidth / layout.layoutHeight;
         const worldRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3 * layout.layoutWidth, 1.3 * layout.layoutWidth / aspectRatio);
         viewer.viewport.fitBounds(worldRect, true);
@@ -80,8 +78,7 @@ export const CanvasComposer = () => {
   return (
     <div className="size-full bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)] relative">
       <div ref={elementRef} className="size-full">
-        {/* <OverlayLayer
-          viewer={viewer} /> */}
+        <OverlayLayer />
       </div>
     </div>
   );

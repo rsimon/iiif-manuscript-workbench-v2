@@ -1,6 +1,5 @@
 import type { ReconstructionCanvas } from '@/types';
-import type { ComposerLayout, DraggableImage, ReconstructionCanvasItem } from './composer-types';
-import { getRepresentativeCanvas } from './utils';
+import type { ComposerLayout, DraggableImage, ComposerLayoutItem } from './composer-types';
 
 export const ROW_GAP = 0.25;
 
@@ -15,7 +14,7 @@ const DEFAULT_STEP = 0.05; // rightward/downward shift per stacked image
 // Helper
 export interface LayoutRow {
 
-  items: ReconstructionCanvasItem[];
+  items: ComposerLayoutItem[];
 
   rowHeight: number;
 
@@ -58,14 +57,16 @@ export const TwoColumnLayout = (reconstruction: ReconstructionCanvas[]): Compose
 
   for (let i = 0; i < reconstruction.length; i += 2) {
     const left = reconstruction[i];
-    const right = reconstruction[i + 1];
+    const right = reconstruction[i + 1]
 
-    const leftCanvas = getRepresentativeCanvas(left);
-    const rightCanvas = right ? getRepresentativeCanvas(right) : undefined;
+    const leftHeight = left.type === 'composite' ? left.height : left.source.canvas.height;
+    const leftWidth = left.type === 'composite' ? left.width : left.source.canvas.width;
+    const leftAspect = leftHeight / leftWidth;
 
-    // Temporary hack - derive a proper world coordinate system later!
-    const leftAspect = leftCanvas.height / leftCanvas.width;
-    const rightAspect = rightCanvas ? rightCanvas.height / rightCanvas.width : 0;
+    const rightWidth = right ? right.type === 'composite' ? right.width : right.source.canvas.width : 0;
+    const rightHeight = right ? right.type === 'composite' ? right.height : right.source.canvas.height : 0;
+    const rightAspect = right ? rightHeight / rightWidth : 0;
+
     const rowHeight = Math.max(leftAspect, rightAspect);
 
     rows.push({

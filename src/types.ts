@@ -42,6 +42,10 @@ export interface CompositeCanvas {
 
   sources: SourceCanvas[];
 
+  width: number;
+
+  height: number;
+
 }
 
 export type ReconstructionCanvas = 

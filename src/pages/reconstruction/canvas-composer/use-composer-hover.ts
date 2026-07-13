@@ -5,8 +5,8 @@ import type { ComposerLayout } from './composer-types';
 
 export const useComposerHover = (viewer: Viewer | null, layout: ComposerLayout) => {
 
-  const hover = useReconstructionStore(state => state.hover);
-  const setHover = useReconstructionStore(state => state.setHover);
+  const hover = useReconstructionStore(state => state.hoveredCanvas);
+  const setHover = useReconstructionStore(state => state.setHoveredCanvas);
 
   useEffect(() => {
     if (!viewer) return;
