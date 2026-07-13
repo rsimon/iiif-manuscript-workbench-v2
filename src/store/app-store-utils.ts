@@ -27,7 +27,7 @@ export const getEmptyCanvasLabel = (reconstruction: ReconstructionCanvas[]) => {
   const regex = /^New Canvas( \((\d+)\))?$/;
 
   const numbers = reconstruction
-    .map(rc => rc.canvas.getLabel().match(regex))
+    .map(rc => rc.label.match(regex))
     .filter(Boolean)
     .map(match => (match![2] ? parseInt(match![2]) : 0));
 

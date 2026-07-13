@@ -23,21 +23,29 @@ export const useSourceNavigation = () => {
 
   // Map: canvasIds in reconstruction, by manifest ID
   const inReconstructionByManifest = useMemo(() => 
-    reconstruction.reduce<Map<string, Set<string>>>((map, r) => {
-      if (!r.sourceManifestId) return map;
+    reconstruction
+      .reduce<Map<string, Set<string>>>((map, r) => {
+        const sources = r.type === 'original' ? [r.source] : r.sources;
+        
+        sources.forEach(s => {
+          const set = map.get(s.sourceManifestId) || new Set();
+          set.add(s.canvas.id);
+          map.set(s.sourceManifestId, set);
+        });
 
-      const set = map.get(r.sourceManifestId) || new Set();
-      set.add(r.canvas.id);
-      map.set(r.sourceManifestId, set);
-      return map;
-    }, new Map())
-  , [reconstruction]);
+        return map;
+      }, new Map())
+    , [reconstruction]);
+
+  const sourceCanvasesInReconstruction = useMemo(() =>
+    [...inReconstructionByManifest.values()].reduce((total, r) => total + r.size, 0)
+  , [inReconstructionByManifest]);
 
   const filteredSources: FilteredSources[] = useMemo(() =>
     showInReconstructionOnly 
       ? sources.map(s => ({
           source: s, 
-          canvases: s.manifest.canvases.filter(canvas => reconstruction.some(r => r.canvas.id === canvas.id))
+          canvases: s.manifest.canvases.filter(canvas => reconstruction.some(r => r.id === canvas.id))
         }))
       : sources.map(s => ({ source: s, canvases: s.manifest.canvases }))
     , [sources, showInReconstructionOnly, inReconstructionByManifest]);
@@ -81,7 +89,8 @@ export const useSourceNavigation = () => {
     countCanvasesInReconstruction,
     isInReconstruction,
     selectNext,
-    selectPrevious
+    selectPrevious,
+    sourceCanvasesInReconstruction
    };
   
 }

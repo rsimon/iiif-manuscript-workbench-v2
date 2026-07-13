@@ -9,7 +9,7 @@ export const Sources = () => {
   const [isInspectorOpen, setInspectorOpen] = useState(false);
 
   return (
-    <main className="grow min-h-0 flex flex-col">
+    <main className="grow min-h-0">
       <AnimatedPanelGroup className="flex grow h-full min-h-0">
         <Panel
           minSize={240}
@@ -20,7 +20,7 @@ export const Sources = () => {
 
         <Separator />
 
-        <Panel className="min-h-full grow">
+        <Panel>
           <SourcePreview
             isInspectorOpen={isInspectorOpen}
             setInspectorOpen={setInspectorOpen} />

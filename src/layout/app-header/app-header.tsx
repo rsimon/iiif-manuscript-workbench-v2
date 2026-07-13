@@ -1,9 +1,11 @@
-import type { ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Link, useLocation} from 'wouter';
 import { cn  } from '@/shadcn/utils';
 import { IIIFIcon } from '@/components/iiif-icon';
 import { useAppStore } from '@/store/app-store';
 import { Badge } from '@/shadcn/badge';
+import { Help } from './menu-help';
+import { Project } from './menu-project';
 
 interface NavItemProps {
   
@@ -31,7 +33,11 @@ const NavItem = (props: NavItemProps) => {
 }
 
 export const AppHeader = () => {
-  const reconstruction = useAppStore(state => state.reconstruction.length);
+  const reconstruction = useAppStore(state => state.reconstruction);
+
+  const sourceCanvasCount = useMemo(() => 
+    reconstruction.flatMap(s => s.type === 'original' ? s.source : s.sources).length
+  , [reconstruction]);
 
   return (
     <header className="flex justify-between items-center px-4 text-sm 
@@ -52,7 +58,7 @@ export const AppHeader = () => {
           <Badge 
             variant="secondary" 
             className="font-normal">
-            {reconstruction}
+            {sourceCanvasCount}
           </Badge>
         </NavItem>
 
@@ -61,9 +67,9 @@ export const AppHeader = () => {
         </NavItem>
       </nav>
 
-      <div className="text-muted-foreground/80 flex gap-4 items-center">
-        <div className="cursor-pointer hover:underline hover:text-primary">Help</div>
-        <div className="cursor-pointer hover:underline hover:text-primary">About</div>
+      <div className="text-muted-foreground/80 flex items-center">
+        <Project />
+        <Help />
       </div>
     </header>
   )
