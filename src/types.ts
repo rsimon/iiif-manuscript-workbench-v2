@@ -20,6 +20,32 @@ export interface SourceCanvas {
 
 /** Reconstruction **/
 
+export interface Reconstruction {
+
+  quires: Quire[]
+
+}
+
+export interface Quire {
+
+  id: string;
+
+  label?: string;
+
+  leaves: Leaf[];
+
+}
+
+export interface Leaf {
+
+  id: string;
+
+  recto: ReconstructionCanvas | null;
+
+  verso: ReconstructionCanvas | null;
+
+}
+
 export interface OriginalCanvas {
 
   type: 'original';
