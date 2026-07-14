@@ -6,33 +6,34 @@ import { getDraggableImageKey } from './composer-utils';
 import { OverlayLayer } from './overlay-layer';
 import { useComposerSelection } from './use-composer-selection';
 
-// OSD animation settings
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
 
 export const CanvasComposer = () => {
   const elementRef = useRef<HTMLDivElement>(null);
 
-  const viewer = useComposerStore(state => state.viewer);
   const layout = useComposerStore(state => state.layout);
+  const viewer = useComposerStore(state => state.viewer);
   const setViewer = useComposerStore(state => state.setViewer);
 
-  // One images array per layout item
+  useComposerSelection(viewer, layout);
+  
+  const firstRender = useRef(true);
+
+  // images per layout item
   const images = useComposerStore(useShallow(state =>
     layout.items.map(item => state.imagesByCanvasId.get(item.reconstructionCanvasId) ?? [])
   ));
 
-  const firstRender = useRef(true);
-
-  useComposerSelection(viewer, layout);
-
+  // Allows OSD and react-resizable-panel to co-exist
   useEffect(() => {
     const el = elementRef.current;
     if (!el) return;
 
     const onPointerDownCapture = (e: PointerEvent) => {
-      if (e.defaultPrevented) e.stopPropagation();
-    };
+      if (e.defaultPrevented) 
+        e.stopPropagation();
+    }
 
     el.addEventListener('pointerdown', onPointerDownCapture, true);
     return () => el.removeEventListener('pointerdown', onPointerDownCapture, true);
@@ -59,12 +60,9 @@ export const CanvasComposer = () => {
 
     return () => {
       viewerInstance.destroy();
-      // Every TiledImage this viewer owned is gone with it - drop the
-      // (now dangling) index so the reconciler treats a new viewer as
-      // starting from scratch instead of thinking everything still exists.
       useComposerStore.getState().tiledImages.clear();
       setViewer(undefined);
-    };
+    }
   }, []);
 
   useEffect(() => {
@@ -72,6 +70,7 @@ export const CanvasComposer = () => {
 
     const tiledImages = useComposerStore.getState().tiledImages;
 
+    // All layout items
     const placements = layout.items.flatMap((item, i) =>
       images[i].map(image => ({
         key: getDraggableImageKey(image),
@@ -82,27 +81,26 @@ export const CanvasComposer = () => {
       }))
     );
 
-    // Remove tiles for images that no longer exist in the current layout
-    const desiredKeys = new Set(placements.map(p => p.key));
+    const toKeep = new Set(placements.map(p => p.key));
 
-    for (const [key, tiledImage] of tiledImages) {
-      if (!desiredKeys.has(key)) {
+    // 1. Remove all images that are no longer in the layout
+    [...tiledImages.entries()].forEach(([key, tiledImage]) => {
+      if (!toKeep.has(key)) {
         viewer.world.removeItem(tiledImage);
         tiledImages.delete(key);
       }
-    }
+    });
 
-    // Move/resize images that already exist; only genuinely new images
-    // go through addTiledImage (and its tile fetch).
-    const additions = placements.map(({ key, tileSource, x, y, width }) => {
+    const toAdd = placements.map(({ key, tileSource, x, y, width }) => {
+      // 2. move/resize images that already exist
       const existing = tiledImages.get(key);
-
       if (existing) {
         existing.setPosition(new OpenSeadragon.Point(x, y));
         existing.setWidth(width);
         return Promise.resolve();
       }
 
+      // 3. Add images that don't exist yet
       return new Promise<void>(resolve => {
         viewer.addTiledImage({
           tileSource,
@@ -118,7 +116,7 @@ export const CanvasComposer = () => {
       });
     });
 
-    Promise.all(additions).then(() => {
+    Promise.all(toAdd).then(() => {
       if (firstRender.current) {
         const aspectRatio = layout.layoutWidth / layout.layoutHeight;
         const worldRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3 * layout.layoutWidth, 1.3 * layout.layoutWidth / aspectRatio);
