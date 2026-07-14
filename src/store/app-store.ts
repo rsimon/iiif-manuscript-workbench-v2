@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import type { ReconstructionCanvas, SourceManifest } from '@/types';
-import { /* getEmptyCanvasLabel, */ parseCanvas, parseManifest } from './app-store-utils';
+import { /* getEmptyCanvasLabel, */ parseCanvas, parseManifest, removeCanvasFromReconstruction } from './app-store-utils';
 
 interface AppStore {
 
@@ -115,25 +115,14 @@ export const useAppStore = create<AppStore>()(
       */
 
       removeCanvasFromReconstruction: canvasId => set(({ reconstruction }) => ({
-        reconstruction: reconstruction.filter(c => c.id !== canvasId)
+        reconstruction: removeCanvasFromReconstruction(reconstruction, canvasId)
       })),
 
       removeCanvasesFromReconstruction: canvasIds => set(({ reconstruction }) => ({
-        reconstruction: reconstruction.filter(c => !canvasIds.includes(c.id))
+        reconstruction: removeCanvasFromReconstruction(reconstruction, canvasIds)
       })),
 
       updateReconstruction: reconstruction => set({ reconstruction }),
-
-      /*
-      renameCanvas: (canvasId, label) => set(({ reconstruction }) => ({
-        reconstruction: reconstruction.map(r => 
-          r.canvas.id === canvasId ? { ...r, canvas: parseCanvas({
-            ...r.canvas.source,
-            label: { en: [ label ]}
-          }) } : r
-        )
-      })),
-      */
 
       resetAll: () => set(() => ({
         reconstruction: [],

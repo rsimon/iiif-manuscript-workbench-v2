@@ -36,3 +36,21 @@ export const getEmptyCanvasLabel = (reconstruction: ReconstructionCanvas[]) => {
   const max = Math.max(...numbers);
   return max === 0 ? 'New Canvas (1)' : `New Canvas (${max + 1})`;
 }
+
+export const removeCanvasFromReconstruction = (reconstruction: ReconstructionCanvas[], toRemove: string | string[]) => {
+  const canvasIds = Array.isArray(toRemove) ? new Set(toRemove) : new Set([toRemove]);
+  return reconstruction
+    // Remove canvas at root level
+    .filter(r => !canvasIds.has(r.id)) 
+    // Remove canvas from composites
+    .map(r => {
+      if (r.type === 'original' || r.sources.every(r => !canvasIds.has(r.canvas.id))) {
+        return r;
+      } else {
+        return {
+          ...r,
+          sources: r.sources.filter(s => !canvasIds.has(s.canvas.id))
+        }
+      }
+    });
+}
