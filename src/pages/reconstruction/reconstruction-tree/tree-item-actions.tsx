@@ -1,4 +1,6 @@
 import { cn, withStopPropagation } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
+import type { ReconstructionCanvas } from '@/types';
 import {
   IconArrowBarToDown,
   IconArrowBarToUp,
@@ -19,9 +21,13 @@ interface ReconstructionTreeItemProps {
 
   className?: string;
 
+  item: ReconstructionCanvas;
+
 }
 
 export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps) => {
+
+  const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
 
   return (
     <DropdownMenu>
@@ -55,7 +61,9 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem variant="destructive">
+        <DropdownMenuItem 
+          variant="destructive"
+          onClick={() => removeCanvas(props.item.id)}>
           <IconCircleMinus /> Remove
         </DropdownMenuItem>
       </DropdownMenuContent>

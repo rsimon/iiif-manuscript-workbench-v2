@@ -108,7 +108,8 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
                 label={item.label} />
               
               <ReconstructionTreeItemActions 
-                className="mt-1.5" />
+                className="mt-1.5" 
+                item={props.item} />
             </div>
           ) : (
             <div className="px-1.5 pt-2.5 pb-1 pr-2 grow">
@@ -119,7 +120,8 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
                   <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
                 </div>
 
-                <ReconstructionTreeItemActions />
+                <ReconstructionTreeItemActions 
+                  item={props.item} />
               </div>
 
               <div>

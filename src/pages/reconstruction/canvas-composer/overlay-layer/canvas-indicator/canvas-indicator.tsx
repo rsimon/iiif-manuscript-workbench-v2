@@ -13,6 +13,7 @@ export const CanvasIndicatorBackground = (props: CanvasIndicatorProps) => {
     <g>
       {props.layout.items.map(item => (
         <rect
+          key={item.canvas.id}
           x={item.x}
           y={item.y}
           width={item.width}
@@ -39,6 +40,7 @@ export const CanvasIndicatorForeground = (props: CanvasIndicatorProps) => {
     <g>
       {props.layout.items.map(item => (
         <rect
+          key={item.canvas.id}
           x={item.x}
           y={item.y}
           width={item.width}
