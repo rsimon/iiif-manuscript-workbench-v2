@@ -60,6 +60,8 @@ export const ImageTool = (props: ImageToolProps) => {
 
   const updateImage = useComposerStore(state => state.updateImage);
 
+  const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
+
   // Stable identity for the current selection - unlike `selectedImage` itself,
   // this does NOT change on every drag-driven position update, so it's safe
   // to use as an effect dependency for resetting drag state on (re)selection.
@@ -138,6 +140,8 @@ export const ImageTool = (props: ImageToolProps) => {
       canvasWidth
     });
 
+    setIsDraggingImage(true);
+
     const pt = viewport.pointFromPixel(new Point(evt.clientX, evt.clientY));
     setOrigin(pt);
   }
@@ -161,12 +165,14 @@ export const ImageTool = (props: ImageToolProps) => {
 
     setOrigin(undefined);
     setDragStart(undefined);
+    setIsDraggingImage(false);
   }
 
   const onPointerCancel = () => {
     // Capture is auto-released by the browser on cancel
     setOrigin(undefined);
     setDragStart(undefined);
+    setIsDraggingImage(false);
   }
 
   return (

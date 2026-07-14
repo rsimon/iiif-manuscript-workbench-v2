@@ -15,16 +15,20 @@ export interface ComposerState {
 
   imagesByCanvasId: Map<string, DraggableImage[]>,
 
-  // Non-reactive, so it doesn't trigger re-render - rebuilt in composer.tsx 
+  // Non-reactive & mutable by convention, use without re-render
   tiledImages: Map<string, TiledImage>;
 
   selectedImage?: DraggableImageSelection;
+
+  isDraggingImage: boolean;
 
   setViewer(viewer?: Viewer): void;
 
   setLayout(layout: ComposerLayout): void;
 
   setSelectedImage(selectedImage?: DraggableImageSelection): void;
+
+  setIsDraggingImage(isDraggingImage: boolean): void;
 
   updateImage(canvasId: string, updated: DraggableImage): void;
 
@@ -42,11 +46,15 @@ export const useComposerStore = create<ComposerState>(set => ({
 
   selectedImage: undefined,
 
+  isDraggingImage: false,
+
   setViewer: viewer => set({ viewer }),
 
   setLayout: layout => set({ layout }),
 
   setSelectedImage: selectedImage => set({ selectedImage }),
+
+  setIsDraggingImage: isDraggingImage => set({ isDraggingImage }),
 
   updateImage: (canvasId, updated) => set(({ imagesByCanvasId, selectedImage }) => {
     const onThisCanvas = imagesByCanvasId.get(canvasId);

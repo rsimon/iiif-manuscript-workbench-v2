@@ -68,7 +68,7 @@ export const CanvasComposer = () => {
   useEffect(() => {
     if (!viewer) return;
 
-    const tiledImages = useComposerStore.getState().tiledImages;
+    const { tiledImages, isDraggingImage } = useComposerStore.getState();
 
     // All layout items
     const placements = layout.items.flatMap((item, i) =>
@@ -95,8 +95,8 @@ export const CanvasComposer = () => {
       // 2. move/resize images that already exist
       const existing = tiledImages.get(key);
       if (existing) {
-        existing.setPosition(new OpenSeadragon.Point(x, y));
-        existing.setWidth(width);
+        existing.setPosition(new OpenSeadragon.Point(x, y), isDraggingImage);
+        existing.setWidth(width, isDraggingImage);
         return Promise.resolve();
       }
 
