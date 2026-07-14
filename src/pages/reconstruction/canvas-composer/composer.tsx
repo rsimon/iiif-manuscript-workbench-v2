@@ -6,6 +6,10 @@ import { getDraggableImageKey } from './composer-utils';
 import { OverlayLayer } from './overlay-layer';
 import { useComposerSelection } from './use-composer-selection';
 
+// OSD animation settings
+export const OSD_SPRING_STIFFNESS = 10;
+export const OSD_ANIMATION_TIME = 0.5;
+
 export const CanvasComposer = () => {
   const elementRef = useRef<HTMLDivElement>(null);
 
@@ -42,8 +46,8 @@ export const CanvasComposer = () => {
       showNavigationControl: false,
       maxZoomPixelRatio: Infinity,
       minZoomImageRatio: 0,
-      animationTime: 0.5,
-      springStiffness: 10,
+      animationTime: OSD_ANIMATION_TIME,
+      springStiffness: OSD_SPRING_STIFFNESS,
       gestureSettingsMouse: {
         clickToZoom: false,
         dblClickToZoom: true
