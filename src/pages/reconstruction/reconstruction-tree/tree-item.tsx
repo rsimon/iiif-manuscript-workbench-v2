@@ -137,7 +137,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
                   </ul>
                 ) : (
                   <div className="border border-foreground/25 border-dashed rounded-sm my-1.5 py-2.5 px-4
-                    text-sm text-muted-foreground text-center font-light">
+                    text-xs text-muted-foreground text-center font-light">
                     Empty composite — drop canvases here
                   </div>
                 )}
