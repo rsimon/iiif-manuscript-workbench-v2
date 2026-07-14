@@ -2,16 +2,18 @@ import { useEffect, useRef } from 'react';
 import OpenSeadragon from 'openseadragon';
 import { useComposerStore } from './composer-store';
 import { OverlayLayer } from './overlay-layer';
+import { useComposerSelection } from './use-composer-selection';
 
 export const CanvasComposer = () => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const viewer = useComposerStore(state => state.viewer);
+  const layout = useComposerStore(state => state.layout);
   const setViewer = useComposerStore(state => state.setViewer);
 
   const firstRender = useRef(true);
 
-  const layout = useComposerStore(state => state.layout);
+  useComposerSelection(viewer, layout);
 
   useEffect(() => {
     const el = elementRef.current;
@@ -81,5 +83,6 @@ export const CanvasComposer = () => {
         <OverlayLayer />
       </div>
     </div>
-  );
+  )
+
 }

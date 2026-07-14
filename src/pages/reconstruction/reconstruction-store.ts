@@ -9,7 +9,7 @@ interface ReconstructionStore {
 
   selection: ReconstructionCanvas[];
 
-  setSelection(selected: ReconstructionCanvas[]): void;
+  setSelection(selected: ReconstructionCanvas[] | ((current: ReconstructionCanvas[]) => ReconstructionCanvas[])): void;
 
 }
 
@@ -21,6 +21,8 @@ export const useReconstructionStore = create<ReconstructionStore>()(set => ({
 
   setHoveredCanvas: hoveredCanvas => set({ hoveredCanvas }),
 
-  setSelection: selection => set({ selection }),
+  setSelection: arg => set(({ selection }) => ({
+    selection: typeof arg === 'function' ? arg(selection) : arg
+  })),
 
 }));

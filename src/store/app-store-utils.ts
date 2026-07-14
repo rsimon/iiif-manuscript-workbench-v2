@@ -100,13 +100,13 @@ export const mergeInto = (
           // Simple case - destination is already a composite
           return {
             ...r,
-            sources: [...(r as CompositeCanvas).sources, ...sourcesToMerge]
+            sources: sourcesToMerge
           };
         } else {
           return {
             type: 'composite',
             id: `${baseURI}/${crypto.randomUUID()}`,
-            sources: [r.source, ...sourcesToMerge],
+            sources: sourcesToMerge,
             // Keep destination label and size
             label: r.label,
             width: r.source.canvas.width,

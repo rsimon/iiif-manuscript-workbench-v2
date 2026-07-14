@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { Viewer } from 'openseadragon';
-import type { ComposerLayout } from './composer-types';
+import type { ComposerLayout, DraggableImage } from './composer-types';
 import { TwoColumnLayout } from './layout';
 import { useAppStore } from '@/store/app-store';
 
@@ -10,12 +10,15 @@ export interface ComposerState {
 
   layout: ComposerLayout;
 
+  selectedImage?: DraggableImage;
+
   setViewer(viewer?: Viewer): void;
 
   setLayout(layout: ComposerLayout): void;
 
-}
+  setSelectedImage(image?: DraggableImage): void;
 
+}
 
 export const useComposerStore = create<ComposerState>(set => ({
 
@@ -23,9 +26,13 @@ export const useComposerStore = create<ComposerState>(set => ({
 
   layout: TwoColumnLayout(useAppStore.getState().reconstruction),
 
+  selectedImage: undefined,
+
   setViewer: viewer => set({ viewer }),
 
-  setLayout: layout => set({ layout })
+  setLayout: layout => set({ layout }),
+
+  setSelectedImage: selectedImage => set({ selectedImage })
 
 }));
 
