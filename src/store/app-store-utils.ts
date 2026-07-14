@@ -54,3 +54,28 @@ export const removeCanvasFromReconstruction = (reconstruction: ReconstructionCan
       }
     });
 }
+
+export const appendEmptyCanvas = (
+  reconstruction: ReconstructionCanvas[], 
+  baseURI: string,
+  fallbackWidth = 1000, 
+  fallbackHeight = 1000
+): ReconstructionCanvas[] => {
+  const getDimensions = (r: ReconstructionCanvas) => r.type === 'original' ? r.source.canvas : r;
+
+  const { width, height } = reconstruction.length > 0 
+    ? getDimensions(reconstruction[reconstruction.length - 1]) 
+    : { width: fallbackWidth, height: fallbackHeight};
+
+  return [
+    ...reconstruction,
+    {
+      type: 'composite',
+      id: `${baseURI}/${crypto.randomUUID()}`,
+      label: getEmptyCanvasLabel(reconstruction),
+      sources: [],
+      width, 
+      height
+    }
+  ]
+}

@@ -2,7 +2,12 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import type { ReconstructionCanvas, SourceManifest } from '@/types';
-import { /* getEmptyCanvasLabel, */ parseCanvas, parseManifest, removeCanvasFromReconstruction } from './app-store-utils';
+import { 
+  appendEmptyCanvas, 
+  parseCanvas, 
+  parseManifest, 
+  removeCanvasFromReconstruction 
+} from './app-store-utils';
 
 interface AppStore {
 
@@ -20,7 +25,7 @@ interface AppStore {
   // Actions: reconstruction
   addCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
   addCanvasesToReconstruction: (arg: { sourceId: string, canvas: CozyCanvas}[]) => void;
-  // createEmptyCanvas: (width?: number, height?: number) => void;
+  appendEmptyCanvas: (width?: number, height?: number) => void;
   removeCanvasFromReconstruction: (canvasId: string) => void;
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
   updateReconstruction: (updated: ReconstructionCanvas[]) => void;
@@ -95,24 +100,9 @@ export const useAppStore = create<AppStore>()(
         }
       }),
 
-      /*
-      createEmptyCanvas: (width = 1000, height = 1000) => set(({ baseURI, reconstruction }) => ({
-        reconstruction: [
-          ...reconstruction,
-          { 
-            canvas: parseCanvas({
-              id: `${baseURI}/canvas/${crypto.randomUUID()}`,
-              type: 'Canvas',
-              label: {
-                en: getEmptyCanvasLabel(reconstruction)
-              },
-              width,
-              height
-            }) 
-          }
-        ]
+      appendEmptyCanvas: (fallbackWidth = 2000, fallbackHeight = 3000) => set(({ baseURI, reconstruction }) => ({
+        reconstruction: appendEmptyCanvas(reconstruction, baseURI, fallbackWidth, fallbackHeight)
       })),
-      */
 
       removeCanvasFromReconstruction: canvasId => set(({ reconstruction }) => ({
         reconstruction: removeCanvasFromReconstruction(reconstruction, canvasId)
