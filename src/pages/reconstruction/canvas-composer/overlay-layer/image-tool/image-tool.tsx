@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Point, Rect, type Viewer } from 'openseadragon';
+import { Point, type Viewer } from 'openseadragon';
 import { ToolCornerHandle } from './tool-corner-handle';
 import type { CornerHandleType, HandleType, ResizeHandleType } from '../../composer-types';
 import { useComposerStore } from '../../composer-store';
+import { getDraggableImageKey, getItemCanvasSize } from '../../composer-utils';
 import { cornersToSvgPoints, getImageCorners } from './image-tool-utils';
+import { useAppStore } from '@/store/app-store';
 
 interface ImageToolProps {
 
@@ -18,116 +20,123 @@ const HANDLE_TYPES: CornerHandleType[] = [
   'BOTTOM_LEFT'
 ];
 
+// Sign of each handle's effect on the image's x/y position as it's resized:
+// +1 keeps the opposite (min) edge anchored, -1 keeps the opposite (max)
+// edge anchored, 0 means this axis isn't driven by that handle at all.
+const RESIZE_SIGNS: Record<ResizeHandleType, { h: number; v: number }> = {
+  TOP_LEFT: { h: -1, v: -1 },
+  TOP: { h: 0, v: -1 },
+  TOP_RIGHT: { h: 1, v: -1 },
+  RIGHT: { h: 1, v: 0 },
+  BOTTOM_RIGHT: { h: 1, v: 1 },
+  BOTTOM: { h: 0, v: 1 },
+  BOTTOM_LEFT: { h: -1, v: 1 },
+  LEFT: { h: -1, v: 0 }
+};
+
+// Image x/y/width, snapshotted at drag start (pixel-space units, same as
+// DraggableImage), plus the canvas pixel size needed to convert viewport
+// deltas back into that same pixel space.
+interface DragStart {
+
+  x: number;
+
+  y: number;
+
+  width: number;
+
+  canvasWidth: number;
+
+}
+
 export const ImageTool = (props: ImageToolProps) => {
   const { viewport } = props.viewer;
 
-  // Keep a ref to the selected shape bounds at selection time
-  const [initialBounds] = useState<Rect>();
-
   const [origin, setOrigin] = useState<Point>();
+
+  const [dragStart, setDragStart] = useState<DragStart>();
 
   const selectedImage = useComposerStore(state => state.selectedImage);
 
-  // const updateImage = useComposerStore(state => state.updateImage);
+  const updateImage = useComposerStore(state => state.updateImage);
 
-  // const onCanvasUpdatedDebounced = useDebouncedCallback(
-  //   props.onCanvasUpdated,
-  //   200
-  // );
+  // Stable identity for the current selection - unlike `selectedImage` itself,
+  // this does NOT change on every drag-driven position update, so it's safe
+  // to use as an effect dependency for resetting drag state on (re)selection.
+  const selectionKey = selectedImage
+    ? `${selectedImage.item.reconstructionCanvasId}:${getDraggableImageKey(selectedImage.image)}`
+    : undefined;
 
   useEffect(() => {
     setOrigin(undefined);
-    // setInitialBounds(props.selected.osdImage.getBounds());
-  }, [selectedImage]);
+    setDragStart(undefined);
+  }, [selectionKey]);
 
   const corners = useMemo(() => {
     if (!selectedImage) return [];
     return getImageCorners(selectedImage);
   }, [selectedImage]);
 
-  const onMoveImage = (_delta: number[]) => {
-    if (!initialBounds) return;
-
-    // const nextPosition = new Point(initialBounds.x + _delta[0], initialBounds.y + _delta[1]);
-
-    // Mutate OSD image in place
-    // props.selected.osdImage.setPosition(nextPosition, true);
-    
-    // const { osdImage, ...rest } = props.selected;
-
-    /*
-    const updated: DraggableImage = {
-      ...rest,
-      x: nextPosition.x,
-      y: nextPosition.y
-    }
-    */
-
-    // updateImage(props.selected.id, updated);
-    // onCanvasUpdatedDebounced();
-  }
-
-  const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
-    if (!initialBounds) return;
+  const onMoveImage = (delta: number[]) => {
+    if (!selectedImage || !dragStart) return;
 
     const [dx, dy] = delta;
 
-    let x0 = initialBounds.x;
-    let y0 = initialBounds.y;
-    let x1 = initialBounds.x + initialBounds.width;
-    let y1 = initialBounds.y + initialBounds.height;
+    updateImage(selectedImage.item.reconstructionCanvasId, {
+      ...selectedImage.image,
+      x: dragStart.x + dx * dragStart.canvasWidth,
+      y: dragStart.y + dy * dragStart.canvasWidth
+    });
+  }
 
-    switch (handle) {
-      case 'LEFT':
-      case 'TOP_LEFT':
-      case 'BOTTOM_LEFT':
-        x0 += dx;
-        break;
-      case 'RIGHT':
-      case 'TOP_RIGHT':
-      case 'BOTTOM_RIGHT':
-        x1 += dx;
-        break;
-    }
-    
-    switch (handle) {
-      case 'TOP':
-      case 'TOP_LEFT':
-      case 'TOP_RIGHT':
-        y0 += dy;
-        break;
-      case 'BOTTOM':
-      case 'BOTTOM_LEFT':
-      case 'BOTTOM_RIGHT':
-        y1 += dy;
-        break;
-    }
+  const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
+    if (!selectedImage || !dragStart) return;
 
-    // const oppositeCorner: Placement =
-    //   handle === 'TOP_LEFT' ? Placement.BOTTOM_RIGHT :
-    //   handle === 'TOP_RIGHT' ? Placement.BOTTOM_LEFT :
-    //   handle === 'BOTTOM_RIGHT' ? Placement.TOP_LEFT :
-    //     Placement.TOP_RIGHT;
+    const [dxViewport, dyViewport] = delta;
+    const dx = dxViewport * dragStart.canvasWidth;
+    const dy = dyViewport * dragStart.canvasWidth;
 
-    // const nextBounds = new Rect(x0, y0, x1 - x0, y1 - y0);
+    const { h, v } = RESIZE_SIGNS[handle];
 
-    // Mutate OSD image in place
-    // props.selected.osdImage.fitBounds(nextBounds, oppositeCorner, true);
-    
-    // const updated: SelectedImage = {
-    //   ...props.selected,
-    //   x: nextBounds.x,
-    //   y: nextBounds.y,
-    //   width: nextBounds.width
-    // }
+    // Images can't be distorted: height always follows the resource's own
+    // aspect ratio, so width is the only free variable. Whichever axis the
+    // pointer moved further along (horizontal vs. vertical) drives it.
+    const aspect = selectedImage.image.resource.width / selectedImage.image.resource.height;
+    const initialHeight = dragStart.width / aspect;
 
-    // updateImage(props.selected.id, updated);
-    // onCanvasUpdatedDebounced();
+    const dWidthFromX = h * dx;
+    const dWidthFromY = v * dy * aspect;
+    const dWidth = Math.abs(dWidthFromX) >= Math.abs(dWidthFromY) ? dWidthFromX : dWidthFromY;
+
+    const width = Math.max(1, dragStart.width + dWidth);
+    const height = width / aspect;
+
+    const x = h < 0 ? (dragStart.x + dragStart.width) - width : dragStart.x;
+    const y = v < 0 ? (dragStart.y + initialHeight) - height : dragStart.y;
+
+    updateImage(selectedImage.item.reconstructionCanvasId, {
+      ...selectedImage.image,
+      x, y, width
+    });
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
+    if (!selectedImage) return;
+
+    const canvas = useAppStore.getState().reconstruction.find(r => r.id === selectedImage.item.reconstructionCanvasId);
+    if (!canvas) return;
+
+    const [canvasWidth] = getItemCanvasSize(canvas);
+
     const target = evt.target as Element;
     target.setPointerCapture(evt.pointerId);
+
+    setDragStart({
+      x: selectedImage.image.x,
+      y: selectedImage.image.y,
+      width: selectedImage.image.width,
+      canvasWidth
+    });
 
     const pt = viewport.pointFromPixel(new Point(evt.clientX, evt.clientY));
     setOrigin(pt);
@@ -140,8 +149,8 @@ export const ImageTool = (props: ImageToolProps) => {
     const delta = [x - origin.x, y - origin.y];
 
     if (handle === 'SHAPE') {
-      onMoveImage(delta); 
-    } else { 
+      onMoveImage(delta);
+    } else {
       onResizeImage(handle, delta);
     }
   }
@@ -150,16 +159,14 @@ export const ImageTool = (props: ImageToolProps) => {
     const target = evt.target as Element;
     target.releasePointerCapture(evt.pointerId);
 
-    // onCanvasUpdatedDebounced.flush();
-    
     setOrigin(undefined);
-    // setInitialBounds(props.selected.osdImage.getBounds());
+    setDragStart(undefined);
   }
 
   const onPointerCancel = () => {
     // Capture is auto-released by the browser on cancel
     setOrigin(undefined);
-    // setInitialBounds(props.selected.osdImage.getBounds());
+    setDragStart(undefined);
   }
 
   return (
@@ -179,27 +186,27 @@ export const ImageTool = (props: ImageToolProps) => {
         stroke="oklch(70.5% 0.213 47.604)"
         strokeWidth={2.5}
         vectorEffect="non-scaling-stroke"
-        strokeDasharray="5 2" 
+        strokeDasharray="5 2"
         onPointerDown={onPointerDown}
         onPointerMove={onPointerMove('SHAPE')}
-        onPointerUp={onPointerUp} 
+        onPointerUp={onPointerUp}
         onPointerCancel={onPointerCancel} />
 
       {corners.map((corner, i) => (
-        <ToolCornerHandle 
-          key={i} 
+        <ToolCornerHandle
+          key={i}
           direction={
             i === 0 ? 'NW' :
             i === 1 ? 'NE' :
             i === 2 ? 'SE' :
             'SW'
           }
-          corner={corner} 
+          corner={corner}
           type={HANDLE_TYPES[i]}
-          viewer={props.viewer} 
-          onPointerDown={onPointerDown} 
+          viewer={props.viewer}
+          onPointerDown={onPointerDown}
           onPointerMove={onPointerMove(HANDLE_TYPES[i])}
-          onPointerUp={onPointerUp} 
+          onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel} />
       ))}
     </g>

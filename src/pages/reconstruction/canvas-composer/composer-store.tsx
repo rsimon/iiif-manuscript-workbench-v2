@@ -3,7 +3,7 @@ import { Viewer, TiledImage } from 'openseadragon';
 import { dequal } from 'dequal/lite';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
 import { TwoColumnLayout } from './layout';
-import { toDraggableImages } from './composer-utils';
+import { getDraggableImageKey, toDraggableImages } from './composer-utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 
@@ -26,6 +26,8 @@ export interface ComposerState {
 
   setSelectedImage(selectedImage?: DraggableImageSelection): void;
 
+  updateImage(canvasId: string, updated: DraggableImage): void;
+
 }
 
 export const useComposerStore = create<ComposerState>(set => ({
@@ -44,8 +46,33 @@ export const useComposerStore = create<ComposerState>(set => ({
 
   setLayout: layout => set({ layout }),
 
-  setSelectedImage: selectedImage => set({ selectedImage })
+  setSelectedImage: selectedImage => set({ selectedImage }),
 
+  updateImage: (canvasId, updated) => set(({ imagesByCanvasId, selectedImage }) => {
+    const onThisCanvas = imagesByCanvasId.get(canvasId);
+    if (!onThisCanvas) return {};
+
+    const key = getDraggableImageKey(updated);
+
+    const prevImage = onThisCanvas.find(img => getDraggableImageKey(img) === key);
+    if (!prevImage) return {};
+
+    const nextImages = onThisCanvas.map(img => img === prevImage ? updated : img);
+
+    const updatedImagesByCanvasId = new Map(imagesByCanvasId);
+    updatedImagesByCanvasId.set(canvasId, nextImages);
+
+    const updatedSelectedImage =
+      selectedImage?.item.reconstructionCanvasId === canvasId &&
+      getDraggableImageKey(selectedImage.image) === key
+        ? { ...selectedImage, image: updated }
+        : undefined;
+
+    return {
+      imagesByCanvasId: updatedImagesByCanvasId,
+      ...(updatedSelectedImage ? { selectedImage: updatedSelectedImage } : {})
+    };
+  })
 }));
 
 useAppStore.subscribe((state, prevState) => {
