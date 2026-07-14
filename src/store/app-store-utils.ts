@@ -1,5 +1,5 @@
 import { Cozy, type CozyCanvas, type CozyManifest } from 'cozy-iiif';
-import type { ReconstructionCanvas } from '@/types';
+import type { SourceCanvas, CompositeCanvas, ReconstructionCanvas } from '@/types';
 
 export const parseCanvas = (source: unknown): CozyCanvas => {
   const parsed = Cozy.parse(source);
@@ -78,4 +78,43 @@ export const appendEmptyCanvas = (
       height
     }
   ]
+}
+
+export const mergeInto = (
+  toMerge: ReconstructionCanvas[], 
+  current: ReconstructionCanvas[],
+  baseURI: string
+): ReconstructionCanvas[] => {
+  if (toMerge.length < 2) return current;
+
+  const [destination, ...others] = toMerge;
+
+  const sourcesToMerge = toMerge.reduce<SourceCanvas[]>((all, r) =>
+    r.type === 'original' ? [...all, r.source] : [...all, ...r.sources]
+  , []);
+    
+  return removeCanvasFromReconstruction(current, others.map(r => r.id))
+    .map(r => { 
+      if (r.id === destination.id) {
+        if (r.type === 'composite') {
+          // Simple case - destination is already a composite
+          return {
+            ...r,
+            sources: [...(r as CompositeCanvas).sources, ...sourcesToMerge]
+          };
+        } else {
+          return {
+            type: 'composite',
+            id: `${baseURI}/${crypto.randomUUID()}`,
+            sources: [r.source, ...sourcesToMerge],
+            // Keep destination label and size
+            label: r.label,
+            width: r.source.canvas.width,
+            height: r.source.canvas.height
+          }
+        }
+      } else {
+        return r;
+      }
+    });
 }
