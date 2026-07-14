@@ -55,6 +55,10 @@ export const CanvasComposer = () => {
 
     return () => {
       viewerInstance.destroy();
+      // Every TiledImage this viewer owned is gone with it - drop the
+      // (now dangling) index so the reconciler treats a new viewer as
+      // starting from scratch instead of thinking everything still exists.
+      useComposerStore.getState().tiledImages.clear();
       setViewer(undefined);
     };
   }, []);
@@ -62,26 +66,55 @@ export const CanvasComposer = () => {
   useEffect(() => {
     if (!viewer) return;
 
-    viewer.world.removeAll();
-    useComposerStore.getState().tiledImages.clear();
+    const tiledImages = useComposerStore.getState().tiledImages;
 
-    const promises = layout.items.flatMap((item, i) =>
-      images[i].map(image => new Promise<void>(resolve => {
-        viewer.addTiledImage({
-          tileSource: image.tileSource,
-          x: item.x + image.x / image.resource.width,
-          y: item.y + image.y / image.resource.width,
-          width: image.width / image.resource.width,
-          success: (evt: Event) => {
-            const { item } = evt as unknown as { item: TiledImage };
-            useComposerStore.getState().tiledImages.set(getDraggableImageKey(image), item);
-            resolve();
-          }
-        });
+    const placements = layout.items.flatMap((item, i) =>
+      images[i].map(image => ({
+        key: getDraggableImageKey(image),
+        tileSource: image.tileSource,
+        x: item.x + image.x / image.resource.width,
+        y: item.y + image.y / image.resource.width,
+        width: image.width / image.resource.width
       }))
     );
 
-    Promise.all(promises).then(() => {
+    // Remove tiles for images that no longer exist in the current layout
+    const desiredKeys = new Set(placements.map(p => p.key));
+
+    for (const [key, tiledImage] of tiledImages) {
+      if (!desiredKeys.has(key)) {
+        viewer.world.removeItem(tiledImage);
+        tiledImages.delete(key);
+      }
+    }
+
+    // Move/resize images that already exist; only genuinely new images
+    // go through addTiledImage (and its tile fetch).
+    const additions = placements.map(({ key, tileSource, x, y, width }) => {
+      const existing = tiledImages.get(key);
+
+      if (existing) {
+        existing.setPosition(new OpenSeadragon.Point(x, y));
+        existing.setWidth(width);
+        return Promise.resolve();
+      }
+
+      return new Promise<void>(resolve => {
+        viewer.addTiledImage({
+          tileSource,
+          x, y, width,
+          // @types/openseadragon mistypes this as (event: Event) => void;
+          // OSD actually calls it with { item: TiledImage }.
+          success: (evt: Event) => {
+            const { item: tiledImage } = evt as unknown as { item: TiledImage };
+            tiledImages.set(key, tiledImage);
+            resolve();
+          }
+        });
+      });
+    });
+
+    Promise.all(additions).then(() => {
       if (firstRender.current) {
         const aspectRatio = layout.layoutWidth / layout.layoutHeight;
         const worldRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3 * layout.layoutWidth, 1.3 * layout.layoutWidth / aspectRatio);
