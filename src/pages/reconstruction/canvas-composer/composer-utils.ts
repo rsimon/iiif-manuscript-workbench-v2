@@ -41,9 +41,6 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
   }, []);
 }
 
-// A source canvas can hold several images (idx disambiguates them), so
-// sourceCanvasId alone is not a unique key - pair it with the image's
-// local index on that canvas.
 export const getDraggableImageKey = (image: DraggableImage): string =>
   `${image.sourceCanvasId}:${image.index}`;
 
