@@ -1,5 +1,5 @@
 import { Cozy, type CozyCanvas, type CozyManifest } from 'cozy-iiif';
-import type { SourceCanvas, CompositeCanvas, ReconstructionCanvas } from '@/types';
+import type { SourceCanvas, ReconstructionCanvas } from '@/types';
 
 export const parseCanvas = (source: unknown): CozyCanvas => {
   const parsed = Cozy.parse(source);

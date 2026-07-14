@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { CanvasIndicatorBackground, CanvasIndicatorForeground } from './canvas-indicator';
 import { useComposerStore } from '../composer-store';
+import { ImageTool } from './image-tool';
 
 export const OverlayLayer = () => {
   const viewer = useComposerStore(state => state.viewer);
@@ -76,7 +77,7 @@ export const OverlayLayer = () => {
         ref={belowSvgRef}
         className="absolute inset-0 size-full pointer-events-none z-0">
         <g ref={belowGroupRef} className="pointer-events-auto">
-          <CanvasIndicatorBackground layout={layout} />
+          <CanvasIndicatorBackground layout={layout} viewer={viewer} />
         </g>
       </svg>
 
@@ -85,7 +86,8 @@ export const OverlayLayer = () => {
         ref={aboveSvgRef}
         className="absolute inset-0 size-full pointer-events-none z-50">
         <g ref={aboveGroupRef} className="pointer-events-auto">
-          <CanvasIndicatorForeground layout={layout} />
+          <CanvasIndicatorForeground layout={layout} viewer={viewer} />
+          <ImageTool  viewer={viewer}/>
         </g>
       </svg>
     </>
