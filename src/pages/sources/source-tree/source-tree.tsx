@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'wouter';
 import { IconUpload } from '@tabler/icons-react';
 import { GroupedVirtuoso } from 'react-virtuoso';
 import type { CozyCanvas } from 'cozy-iiif';
@@ -18,7 +19,6 @@ import { useSourceNavigation } from '../use-source-navigation';
 export const SourceTree = () => {
   const sources = useAppStore(state => state.sources);
 
-  const reconstruction = useAppStore(state => state.reconstruction);
   const addCanvas = useAppStore(state => state.addCanvasToReconstruction);
   const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
 
@@ -120,17 +120,19 @@ export const SourceTree = () => {
           </ScrollArea>
 
           <div className="p-2.5 border-t">
-            <Button 
-              disabled={reconstruction.length === 0}
-              className="w-full font-normal"
-              size="lg"
-              onClick={() => setShowImportDialog(true)}>
-              Continue to Reconstruction 
+            <Link 
+              href="/reconstruction"
+              className="cursor-pointer flex items-center justify-center rounded-md border border-transparent text-sm w-full whitespace-nowrap transition-all 
+                outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px 
+                disabled:pointer-events-none disabled:opacity-30 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 
+                [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 
+                h-10 gap-1.5 px-2.5">
+              Continue to Reconstruction
               <Badge 
                 className="bg-white/25">
                 {sourceCanvasesInReconstruction}
               </Badge>
-            </Button>
+            </Link>
 
             <Button 
               className="w-full font-normal mt-1.5"
