@@ -4,20 +4,16 @@ import { PanelActionButton } from '@/components/panel-action-button';
 export const ReconstructionTreeToolbar = () => {
 
   return (
-    <div className="text-muted-foreground flex justify-end pt-2 pr-2.5">
+    <div className="text-muted-foreground py-2 pl-1 pr-3.5 flex justify-end bg-white border-b">
       <div className="flex items-center gap-1.5">
         <PanelActionButton
           disabled
-          variant="outline"
-          className="shadow-none rounded-sm font-normal"
           tooltip="Merge selected canvases">
           <IconArrowMerge className="size-4" />
         </PanelActionButton>
 
         <PanelActionButton
-          variant="outline"
-          className="shadow-none rounded-sm font-normal"
-          tooltip="Create empty leaf">
+          tooltip="Create empty canvas">
           <IconFilePlus className="size-4" />
         </PanelActionButton>
       </div>

@@ -28,7 +28,6 @@ export const SourceTreeToolbar = () => {
       <div className="flex items-center">
         <PanelActionButton
           tooltip={isAllExpanded ? 'Collapse all' : 'Expand all'}
-          className="size-7"
           onClick={onToggleExpand}>
           {isAllExpanded ? (
             <ListChevronsDownUp />
