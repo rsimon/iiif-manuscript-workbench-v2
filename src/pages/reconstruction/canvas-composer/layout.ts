@@ -1,15 +1,11 @@
 import type { ReconstructionCanvas } from '@/types';
-import type { ComposerLayout, DraggableImage, ComposerLayoutItem } from './composer-types';
+import type { ComposerLayout, ComposerLayoutItem } from './composer-types';
 
 export const ROW_GAP = 0.25;
 
 export const COLUMN_GAP = 0.25;
 
 export const COLUMN_WIDTH = 1;
-
-const DEFAULT_WIDTH = 0.4;
-
-const DEFAULT_STEP = 0.05; // rightward/downward shift per stacked image
 
 // Helper
 export interface LayoutRow {
@@ -18,38 +14,6 @@ export interface LayoutRow {
 
   rowHeight: number;
 
-}
-
-const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => {
-  const sources = r.type === 'original' ? [r.source] : r.sources;
-
-  return sources.reduce<DraggableImage[]>((agg, source) => {
-    return [
-      ...agg, 
-      ...source.canvas.images.map((image, idx) => {
-        const runningIndex = agg.length + idx;
-
-        const defaultWidth = runningIndex === 0 ? source.canvas.width : source.canvas.width * DEFAULT_WIDTH;
-        const defaultOffset = runningIndex === 0 ? 0 : source.canvas.width * DEFAULT_STEP * runningIndex;
-
-        const x = image.target ? image.target.x : defaultOffset;
-        const y = image.target ? image.target.y : defaultOffset;
-        const width = image.target ? image.target.w : defaultWidth;
-
-        return {
-          sourceCanvasId: source.canvas.id,
-          resource: image,
-          tileSource: image.type === 'dynamic' || image.type === 'level0' ? image.serviceUrl : {
-            type: 'image',
-            url: image.getImageURL()
-          },
-          x,
-          y,
-          width
-        } as DraggableImage
-      })
-    ]
-  }, []);
 }
 
 export const TwoColumnLayout = (reconstruction: ReconstructionCanvas[]): ComposerLayout => {
@@ -72,20 +36,18 @@ export const TwoColumnLayout = (reconstruction: ReconstructionCanvas[]): Compose
     rows.push({
       items: [
         { 
-          canvas: left, 
+          reconstructionCanvasId: left.id,
           x: 0, 
           y: 0, 
           width: COLUMN_WIDTH, 
-          height: leftAspect,
-          images: toDraggableImages(left)
+          height: leftAspect
         },
         ...(right ? [{ 
-          canvas: right, 
+          reconstructionCanvasId: right.id, 
           x: COLUMN_WIDTH + COLUMN_GAP, 
           y: 0, 
           width: COLUMN_WIDTH, 
-          height: rightAspect,
-          images: toDraggableImages(right)
+          height: rightAspect
         }] : []) 
       ],
       rowHeight

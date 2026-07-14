@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import type { ComposerLayout } from './composer-types';
 import { getImageAt, getItemAt } from './composer-utils';
 import { useComposerStore } from './composer-store';
+import { useAppStore } from '@/store/app-store';
 
 export const useComposerSelection = (viewer: Viewer | undefined, layout: ComposerLayout) => {
   const setSelectedItems = useReconstructionStore(state => state.setSelection);
@@ -19,18 +20,25 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
       const item = getItemAt(point, layout);
 
       if (item) {
+        // Snapshot read (prevents re-running the effect)
+        const { reconstruction } = useAppStore.getState();
+        
+        const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
+        if (!canvas) return;
+
         if (metaKey) {
           setSelectedImage();
-          setSelectedItems(current => [...current, item.canvas]);
+          setSelectedItems(current => [...current, canvas]);
         } else {
           setSelectedItems(current => {
-            if (current.length === 1 && current[0].id === item.canvas.id) {
+            if (current.length === 1 && current[0].id === canvas.id) {
               // Same selected canvas, clicked again -> select image
-              const hit = getImageAt(point, layout);
-              setSelectedImage(hit?.image);              
+              const { imagesByCanvasId } = useComposerStore.getState();
+              const hit = getImageAt(point, layout, reconstruction, imagesByCanvasId);
+              setSelectedImage(hit);
               return current;
             } else {
-              return [item.canvas];
+              return [canvas];
             }
           });
         }

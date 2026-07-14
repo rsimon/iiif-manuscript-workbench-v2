@@ -1,13 +1,56 @@
 import type { Point } from 'openseadragon';
-import type { ComposerLayout, ComposerLayoutItem, DraggableImage } from './composer-types';
+import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from './composer-types';
+import type { ReconstructionCanvas } from '@/types';
 
-export interface ImageSelection {
+const DEFAULT_IMAGE_WIDTH = 0.4;
+const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
 
-  image: DraggableImage;
+export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => {
+  const sources = r.type === 'original' ? [r.source] : r.sources;
 
-  item: ComposerLayoutItem;
+  return sources.reduce<DraggableImage[]>((agg, source) => {
+    return [
+      ...agg, 
+      ...source.canvas.images.map((image, idx) => {
+        const runningIndex = agg.length + idx;
 
+        const defaultWidth = runningIndex === 0 
+          ? source.canvas.width : source.canvas.width * DEFAULT_IMAGE_WIDTH;
+          
+        const defaultOffset = runningIndex === 0
+          ? 0 : source.canvas.width * DEFAULT_IMAGE_STEP * runningIndex;
+
+        const x = image.target ? image.target.x : defaultOffset;
+        const y = image.target ? image.target.y : defaultOffset;
+        const width = image.target ? image.target.w : defaultWidth;
+
+        return {
+          sourceCanvasId: source.canvas.id,
+          resource: image,
+          tileSource: image.type === 'dynamic' || image.type === 'level0' ? image.serviceUrl : {
+            type: 'image',
+            url: image.getImageURL()
+          },
+          x,
+          y,
+          width,
+          index: idx
+        } as DraggableImage
+      })
+    ]
+  }, []);
 }
+
+// A source canvas can hold several images (idx disambiguates them), so
+// sourceCanvasId alone is not a unique key - pair it with the image's
+// local index on that canvas.
+export const getDraggableImageKey = (image: DraggableImage): string =>
+  `${image.sourceCanvasId}:${image.index}`;
+
+export const getItemCanvasSize = (canvas: ReconstructionCanvas): [number, number] =>
+  canvas.type === 'original'
+    ? [canvas.source.canvas.width, canvas.source.canvas.height]
+    : [canvas.width, canvas.height];
 
 export const getItemAt = (point: Point, layout: ComposerLayout): ComposerLayoutItem => {
   const hits = layout.items.filter(item => {
@@ -23,15 +66,22 @@ export const getItemAt = (point: Point, layout: ComposerLayout): ComposerLayoutI
   })[0];
 }
 
-export const getImageAt = (point: Point, layout: ComposerLayout): ImageSelection | undefined => {
+export const getImageAt = (
+  point: Point,
+  layout: ComposerLayout,
+  reconstruction: ReconstructionCanvas[],
+  imagesByCanvasId: Map<string, DraggableImage[]>
+): DraggableImageSelection | undefined => {
   const item = getItemAt(point, layout);
   if (!item) return;
 
-  const [canvasWidth, canvasHeight] = item.canvas.type === 'original' 
-    ? [item.canvas.source.canvas.width, item.canvas.source.canvas.height]
-    : [item.canvas.width, item.canvas.height];
+  const rc = reconstruction.find(r => r.id === item.reconstructionCanvasId);
+  if (!rc) return;
 
-  const hit = item.images.filter(image => {
+  const [canvasWidth, canvasHeight] = getItemCanvasSize(rc);
+  const images = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
+
+  const hit = images.filter(image => {
     // Image size is in pixel!
     const aspect = image.resource.height / image.resource.width;
 

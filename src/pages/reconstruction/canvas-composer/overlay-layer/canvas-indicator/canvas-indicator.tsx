@@ -13,7 +13,7 @@ export const CanvasIndicatorBackground = (props: CanvasIndicatorProps) => {
     <g>
       {props.layout.items.map(item => (
         <rect
-          key={item.canvas.id}
+          key={item.reconstructionCanvasId}
           x={item.x}
           y={item.y}
           width={item.width}
@@ -40,14 +40,14 @@ export const CanvasIndicatorForeground = (props: CanvasIndicatorProps) => {
     <g>
       {props.layout.items.map(item => (
         <rect
-          key={item.canvas.id}
+          key={item.reconstructionCanvasId}
           x={item.x}
           y={item.y}
           width={item.width}
           height={item.height}
           fill="transparent"
-          stroke={isSelected(item.canvas.id) ? 'oklch(0.5 0.15 246.78)' : 'oklch(92.2% 0 0)'} // primary : neutral-200 
-          strokeWidth={isSelected(item.canvas.id) ? 2 : 1}
+          stroke={isSelected(item.reconstructionCanvasId) ? 'oklch(0.5 0.15 246.78)' : 'oklch(92.2% 0 0)'} // primary : neutral-200 
+          strokeWidth={isSelected(item.reconstructionCanvasId) ? 2 : 1}
           strokeOpacity={1}
           vectorEffect="non-scaling-stroke"
           pointerEvents="none" />

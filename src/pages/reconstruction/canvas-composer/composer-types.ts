@@ -1,4 +1,3 @@
-import type { ReconstructionCanvas } from '@/types';
 import type { CozyImageResource } from 'cozy-iiif';
 
 export interface ComposerLayout {
@@ -13,7 +12,7 @@ export interface ComposerLayout {
 
 export interface ComposerLayoutItem {
 
-  canvas: ReconstructionCanvas;
+  reconstructionCanvasId: string;
 
   x: number; 
   
@@ -22,8 +21,6 @@ export interface ComposerLayoutItem {
   width: number; 
   
   height: number;
-
-  images: DraggableImage[];
 
 }
 
@@ -42,6 +39,14 @@ export interface DraggableImage {
   width: number;
 
   index: number;
+
+}
+
+export interface DraggableImageSelection {
+
+  image: DraggableImage;
+
+  item: ComposerLayoutItem;
 
 }
 

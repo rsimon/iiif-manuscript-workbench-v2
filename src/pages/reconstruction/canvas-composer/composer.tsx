@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
-import OpenSeadragon from 'openseadragon';
+import OpenSeadragon, { TiledImage } from 'openseadragon';
+import { useShallow } from 'zustand/react/shallow';
 import { useComposerStore } from './composer-store';
+import { getDraggableImageKey } from './composer-utils';
 import { OverlayLayer } from './overlay-layer';
 import { useComposerSelection } from './use-composer-selection';
 
@@ -10,6 +12,11 @@ export const CanvasComposer = () => {
   const viewer = useComposerStore(state => state.viewer);
   const layout = useComposerStore(state => state.layout);
   const setViewer = useComposerStore(state => state.setViewer);
+
+  // One images array per layout item
+  const images = useComposerStore(useShallow(state =>
+    layout.items.map(item => state.imagesByCanvasId.get(item.reconstructionCanvasId) ?? [])
+  ));
 
   const firstRender = useRef(true);
 
@@ -56,18 +63,25 @@ export const CanvasComposer = () => {
     if (!viewer) return;
 
     viewer.world.removeAll();
+    useComposerStore.getState().tiledImages.clear();
 
-    Promise.all(layout.items.map(item => {
-      return item.images.map(image => new Promise<void>(resolve => {
-        return viewer.addTiledImage({
+    const promises = layout.items.flatMap((item, i) =>
+      images[i].map(image => new Promise<void>(resolve => {
+        viewer.addTiledImage({
           tileSource: image.tileSource,
           x: item.x + image.x / image.resource.width,
           y: item.y + image.y / image.resource.width,
           width: image.width / image.resource.width,
-          success: () => resolve()
+          success: (evt: Event) => {
+            const { item } = evt as unknown as { item: TiledImage };
+            useComposerStore.getState().tiledImages.set(getDraggableImageKey(image), item);
+            resolve();
+          }
         });
-      }));
-    })).then(() => {
+      }))
+    );
+
+    Promise.all(promises).then(() => {
       if (firstRender.current) {
         const aspectRatio = layout.layoutWidth / layout.layoutHeight;
         const worldRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3 * layout.layoutWidth, 1.3 * layout.layoutWidth / aspectRatio);
@@ -75,7 +89,7 @@ export const CanvasComposer = () => {
         firstRender.current = false;
       }
     });
-  }, [viewer, layout]);
+  }, [viewer, layout, images]);
 
   return (
     <div className="size-full bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)] relative">
