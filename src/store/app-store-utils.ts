@@ -26,17 +26,17 @@ export const parseManifest = (source: unknown): CozyManifest => {
 }
 
 export const getEmptyCanvasLabel = (reconstruction: ReconstructionCanvas[]) => {
-  const regex = /^New Canvas( \((\d+)\))?$/;
+  const regex = /^New Composite( \((\d+)\))?$/;
 
   const numbers = reconstruction
     .map(rc => rc.label.match(regex))
     .filter(Boolean)
     .map(match => (match![2] ? parseInt(match![2]) : 0));
 
-  if (numbers.length === 0) return 'New Canvas';
+  if (numbers.length === 0) return 'New Composite';
 
   const max = Math.max(...numbers);
-  return max === 0 ? 'New Canvas (1)' : `New Canvas (${max + 1})`;
+  return max === 0 ? 'New Composite (1)' : `New Composite (${max + 1})`;
 }
 
 export const removeCanvasFromReconstruction = (reconstruction: ReconstructionCanvas[], toRemove: string | string[]) => {
