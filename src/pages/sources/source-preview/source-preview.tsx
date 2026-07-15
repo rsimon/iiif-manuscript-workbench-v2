@@ -83,8 +83,11 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   useEffect(() => {
     if (!viewer || !selectedCanvas) return;
 
+    // Guards against a superseded fitBounds after fast next/prev navigation
+    let cancelled = false;
+
     const addImage = (image: CozyImageResource) => new Promise<void>(resolve => {
-      const tileSource = image.type === 'dynamic' || image.type === 'level0' 
+      const tileSource = image.type === 'dynamic' || image.type === 'level0'
         ? image.serviceUrl
         : image.url;
 
@@ -93,7 +96,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
         const y = image.target.y / selectedCanvas!.width;
         const width = image.target.w / selectedCanvas!.width;
 
-        viewer.addTiledImage({ 
+        viewer.addTiledImage({
           tileSource,
           x,
           y,
@@ -106,12 +109,15 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     });
 
     Promise.all(selectedCanvas.images.map(addImage)).then(() => {
+      if (cancelled) return;
+
       const aspectRatio = selectedCanvas!.width / selectedCanvas!.height;
       const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
       viewer.viewport.fitBounds(canvasRect, true);
     });
 
     return () => {
+      cancelled = true;
       viewer.world.removeAll();
     }
   }, [viewer, selectedCanvas]);
