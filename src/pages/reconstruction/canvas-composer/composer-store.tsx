@@ -93,7 +93,7 @@ const scheduleAppStoreSync = pDebounce(() => {
   const { imagesByCanvasId } = useComposerStore.getState();
 
   const next = applyEdits(reconstruction, imagesByCanvasId);
-  const changed = next.some((r, i) => r !== reconstruction[i]);
+  const changed = next.length !== reconstruction.length || next.some((r, i) => r !== reconstruction[i]);
 
   if (changed) updateReconstruction(next);
 }, 250);

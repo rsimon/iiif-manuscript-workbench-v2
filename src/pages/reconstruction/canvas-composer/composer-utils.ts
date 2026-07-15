@@ -113,13 +113,17 @@ export const applyEdits = (
   return reconstruction
     .filter(r => imagesByCanvasId.has(r.id))
     .map(r => {
+      // Images in the composer (with user edits)
       const composerImages = imagesByCanvasId.get(r.id)!;
 
+      // Images in the current reconstruction state (to be replaced)
+      const currentImages = toDraggableImages(r);
+
       if (r.type === 'original') {
-        const nextSource = applyEditsToSource(r.source, composerImages);
+        const nextSource = applyEditsToSource(r.source, composerImages, currentImages);
         return nextSource === r.source ? r : { ...r, source: nextSource };
       } else {
-        const nextSources = r.sources.map(source => applyEditsToSource(source, composerImages));
+        const nextSources = r.sources.map(source => applyEditsToSource(source, composerImages, currentImages));
         const changed = nextSources.some((s, i) => s !== r.sources[i]);
         return changed ? { ...r, sources: nextSources } : r;
       }
@@ -130,10 +134,14 @@ const toFragmentTarget = (canvasId: string, bounds?: { x: number; y: number; w: 
   bounds ? `${canvasId}#xywh=${bounds.x},${bounds.y},${bounds.w},${bounds.h}` : canvasId;
 
 // Applies composer edits onto one source canvas
-const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage[]): SourceCanvas => {
+const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage[], currentImages: DraggableImage[]): SourceCanvas => {
   const canvasId = source.canvas.id;
 
   const composerImagesByKey = new Map(composerImages
+    .filter(img => img.sourceCanvasId === canvasId)
+    .map(img => [getDraggableImageKey(img), img] as const));
+
+  const currentImagesByKey = new Map(currentImages
     .filter(img => img.sourceCanvasId === canvasId)
     .map(img => [getDraggableImageKey(img), img] as const));
 
@@ -157,9 +165,9 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
       return [];
     }
 
-    const current = resource.target;
+    const current = currentImagesByKey.get(key);
 
-    const unchanged = !!current && current.x === draggable.x && current.y === draggable.y && current.w === draggable.width;
+    const unchanged = !!current && current.x === draggable.x && current.y === draggable.y && current.width === draggable.width;
     if (unchanged) return [canvasSourcePaintAnnotations[index]];
 
     touched = true;
