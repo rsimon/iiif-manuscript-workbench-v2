@@ -14,6 +14,8 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
     if (!viewer) return;
 
     const onCanvasClick = (evt: CanvasClickEvent) => {
+      if (!evt.quick) return;
+      
       const { metaKey } = evt.originalEvent as PointerEvent;
 
       const point = viewer.viewport.viewerElementToViewportCoordinates(evt.position);
