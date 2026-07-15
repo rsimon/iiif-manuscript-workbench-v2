@@ -24,7 +24,7 @@ export const SourceTreeToolbar = () => {
   }
 
   return (
-    <div className="border-b text-muted-foreground flex justify-between py-2 pl-1 pr-3.5">
+    <div className="border-b text-muted-foreground flex justify-between py-2 pl-1.5 pr-3.5">
       <div className="flex items-center">
         <PanelActionButton
           tooltip={isAllExpanded ? 'Collapse all' : 'Expand all'}

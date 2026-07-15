@@ -1,9 +1,8 @@
 import { useMemo, type ReactNode } from 'react';
 import { Link, useLocation} from 'wouter';
-import { cn  } from '@/shadcn/utils';
-import { IIIFIcon } from '@/components/iiif-icon';
-import { useAppStore } from '@/store/app-store';
 import { Badge } from '@/shadcn/badge';
+import { cn  } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
 import { Help } from './menu-help';
 import { Project } from './menu-project';
 
@@ -40,11 +39,12 @@ export const AppHeader = () => {
   , [reconstruction]);
 
   return (
-    <header className="flex justify-between items-center px-4 text-sm 
+    <header className="flex justify-between items-center px-2.5 text-sm 
       relative z-10 shadow-[0_0_1px_rgba(0,0,0,0.5)]">
-      <IIIFIcon 
-        color 
-        className="size-8 mb-0.5" />
+      <img 
+        src="/Codicum_Logo_Horizontal_Texture.svg" 
+        alt="CODICUM project logo"
+        className="h-9.5" />
 
       <nav className="flex items-center gap-3 pt-0.5">
         <NavItem href="/sources">
