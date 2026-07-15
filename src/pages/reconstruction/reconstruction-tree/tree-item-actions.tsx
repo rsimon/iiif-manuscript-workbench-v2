@@ -41,7 +41,7 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
 
       <DropdownMenuContent>
         <DropdownMenuItem>
-          <IconPencil /> Rename leaf
+          <IconPencil /> Rename canvas
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
