@@ -6,7 +6,6 @@ import {
   IconArrowBarToUp,
   IconCircleMinus,
   IconDots,
-  IconEye,
   IconPencil
 } from '@tabler/icons-react';
 import {
@@ -41,10 +40,6 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
       </DropdownMenuTrigger>
 
       <DropdownMenuContent>
-        <DropdownMenuItem>
-          <IconEye /> Open in composer
-        </DropdownMenuItem>
-
         <DropdownMenuItem>
           <IconPencil /> Rename leaf
         </DropdownMenuItem>
