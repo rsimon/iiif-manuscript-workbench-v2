@@ -108,6 +108,8 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
   const onConfirmCollectionImport = () => {
     if (step.phase !== 'confirm') return;
 
+    const signal = abortRef.current?.signal;
+
     const total = step.manifests.length;
 
     let progress = 1;
@@ -116,22 +118,30 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
     setStep({ phase: 'bulk-import', progress, total, current });
 
     step.manifests.reduce<Promise<void>>((p, manifest) => p.then(() => {
+      if (signal?.aborted) return;
+
       current = manifest.getLabel();
 
       setStep({ phase: 'bulk-import', progress, total, current });
       return throttledParseURL(manifest.id).then(result => {
+        if (signal?.aborted) return;
+
         if (result.type === 'manifest') {
           addSource(manifest.id, result.resource);
         } else {
-          throw new Error('Not a valid IIIF presentation manifest'); 
+          throw new Error('Not a valid IIIF presentation manifest');
         }
 
         progress += 1;
       });
     }), Promise.resolve()).then(() => {
+      if (signal?.aborted) return;
+
       resetDialog();
       props.onOpenChange(false);
     }).catch(error => {
+      if (signal?.aborted) return;
+
       setError(error.message || 'Failed to import collection');
     });
   }
@@ -244,7 +254,7 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
                 Import
               </Button>
             </>
-          ) : step.phase === 'crawling' ? (
+          ) : step.phase === 'crawling' || step.phase === 'bulk-import' ? (
             <Button
               variant="outline"
               onClick={onBack}>
