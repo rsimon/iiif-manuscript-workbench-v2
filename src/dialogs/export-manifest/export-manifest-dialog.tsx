@@ -5,6 +5,7 @@ import { Button } from '@/shadcn/button';
 import { Label } from '@/shadcn/label';
 import { Input } from '@/shadcn/input';
 import { Textarea } from '@/shadcn/textarea';
+import { useAppStore } from '@/store/app-store';
 import { createManifest } from './create-manifest';
 import { 
   Dialog, 
@@ -20,7 +21,6 @@ import {
   TabsList,
   TabsTrigger
 } from '@/shadcn/tabs';
-import { useAppStore } from '@/store/app-store';
 
 interface ExportManifestDialogProps {
 
