@@ -55,8 +55,7 @@ export const CanvasComposer = () => {
       },
       preserveViewport: true,
       showNavigator:  true,
-      navigatorPosition: 'BOTTOM_RIGHT',
-      navigatorSizeRatio: 0.22
+      navigatorPosition: 'BOTTOM_RIGHT'
     });
 
     viewerInstance.navigator?.viewport.setMargins({ left: 8, top: 8, right: 8, bottom: 8 });
