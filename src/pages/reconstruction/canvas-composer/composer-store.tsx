@@ -1,9 +1,10 @@
 import { create } from 'zustand';
 import { Viewer, TiledImage } from 'openseadragon';
 import { dequal } from 'dequal/lite';
+import pDebounce from 'p-debounce';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
 import { TwoColumnLayout } from './layout';
-import { getDraggableImageKey, toDraggableImages } from './composer-utils';
+import { applyEdits, getDraggableImageKey, toDraggableImages } from './composer-utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 
@@ -76,6 +77,9 @@ export const useComposerStore = create<ComposerState>(set => ({
         ? { ...selectedImage, image: updated }
         : undefined;
 
+    // Debounced upwards sync to the main (persistent) app store
+    scheduleAppStoreSync();
+
     return {
       imagesByCanvasId: updatedImagesByCanvasId,
       ...(updatedSelectedImage ? { selectedImage: updatedSelectedImage } : {})
@@ -83,6 +87,18 @@ export const useComposerStore = create<ComposerState>(set => ({
   })
 }));
 
+// Debounced upwards sync to root app state
+const scheduleAppStoreSync = pDebounce(() => {
+  const { reconstruction, updateReconstruction } = useAppStore.getState();
+  const { imagesByCanvasId } = useComposerStore.getState();
+
+  const next = applyEdits(reconstruction, imagesByCanvasId);
+  const changed = next.length !== reconstruction.length || next.some((r, i) => r !== reconstruction[i]);
+
+  if (changed) updateReconstruction(next);
+}, 250);
+
+// Downwards sync from app store to local state
 useAppStore.subscribe((state, prevState) => {
   // Layout only needs recomputing if structural props changed by value
   const stripIrrelevant = (r: ReconstructionCanvas) => r.type === 'composite' ? {
@@ -111,8 +127,16 @@ useAppStore.subscribe((state, prevState) => {
       : toDraggableImages(r)
   ]));
 
+  // Skip updated if nothing actually differs - prevents infinite loop
+  // from the 'upwards sync' to the app state after a user edit
+  const imagesChanged =
+    imagesByCanvasId.size !== prevImages.size ||
+      [...imagesByCanvasId].some(([id, images]) => prevImages.get(id) !== images);
+
+  if (!layoutChanged && !imagesChanged) return;
+
   useComposerStore.setState({
     ...(layoutChanged ? { layout: TwoColumnLayout(state.reconstruction) } : {}),
-    imagesByCanvasId
+    ...(imagesChanged ? { imagesByCanvasId } : {})
   });
 });
