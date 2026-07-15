@@ -1,6 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import OpenSeadragon, { TiledImage } from 'openseadragon';
 import { useShallow } from 'zustand/react/shallow';
+import { cn } from '@/shadcn/utils';
 import { useComposerStore } from './composer-store';
 import { getDraggableImageKey } from './composer-utils';
 import { OverlayLayer } from './overlay-layer';
@@ -19,6 +20,7 @@ export const CanvasComposer = () => {
   useComposerSelection(viewer, layout);
   
   const firstRender = useRef(true);
+  const [isReady, setIsReady] = useState(false);
 
   // images per layout item
   const images = useComposerStore(useShallow(state =>
@@ -126,6 +128,7 @@ export const CanvasComposer = () => {
         const worldRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3 * layout.layoutWidth, 1.3 * layout.layoutWidth / aspectRatio);
         viewer.viewport.fitBounds(worldRect, true);
         firstRender.current = false;
+        setIsReady(true);
       }
     });
   }, [viewer, layout, images]);
@@ -135,7 +138,7 @@ export const CanvasComposer = () => {
       [&_.openseadragon-container]:z-10 [&_.navigator]:rounded-tl-md [&_.navigator]:bg-neutral-50! [&_.navigator]:border-r-0! 
       [&_.navigator]:border-b-0! [&_.navigator]:border-t! [&_.navigator]:border-l! [&_.navigator]:border-neutral-400/70! 
       [&_.navigator]:shadow-md shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
-      <div ref={elementRef} className="size-full leading-0">
+      <div ref={elementRef} className={cn('size-full leading-0', !isReady && 'invisible')}>
         <OverlayLayer />
       </div>
     </div>
