@@ -77,12 +77,12 @@ export const ExportManifestDialog = (props: ExportManifestDialogProps) => {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl gap-4">
         <DialogHeader className="gap-2">
-          <DialogTitle className="flex items-center gap-2 font-bold">
+          <DialogTitle className="flex items-center gap-2">
             <IIIFIcon color className="size-6 mb-0.75" />
             Export IIIF Manifest
           </DialogTitle>
           <DialogDescription>
-            Generate a IIIF Presentation API 2.1 manifest for your reconstruction.
+            Generate a IIIF Presentation API 3 manifest for your reconstruction.
           </DialogDescription>
         </DialogHeader>
         
@@ -92,7 +92,7 @@ export const ExportManifestDialog = (props: ExportManifestDialogProps) => {
             <TabsTrigger value="preview">JSON Preview</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="settings" className="space-y-4 pt-4">
+          <TabsContent value="settings" className="space-y-6 pt-4">
             <div className="space-y-2">
               <Label htmlFor="export-label">Manifest Label</Label>
               <Input
@@ -137,7 +137,7 @@ export const ExportManifestDialog = (props: ExportManifestDialogProps) => {
               <Textarea
                 value={manifestJson}
                 readOnly
-                className="h-80 font-mono text-sm! font-light" />
+                className="h-80 field-sizing-fixed wrap-anywhere font-mono text-sm! font-light" />
               
               <Button
                 variant="ghost"
