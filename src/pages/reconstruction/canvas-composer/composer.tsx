@@ -53,11 +53,16 @@ export const CanvasComposer = () => {
         clickToZoom: false,
         dblClickToZoom: true
       },
-      preserveViewport: true
+      preserveViewport: true,
+      showNavigator:  true,
+      navigatorPosition: 'BOTTOM_RIGHT',
+      navigatorSizeRatio: 0.22
     });
 
-    setViewer(viewerInstance);
+    viewerInstance.navigator?.viewport.setMargins({ left: 8, top: 8, right: 8, bottom: 8 });
 
+    setViewer(viewerInstance);
+    
     return () => {
       viewerInstance.destroy();
       useComposerStore.getState().tiledImages.clear();
@@ -127,8 +132,11 @@ export const CanvasComposer = () => {
   }, [viewer, layout, images]);
 
   return (
-    <div className="size-full bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)] relative">
-      <div ref={elementRef} className="size-full">
+    <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] 
+      [&_.openseadragon-container]:z-10 [&_.navigator]:rounded-tl-md [&_.navigator]:bg-neutral-50! [&_.navigator]:border-r-0! 
+      [&_.navigator]:border-b-0! [&_.navigator]:border-t! [&_.navigator]:border-l! [&_.navigator]:border-neutral-400/70! 
+      [&_.navigator]:shadow-md shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
+      <div ref={elementRef} className="size-full leading-0">
         <OverlayLayer />
       </div>
     </div>
