@@ -100,7 +100,7 @@ export const useDragAndDrop = () => {
         : {
             type: 'composite' as const,
             id: `${baseURI}/${crypto.randomUUID()}`,
-            label: `Leaf ${idx + 1}`,
+            label: `Canvas ${idx + 1}`,
             sources: [c.source, dragged],
             width: c.source.canvas.width,
             height: c.source.canvas.height
