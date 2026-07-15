@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { IconLoader2, IconPhotoPlus, IconStack2 } from '@tabler/icons-react';
 import { IconAlertCircle } from '@tabler/icons-react';
 import pThrottle from 'p-throttle';
+import { useLocation } from 'wouter';
 import { Cozy, type CozyCollectionManifestItem } from 'cozy-iiif';
 import { Alert, AlertDescription } from '@/shadcn/alert';
 import { Button } from '@/shadcn/button';
@@ -37,6 +38,8 @@ type DialogStep =
   | { phase: 'bulk-import'; progress: number; total: number; current?: string };
 
 export const ImportSourceDialog = (props: ImportSourceDialogProps) => {
+  const [location, navigate] = useLocation();
+
   const addSource = useAppStore(state => state.addSource);
 
   const [url, setUrl] = useState('');
@@ -44,6 +47,11 @@ export const ImportSourceDialog = (props: ImportSourceDialogProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+
+  const goToSourcesTab = () => {
+    if (location !== '/sources')
+      navigate("/sources");
+  }
 
   const resetDialog = () => {
     abortRef.current?.abort();
@@ -82,7 +90,7 @@ export const ImportSourceDialog = (props: ImportSourceDialogProps) => {
         addSource(url, result.resource);
         resetDialog();
 
-        // Navigate to `/sources` if needed
+        goToSourcesTab();
 
         props.onOpenChange(false);
         return;
@@ -140,7 +148,7 @@ export const ImportSourceDialog = (props: ImportSourceDialogProps) => {
     }), Promise.resolve()).then(() => {
       if (signal?.aborted) return;
 
-      // Navigate to `/sources` if needed
+      goToSourcesTab();
       
       resetDialog();
       props.onOpenChange(false);
