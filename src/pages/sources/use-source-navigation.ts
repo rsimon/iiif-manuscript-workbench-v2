@@ -45,8 +45,10 @@ export const useSourceNavigation = () => {
     showInReconstructionOnly 
       ? sources.map(s => ({
           source: s, 
-          canvases: s.manifest.canvases.filter(canvas => reconstruction.some(r => r.id === canvas.id))
+          canvases: s.manifest.canvases.filter(canvas => inReconstructionByManifest.get(s.manifest.id)?.has(canvas.id))
         }))
+
+        // inReconstructionByManifest.get(manifestId)?.has(canvasId) ?? false
       : sources.map(s => ({ source: s, canvases: s.manifest.canvases }))
     , [sources, showInReconstructionOnly, inReconstructionByManifest]);
 
