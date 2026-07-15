@@ -22,7 +22,6 @@ export const CanvasIndicatorBackground = (props: CanvasIndicatorProps) => {
           viewer={props.viewer}
           fill="#fff"
           fillOpacity={0.9}
-          stroke="red"
           strokeWidth={0}
           pointerEvents="none" />
       ))}
