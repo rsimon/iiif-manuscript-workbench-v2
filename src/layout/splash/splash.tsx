@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { IconUpload } from '@tabler/icons-react';
+import { ImportSourceDialog } from '@/dialogs/import-source';
 import { Button } from '@/shadcn/button';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/shadcn/dialog';
 import { Checkbox } from '@/shadcn/checkbox';
@@ -13,7 +14,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/shadcn/carousel';
-import { ImportManifestDialog } from '@/dialogs/import-manifest';
 
 const SPLASH_CONTENT = [{
   title: '1. Select Sources',
@@ -34,10 +34,10 @@ export const Splash = () => {
 
   const hasSources = useAppStore(state => state.sources.length > 0);
 
-  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
 
   const onImportFirstSource = () => {
-    setShowImportDialog(true);
+    setShowImportSourceDialog(true);
     setOpen(false);
   }
 
@@ -117,9 +117,9 @@ export const Splash = () => {
         </DialogContent>
       </Dialog>
 
-      <ImportManifestDialog 
-        open={showImportDialog} 
-        onOpenChange={setShowImportDialog} />
+      <ImportSourceDialog 
+        open={showImportSourceDialog} 
+        onOpenChange={setShowImportSourceDialog} />
     </>
   )
 

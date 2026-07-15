@@ -22,7 +22,7 @@ const throttledParseURL = pThrottle({ limit: 2, interval: 1000 })(
   (url: string) => Cozy.parseURL(url)
 );
 
-interface ImportManifestDialogProps {
+interface ImportSourceDialogProps {
 
   open: boolean;
 
@@ -36,7 +36,7 @@ type DialogStep =
   | { phase: 'confirm'; manifests: CozyCollectionManifestItem[] }
   | { phase: 'bulk-import'; progress: number; total: number; current?: string };
 
-export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
+export const ImportSourceDialog = (props: ImportSourceDialogProps) => {
   const addSource = useAppStore(state => state.addSource);
 
   const [url, setUrl] = useState('');
@@ -81,6 +81,9 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
       if (result.type === 'manifest') {
         addSource(url, result.resource);
         resetDialog();
+
+        // Navigate to `/sources` if needed
+
         props.onOpenChange(false);
         return;
       } 
@@ -137,6 +140,8 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
     }), Promise.resolve()).then(() => {
       if (signal?.aborted) return;
 
+      // Navigate to `/sources` if needed
+      
       resetDialog();
       props.onOpenChange(false);
     }).catch(error => {

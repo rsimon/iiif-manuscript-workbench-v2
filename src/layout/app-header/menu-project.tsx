@@ -3,7 +3,8 @@ import { IconDownload, IconFolderOpen, IconRestore, IconUpload } from '@tabler/i
 import { Button } from '@/shadcn/button';
 import { useAppStore } from '@/store/app-store';
 import { useConfirm } from '@/dialogs/confirm';
-import { ExportManifestDialog } from '@/dialogs/export-manifest';
+import { ExportReconstructionDialog } from '@/dialogs/export-reconstruction';
+import { ImportSourceDialog } from '@/dialogs/import-source';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +16,8 @@ import {
 export const Project = () => {
   const reset  = useAppStore(state => state.resetAll);
 
-  const [exportDialogOpen, setExportDialogOpen] = useState(false);
+  const [showExportReconstructionDialog, setShowExportReconstructionDialog] = useState(false);
+  const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
 
   const confirm = useConfirm();
 
@@ -48,13 +50,15 @@ export const Project = () => {
 
           <DropdownMenuItem 
             className="gap-2.5"
-            onClick={() => setExportDialogOpen(true)}>
+            onClick={() => setShowExportReconstructionDialog(true)}>
             <IconDownload /> Export reconstruction...
           </DropdownMenuItem>
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem className="gap-2.5">
+          <DropdownMenuItem 
+            className="gap-2.5"
+            onClick={() => setShowImportSourceDialog(true)}>
             <IconUpload /> Import IIIF source...
           </DropdownMenuItem>
 
@@ -69,9 +73,13 @@ export const Project = () => {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ExportManifestDialog
-        open={exportDialogOpen}
-        onOpenChange={setExportDialogOpen} />
+      <ExportReconstructionDialog
+        open={showExportReconstructionDialog}
+        onOpenChange={setShowExportReconstructionDialog} />
+
+      <ImportSourceDialog
+        open={showImportSourceDialog}
+        onOpenChange={setShowImportSourceDialog} />
     </>
   )
 

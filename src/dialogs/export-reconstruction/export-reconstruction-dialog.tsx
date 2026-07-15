@@ -22,7 +22,7 @@ import {
   TabsTrigger
 } from '@/shadcn/tabs';
 
-interface ExportManifestDialogProps {
+interface ExportReconstructionDialogProps {
 
   open: boolean;
 
@@ -30,7 +30,7 @@ interface ExportManifestDialogProps {
 
 }
 
-export const ExportManifestDialog = (props: ExportManifestDialogProps) => {
+export const ExportReconstructionDialog = (props: ExportReconstructionDialogProps) => {
 
   const { open, onOpenChange } = props;
 

@@ -8,7 +8,7 @@ import { Button } from '@/shadcn/button';
 import { ScrollArea } from '@/shadcn/scroll-area';
 import { TooltipProvider } from '@/shadcn/tooltip';
 import { cn } from '@/shadcn/utils';
-import { ImportManifestDialog } from '@/dialogs/import-manifest';
+import { ImportSourceDialog } from '@/dialogs/import-source';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 import { EmptySourceTree } from './empty-source-tree';
@@ -28,7 +28,7 @@ export const SourceTree = () => {
   const selection = useSourcesStore(state => state.selection);
   const setSelection = useSourcesStore(state => state.setSelection);
 
-  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
@@ -99,7 +99,7 @@ export const SourceTree = () => {
 
       {sources.length === 0 ? (
         <EmptySourceTree
-          onImport={() => setShowImportDialog(true)} />
+          onImport={() => setShowImportSourceDialog(true)} />
       ) : (
         <>
           <ScrollArea className="grow min-h-0" viewportRef={setViewportEl}>
@@ -137,16 +137,16 @@ export const SourceTree = () => {
             <Button 
               className="w-full font-normal mt-1.5"
               variant="outline"
-              onClick={() => setShowImportDialog(true)}>
+              onClick={() => setShowImportSourceDialog(true)}>
               <IconUpload /> Import IIIF
             </Button>
           </div>
         </>
       )}
 
-      <ImportManifestDialog 
-        open={showImportDialog} 
-        onOpenChange={setShowImportDialog} />
+      <ImportSourceDialog 
+        open={showImportSourceDialog} 
+        onOpenChange={setShowImportSourceDialog} />
     </div>
 
   )
