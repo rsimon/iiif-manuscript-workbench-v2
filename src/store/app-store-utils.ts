@@ -1,5 +1,7 @@
 import { Cozy, type CozyCanvas, type CozyManifest } from 'cozy-iiif';
+import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { SourceCanvas, ReconstructionCanvas } from '@/types';
+import type { MoveDirection } from './app-store';
 
 export const parseCanvas = (source: unknown): CozyCanvas => {
   const parsed = Cozy.parse(source);
@@ -78,6 +80,26 @@ export const appendEmptyCanvas = (
       height
     }
   ]
+}
+
+export const moveCanvas = (
+  reconstruction: ReconstructionCanvas[],
+  canvasId: string,
+  direction: MoveDirection
+): ReconstructionCanvas[] => {
+  const startIndex = reconstruction.findIndex(r => r.id === canvasId);
+  if (startIndex === -1) return reconstruction;
+
+  const finishIndex =
+    direction === 'top' ? 0 :
+    direction === 'bottom' ? reconstruction.length - 1 :
+    direction === 'up' ? startIndex - 1 :
+    startIndex + 1;
+
+  if (finishIndex === startIndex || finishIndex < 0 || finishIndex >= reconstruction.length)
+    return reconstruction;
+
+  return reorder({ list: reconstruction, startIndex, finishIndex });
 }
 
 export const mergeInto = (

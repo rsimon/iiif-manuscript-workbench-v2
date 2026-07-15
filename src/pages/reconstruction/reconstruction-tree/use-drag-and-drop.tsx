@@ -108,13 +108,11 @@ export const useDragAndDrop = () => {
     });
   }, [take]);
 
-
   return {
     extractChild,
     mergeInto,
     reorderRoot
   }
-
 }
 
 export const withViewTransition = (update: () => void) => {

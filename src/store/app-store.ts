@@ -2,12 +2,13 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import type { ReconstructionCanvas, SourceManifest } from '@/types';
-import { 
-  appendEmptyCanvas, 
-  mergeInto, 
-  parseCanvas, 
-  parseManifest, 
-  removeCanvasFromReconstruction 
+import {
+  appendEmptyCanvas,
+  mergeInto,
+  moveCanvas,
+  parseCanvas,
+  parseManifest,
+  removeCanvasFromReconstruction
 } from './app-store-utils';
 
 interface AppStore {
@@ -28,6 +29,7 @@ interface AppStore {
   addCanvasesToReconstruction: (arg: { sourceId: string, canvas: CozyCanvas}[]) => void;
   appendEmptyCanvas: (width?: number, height?: number) => void;
   mergeCanvases: (toMerge: ReconstructionCanvas[]) => void;
+  moveCanvas: (canvasId: string, direction: MoveDirection) => void;
   removeCanvasFromReconstruction: (canvasId: string) => void;
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
   updateReconstruction: (updated: ReconstructionCanvas[]) => void;
@@ -37,6 +39,8 @@ interface AppStore {
   resetAll: () => void;
 
 }
+
+export type MoveDirection = 'up' | 'down' | 'top' | 'bottom';
 
 export const useAppStore = create<AppStore>()(
   persist(
@@ -108,6 +112,10 @@ export const useAppStore = create<AppStore>()(
 
       mergeCanvases: toMerge => set(({ baseURI, reconstruction  }) => ({
         reconstruction: mergeInto(toMerge, reconstruction, baseURI)
+      })),
+
+      moveCanvas: (canvasId, direction) => set(({ reconstruction }) => ({
+        reconstruction: moveCanvas(reconstruction, canvasId, direction)
       })),
 
       removeCanvasFromReconstruction: canvasId => set(({ reconstruction }) => ({
