@@ -1,6 +1,12 @@
 import type { Point } from 'openseadragon';
-import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from './composer-types';
+import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
+import type { 
+  ComposerLayout, 
+  ComposerLayoutItem, 
+  DraggableImage, 
+  DraggableImageSelection 
+} from './composer-types';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -99,58 +105,111 @@ export const getImageAt = (
   return hit ? { item, image: hit } : undefined;
 }
 
-// Applies user edits in the composer back into a reconstruction
+// Applies composer edits back into an app-level reconstruction
 export const applyEdits = (
   reconstruction: ReconstructionCanvas[],
   imagesByCanvasId: Map<string, DraggableImage[]>
 ): ReconstructionCanvas[] => {
-  const applyToSource = (source: SourceCanvas, changedKeys: Set<string>, composerImages: DraggableImage[]): SourceCanvas => {
-    let touched = false;
+  return reconstruction
+    .filter(r => imagesByCanvasId.has(r.id))
+    .map(r => {
+      const composerImages = imagesByCanvasId.get(r.id)!;
 
-    const nextImages = source.canvas.images.map((resource, index) => {
-      const key = getDraggableImageKey({ sourceCanvasId: source.canvas.id, index } as DraggableImage);
-      if (!changedKeys.has(key)) return resource;
+      if (r.type === 'original') {
+        const nextSource = applyEditsToSource(r.source, composerImages);
+        return nextSource === r.source ? r : { ...r, source: nextSource };
+      } else {
+        const nextSources = r.sources.map(source => applyEditsToSource(source, composerImages));
+        const changed = nextSources.some((s, i) => s !== r.sources[i]);
+        return changed ? { ...r, sources: nextSources } : r;
+      }
+    });
+}
 
-      const draggable = composerImages.find(img => getDraggableImageKey(img) === key);
-      if (!draggable) return resource;
+const toFragmentTarget = (canvasId: string, bounds?: { x: number; y: number; w: number; h: number }) =>
+  bounds ? `${canvasId}#xywh=${bounds.x},${bounds.y},${bounds.w},${bounds.h}` : canvasId;
 
+// Applies composer edits onto one source canvas
+const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage[]): SourceCanvas => {
+  const canvasId = source.canvas.id;
+
+  const composerImagesByKey = new Map(composerImages
+    .filter(img => img.sourceCanvasId === canvasId)
+    .map(img => [getDraggableImageKey(img), img] as const));
+
+  // Shorthands to original source canvas elements
+  const canvasSource = source.canvas.source;
+  const canvasSourcePage = canvasSource.items?.[0];
+  const canvasSourcePaintAnnotations = canvasSourcePage?.items ?? [];
+
+  let touched = false;
+
+  const seenKeys = new Set<string>();
+
+  // Existing images: keep unchanged, patch the target, or drop
+  const keptPaintAnnotations = source.canvas.images.flatMap((resource, index) => {
+    const key = getDraggableImageKey({ sourceCanvasId: canvasId, index } as DraggableImage);
+    seenKeys.add(key);
+
+    const draggable = composerImagesByKey.get(key);
+    if (!draggable) {
+      touched = true;
+      return [];
+    }
+
+    const current = resource.target;
+
+    const unchanged = !!current && current.x === draggable.x && current.y === draggable.y && current.w === draggable.width;
+    if (unchanged) return [canvasSourcePaintAnnotations[index]];
+
+    touched = true;
+
+    const h = draggable.width * resource.height / resource.width;
+
+    return [{
+      ...canvasSourcePaintAnnotations[index],
+      target: toFragmentTarget(canvasId, { x: draggable.x, y: draggable.y, w: draggable.width, h })
+    }];
+  });
+
+  // Composer entries with no matching existing image: added in composer.
+  const addedAnnotations = [...composerImagesByKey.entries()]
+    .filter(([key]) => !seenKeys.has(key))
+    .map(([, draggable]) => {
       touched = true;
 
-      // Height isn't editable in the composer (width + aspect ratio drive it), so
-      // preserve whatever's already there and only fall back to a fresh aspect-based
-      // value the first time this image gets an explicit target.
-      const h = resource.target?.h ?? (draggable.width * resource.height / resource.width);
+      const h = draggable.width * draggable.resource.height / draggable.resource.width;
 
-      return { ...resource, target: { x: draggable.x, y: draggable.y, w: draggable.width, h } };
+      return {
+        id: `${canvasId}/annotation/${crypto.randomUUID()}`,
+        type: 'Annotation',
+        motivation: 'painting',
+        body: draggable.resource.source,
+        target: toFragmentTarget(canvasId, { x: draggable.x, y: draggable.y, w: draggable.width, h })
+      };
     });
 
-    return touched ? { ...source, canvas: { ...source.canvas, images: nextImages } } : source;
-  }
+  if (!touched) return source;
 
-  return reconstruction.map(r => {
-    const composerImages = imagesByCanvasId.get(r.id);
-    if (!composerImages) return r;
+  const nextRawCanvas = {
+    ...canvasSource,
+    items: [
+      canvasSourcePage ? { 
+        ...canvasSourcePage, 
+        items: [
+          ...keptPaintAnnotations, 
+          ...addedAnnotations
+        ] 
+      } : { 
+        id: `${canvasId}/page/${crypto.randomUUID()}`, 
+        type: 'AnnotationPage', 
+        items: [
+          ...keptPaintAnnotations, 
+          ...addedAnnotations
+        ]
+      }
+    ]
+  };
 
-    const currentImages = toDraggableImages(r);
-
-    const changedKeys = new Set(
-      currentImages
-        .filter((img, i) => {
-          const next = composerImages[i];
-          return next !== undefined && (img.x !== next.x || img.y !== next.y || img.width !== next.width);
-        })
-        .map(getDraggableImageKey)
-    );
-
-    if (changedKeys.size === 0) return r;
-
-    if (r.type === 'original') {
-      const nextSource = applyToSource(r.source, changedKeys, composerImages);
-      return nextSource === r.source ? r : { ...r, source: nextSource };
-    } else {
-      const nextSources = r.sources.map(source => applyToSource(source, changedKeys, composerImages));
-      const changed = nextSources.some((s, i) => s !== r.sources[i]);
-      return changed ? { ...r, sources: nextSources } : r;
-    }
-  });
+  return { ...source, canvas: parseCanvas(nextRawCanvas) };
 }

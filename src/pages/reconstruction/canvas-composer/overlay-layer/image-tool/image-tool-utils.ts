@@ -12,12 +12,12 @@ export const getImageCorners = (selected: DraggableImageSelection): Point[] => {
   const canvas = useAppStore.getState().reconstruction.find(r => r.id === item.reconstructionCanvasId);
   if (!canvas) return [];
 
-  const [canvasWidth, canvasHeight] = getItemCanvasSize(canvas);
+  const [canvasWidth] = getItemCanvasSize(canvas);
 
   const aspect = image.resource.width / image.resource.height;
 
   const x = item.x + image.x / canvasWidth;
-  const y = item.y + image.y / canvasHeight;
+  const y = item.y + image.y / canvasWidth;
   const w = image.width / canvasWidth;
   const h = w / aspect;
 
