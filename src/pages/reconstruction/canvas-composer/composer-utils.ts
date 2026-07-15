@@ -1,6 +1,6 @@
 import type { Point } from 'openseadragon';
 import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from './composer-types';
-import type { ReconstructionCanvas } from '@/types';
+import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -97,4 +97,60 @@ export const getImageAt = (
   })[0];
 
   return hit ? { item, image: hit } : undefined;
+}
+
+// Applies user edits in the composer back into a reconstruction
+export const applyEdits = (
+  reconstruction: ReconstructionCanvas[],
+  imagesByCanvasId: Map<string, DraggableImage[]>
+): ReconstructionCanvas[] => {
+  const applyToSource = (source: SourceCanvas, changedKeys: Set<string>, composerImages: DraggableImage[]): SourceCanvas => {
+    let touched = false;
+
+    const nextImages = source.canvas.images.map((resource, index) => {
+      const key = getDraggableImageKey({ sourceCanvasId: source.canvas.id, index } as DraggableImage);
+      if (!changedKeys.has(key)) return resource;
+
+      const draggable = composerImages.find(img => getDraggableImageKey(img) === key);
+      if (!draggable) return resource;
+
+      touched = true;
+
+      // Height isn't editable in the composer (width + aspect ratio drive it), so
+      // preserve whatever's already there and only fall back to a fresh aspect-based
+      // value the first time this image gets an explicit target.
+      const h = resource.target?.h ?? (draggable.width * resource.height / resource.width);
+
+      return { ...resource, target: { x: draggable.x, y: draggable.y, w: draggable.width, h } };
+    });
+
+    return touched ? { ...source, canvas: { ...source.canvas, images: nextImages } } : source;
+  }
+
+  return reconstruction.map(r => {
+    const composerImages = imagesByCanvasId.get(r.id);
+    if (!composerImages) return r;
+
+    const currentImages = toDraggableImages(r);
+
+    const changedKeys = new Set(
+      currentImages
+        .filter((img, i) => {
+          const next = composerImages[i];
+          return next !== undefined && (img.x !== next.x || img.y !== next.y || img.width !== next.width);
+        })
+        .map(getDraggableImageKey)
+    );
+
+    if (changedKeys.size === 0) return r;
+
+    if (r.type === 'original') {
+      const nextSource = applyToSource(r.source, changedKeys, composerImages);
+      return nextSource === r.source ? r : { ...r, source: nextSource };
+    } else {
+      const nextSources = r.sources.map(source => applyToSource(source, changedKeys, composerImages));
+      const changed = nextSources.some((s, i) => s !== r.sources[i]);
+      return changed ? { ...r, sources: nextSources } : r;
+    }
+  });
 }

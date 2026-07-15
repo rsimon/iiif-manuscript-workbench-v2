@@ -36,6 +36,7 @@
     "embla-carousel-react": "^8.6.0",
     "lucide-react": "^1.23.0",
     "openseadragon": "^5.0.1",
+    "p-debounce": "^5.1.0",
     "p-throttle": "^8.1.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7",
