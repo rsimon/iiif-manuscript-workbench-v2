@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import type { ButtonProps } from '@base-ui/react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
+import { PhysicalDimensionsDialog } from '@/dialogs/physical-dimensions';
 import { Button } from '@/shadcn/button';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { Separator } from '@/shadcn/separator';
@@ -70,6 +72,8 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
   const addToReconstruction = useAppStore(state => state.addCanvasToReconstruction);
   const removeFromReconstruction = useAppStore(state => state.removeCanvasFromReconstruction);
 
+  const [showDimensionsDialog, setShowDimensionsDialog] = useState(false);
+
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
       <div className="bg-white flex items-center gap-1 min-w-20 rounded-full p-1 pointer-events-auto
@@ -112,11 +116,15 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
 
         <Separator orientation="vertical" />
 
-        <Button
-          variant="ghost"
-          className="rounded-full font-normal text-xs text-muted-foreground">
-          <IconDimensions /> 215 x 280 mm
-        </Button>
+        <PhysicalDimensionsDialog
+          open={showDimensionsDialog}
+          onOpenChange={setShowDimensionsDialog}>
+          <Button
+            variant="ghost"
+            className="rounded-full font-normal text-xs text-muted-foreground">
+            <IconDimensions /> 215 x 280 mm
+          </Button>
+        </PhysicalDimensionsDialog>
 
         <SourcePreviewToolbarButton
           tooltip="Measure">
