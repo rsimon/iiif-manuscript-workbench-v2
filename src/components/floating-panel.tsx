@@ -64,7 +64,8 @@ export const FloatingPanelContent = (props: FloatingPanelContentProps) => {
         <Popover.Popup
           ref={popupRef}
           className={cn(
-            'rounded-md min-w-sm border bg-popover text-popover-foreground shadow-lg outline-none',
+            'rounded-md min-w-sm border-0 bg-popover text-popover-foreground ring-1 ring-black/5',
+            'shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.10)]',
             props.className,
           )}>
           <DragHandler popupRef={popupRef} headerRef={headerRef} positionRef={positionRef} />

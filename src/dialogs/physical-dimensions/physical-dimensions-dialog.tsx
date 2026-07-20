@@ -43,6 +43,8 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
 
       <FloatingPanelContent 
         title="Physical dimensions"
+        align="center"
+        sideOffset={14}
         className="w-sm">
         <div className="p-4 space-y-6">
           <Field className="gap-2">
@@ -60,6 +62,10 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
               <FieldSet className="gap-0.5 items-start">
                 <FieldLegend variant="label">Physical size</FieldLegend>
 
+                <FieldDescription className="pt-2 text-xs leading-relaxed">
+                  Enter the known physical measurements for the scanned image.
+                </FieldDescription>
+
                 <FieldGroup 
                   className="flex flex-row gap-2 mt-2 items-center">
                   <Field>
@@ -68,7 +74,7 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     </FieldLabel>
                     <Input
                       id="width"
-                      placeholder="Width"
+                      placeholder="–"
                       className="tabular-nums grow h-8" />
                   </Field>
                     
@@ -80,7 +86,7 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     </FieldLabel>
                     <Input
                       id="height"
-                      placeholder="Height"
+                      placeholder="–"
                       className="tabular-nums grow h-8" />
                   </Field>
 
@@ -90,18 +96,15 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     </FieldLabel>
                     <Input
                       id="unit"
-                      placeholder="Unit"
+                      placeholder="e.g. mm"
                       className="tabular-nums shrink-0 h-8" />
                   </Field>
                 </FieldGroup>
-
-                <FieldDescription className="px-1 py-1.5 text-xs leading-relaxed">
-                  Enter the known physical measurements for the scanned image.
-                </FieldDescription>
               </FieldSet>
 
               <div className="flex gap-2 justify-between items-end">
                 <Button 
+                  disabled
                   size="sm"
                   className="bg-black hover:bg-black/80">
                   Apply scale
@@ -110,16 +113,20 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                 <Button
                   variant="link"
                   size="sm"
-                  className="font-normal px-0.5 h-auto"
+                  className="font-normal text-primary hover:text-primary px-0.5 h-auto"
                   onClick={() => setMode('MEASURE')}>
                   <IconRulerMeasure className="size-4" /> Measure from image
                 </Button>
               </div>
             </div>
           ) : (
-            <div className="space-y-2" key="measure">
+            <div className="space-y-6" key="measure">
               <FieldSet className="gap-0.5 items-start">
                 <FieldLegend variant="label">Measured distance</FieldLegend>
+
+                <FieldDescription className="px-1 py-1.5 text-xs leading-relaxed">
+                  Click two points with a known distance apart to calibrate the physical size.
+                </FieldDescription>
 
                 <FieldGroup className="flex-row items-center gap-2 mt-2">
                   <Field>
@@ -154,10 +161,6 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                       className="tabular-nums shrink-0 h-8" />
                   </Field>
                 </FieldGroup>
-
-                <FieldDescription className="px-1 py-1.5 text-xs leading-relaxed">
-                  Click two points with a known distance apart to calibrate the physical size.
-                </FieldDescription>
               </FieldSet>
 
               <div className="flex gap-2 justify-between items-end">
