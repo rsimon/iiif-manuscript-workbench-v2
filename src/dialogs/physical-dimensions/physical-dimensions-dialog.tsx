@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { IconForms, IconRulerMeasure } from '@tabler/icons-react';
 import { Input } from '@/shadcn/input';
 import { Button } from '@/shadcn/button';
+import type { PhysicalSize } from '@/types';
 import { 
   FloatingPanel, 
   FloatingPanelContent, 
@@ -18,19 +19,22 @@ import {
 } from '@/shadcn/field';
 
 interface PhysicalDimensionsDialogProps {
+  
+  children: ReactNode;
 
   open: boolean;
+  
+  size?: PhysicalSize;
 
   onOpenChange(open: boolean): void;
 
-  children: ReactNode;
-
+  onSizeChanged(size?: PhysicalSize): void;
+  
 }
 
 type PhysicalDimensionsDialogMode = 'FORM_INPUT' | 'MEASURE';
 
 export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) => {
-
   const [mode, setMode] = useState<PhysicalDimensionsDialogMode>('FORM_INPUT');
 
   return (

@@ -69,6 +69,9 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
   const hasNext = props.selectedPageIndex < props.totalPageCount - 1;
   const hasPrev = props.selectedPageIndex > 0;
 
+  const size = useAppStore(state => state.sizes.get(props.selectedCanvas.id));
+  const setSize = useAppStore(state => state.setPhysicalSize);
+
   const addToReconstruction = useAppStore(state => state.addCanvasToReconstruction);
   const removeFromReconstruction = useAppStore(state => state.removeCanvasFromReconstruction);
 
@@ -117,13 +120,24 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
         <Separator orientation="vertical" />
 
         <PhysicalDimensionsDialog
+          size={size}
           open={showDimensionsDialog}
-          onOpenChange={setShowDimensionsDialog}>
-          <Button
-            variant="ghost"
-            className="rounded-full font-normal text-xs text-muted-foreground">
-            <IconDimensions /> 215 x 280 mm
-          </Button>
+          onOpenChange={setShowDimensionsDialog}
+          onSizeChanged={size => setSize(props.selectedCanvas.id, size)}>
+          {size ? (
+            <Button
+              variant="ghost"
+              className="rounded-full font-normal text-xs text-muted-foreground">
+              <IconDimensions /> 
+              <span>{size.width} x {size.height} {size.unit}</span>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="rounded-full border-primary border-dashed text-xs text-primary hover:text-primary">
+              <IconPlus /> Set dimensions
+            </Button>
+          )}
         </PhysicalDimensionsDialog>
 
         <SourcePreviewToolbarButton
