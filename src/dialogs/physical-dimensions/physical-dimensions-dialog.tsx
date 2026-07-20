@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { IconRulerMeasure } from '@tabler/icons-react';
+import { useState, type ReactNode } from 'react';
+import { IconForms, IconRulerMeasure } from '@tabler/icons-react';
 import { Input } from '@/shadcn/input';
 import { Button } from '@/shadcn/button';
 import { 
@@ -10,6 +10,7 @@ import {
 import { 
   Field, 
   FieldContent, 
+  FieldDescription, 
   FieldGroup, 
   FieldLabel, 
   FieldLegend, 
@@ -26,11 +27,11 @@ interface PhysicalDimensionsDialogProps {
 
 }
 
-// type PhysicalDimensionsDialogMode = 'FORM_INPUT' | 'MEASURING';
+type PhysicalDimensionsDialogMode = 'FORM_INPUT' | 'MEASURE';
 
 export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) => {
 
-  // const [mode, setMode] = useState<PhysicalDimensionsDialogMode>('FORM_INPUT');
+  const [mode, setMode] = useState<PhysicalDimensionsDialogMode>('FORM_INPUT');
 
   return (
     <FloatingPanel 
@@ -54,85 +55,131 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
             </FieldContent>
           </Field>
 
-          <FieldSet className="gap-0.5 items-start">
-            <FieldLegend variant="label">Physical size</FieldLegend>
+          {mode === 'FORM_INPUT' ? (
+            <div className="space-y-6" key="form_input">
+              <FieldSet className="gap-0.5 items-start">
+                <FieldLegend variant="label">Physical size</FieldLegend>
 
-            <FieldGroup 
-              className="flex flex-row gap-2 mt-2 items-center">
-              <Field>
-                <FieldLabel htmlFor="width" className="sr-only">
-                  Width
-                </FieldLabel>
-                <Input
-                  id="width"
-                  placeholder="Width"
-                  className="tabular-nums grow" />
-              </Field>
-                
-              <span className="text-muted-foreground">×</span>
+                <FieldGroup 
+                  className="flex flex-row gap-2 mt-2 items-center">
+                  <Field>
+                    <FieldLabel htmlFor="width" className="sr-only">
+                      Width
+                    </FieldLabel>
+                    <Input
+                      id="width"
+                      placeholder="Width"
+                      className="tabular-nums grow h-8" />
+                  </Field>
+                    
+                  <span className="text-muted-foreground">×</span>
 
-              <Field className="pr-2">
-                <FieldLabel htmlFor="height" className="sr-only">
-                  Height
-                </FieldLabel>
-                <Input
-                  placeholder="Height"
-                  className="tabular-nums grow" />
-              </Field>
+                  <Field className="pr-2">
+                    <FieldLabel htmlFor="height" className="sr-only">
+                      Height
+                    </FieldLabel>
+                    <Input
+                      id="height"
+                      placeholder="Height"
+                      className="tabular-nums grow h-8" />
+                  </Field>
 
-              <Field>
-                <FieldLabel htmlFor="unit" className="sr-only">
-                  Unit
-                </FieldLabel>
-                <Input
-                  placeholder="Unit"
-                  className="tabular-nums shrink-o" />
-              </Field>
-            </FieldGroup>
+                  <Field>
+                    <FieldLabel htmlFor="unit" className="sr-only">
+                      Unit
+                    </FieldLabel>
+                    <Input
+                      id="unit"
+                      placeholder="Unit"
+                      className="tabular-nums shrink-0 h-8" />
+                  </Field>
+                </FieldGroup>
 
-            <Button 
-              variant="link"
-              className="font-normal px-0.5">
-              <IconRulerMeasure className="size-4" /> Measure from image
-            </Button>
-          </FieldSet>
+                <FieldDescription className="px-1 py-1.5 text-xs leading-relaxed">
+                  Enter the known physical measurements for the scanned image.
+                </FieldDescription>
+              </FieldSet>
+
+              <div className="flex gap-2 justify-between items-end">
+                <Button 
+                  size="sm"
+                  className="bg-black hover:bg-black/80">
+                  Apply scale
+                </Button>
+
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="font-normal px-0.5 h-auto"
+                  onClick={() => setMode('MEASURE')}>
+                  <IconRulerMeasure className="size-4" /> Measure from image
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2" key="measure">
+              <FieldSet className="gap-0.5 items-start">
+                <FieldLegend variant="label">Measured distance</FieldLegend>
+
+                <FieldGroup className="flex-row items-center gap-2 mt-2">
+                  <Field>
+                    <FieldLabel htmlFor="measured-px" className="sr-only">
+                      Measured pixels
+                    </FieldLabel>
+                    <Input
+                      readOnly 
+                      id="measured-px"
+                      className="bg-muted tabular-nums text-muted-foreground text-sm h-8"
+                      value="200 px" />
+                  </Field>
+
+                  <span className="text-muted-foreground">=</span>
+
+                  <Field className="pr-2">
+                    <FieldLabel htmlFor="measured-value" className="sr-only">
+                      Value
+                    </FieldLabel>
+                    <Input
+                      id="measured-value"
+                      className="grow tabular-nums h-8" />
+                  </Field>
+
+                  <Field>
+                    <FieldLabel htmlFor="unit" className="sr-only">
+                      Unit
+                    </FieldLabel>
+                    <Input
+                      id="unit"
+                      placeholder="Unit"
+                      className="tabular-nums shrink-0 h-8" />
+                  </Field>
+                </FieldGroup>
+
+                <FieldDescription className="px-1 py-1.5 text-xs leading-relaxed">
+                  Click two points with a known distance apart to calibrate the physical size.
+                </FieldDescription>
+              </FieldSet>
+
+              <div className="flex gap-2 justify-between items-end">
+                <Button 
+                  size="sm"
+                  className="bg-black hover:bg-black/80">
+                  Apply scale
+                </Button>
+
+                <Button
+                  variant="link"
+                  size="sm"
+                  className="font-normal px-0.5 h-auto"
+                  onClick={() => setMode('FORM_INPUT')}>
+                  <IconForms className="size-4" /> Enter manually
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </FloatingPanelContent>
     </FloatingPanel>
   )
-  /*
-  <div>
-    <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-      Measured distance
-    </div>
-    <div className="mt-1.5 flex items-center gap-1.5">
-      <div className="flex h-8 min-w-20 items-center rounded-xs border border-dashed border-input px-2 text-sm tabular-nums text-muted-foreground">
-        200 px
-      </div>
-      <span className="text-muted-foreground">=</span>
-      <input
-        defaultValue="10"
-        className="h-8 w-16 flex-none rounded-xs border border-input bg-background px-2 text-sm tabular-nums"
-      />
-      <input
-        placeholder="unit"
-        defaultValue="cm"
-        className="h-8 w-14 flex-none rounded-xs border border-input bg-background px-2 text-sm"
-      />
-    </div>
-    <p className="mt-1.5 text-xs text-muted-foreground">
-      Click two points with a known distance apart to calibrate the physical size.
-    </p>
-  </div>
-
-  <div className="flex gap-2">
-    <button className="h-8 flex-1 rounded-xs bg-primary px-3 text-sm font-medium text-primary-foreground hover:bg-primary/90">
-      Apply scale
-    </button>
-    <button className="h-8 flex-1 rounded-xs border border-input bg-background px-3 text-sm hover:bg-accent">
-      Cancel
-    </button>
-  </div>
-  */
-
+ 
 }
