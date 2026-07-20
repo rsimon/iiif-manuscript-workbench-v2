@@ -87,7 +87,7 @@ export const FloatingPanelContent = (props: FloatingPanelContentProps) => {
             </Popover.Close>
           </div>
 
-          <div className="p-4">
+          <div>
             {props.children}
           </div>
         </Popover.Popup>
