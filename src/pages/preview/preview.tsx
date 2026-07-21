@@ -3,7 +3,7 @@ import { Panel, Separator } from 'react-resizable-panels';
 import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel';
 import { Viewer } from './viewer';
 import { ThumbnailStrip } from './thumbnail-strip';
-import { MetadataInspector } from './metadata-inspector';
+import { PreviewMetadata } from './preview-metadata';
 
 export const Preview = () => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
@@ -34,7 +34,7 @@ export const Preview = () => {
           minSize={40}
           openSize={300}
           className="bg-white border-l">
-          <MetadataInspector />
+          <PreviewMetadata />
         </AnimatedPanel>
       </AnimatedPanelGroup>
     </main>
