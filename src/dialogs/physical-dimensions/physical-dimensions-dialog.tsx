@@ -37,6 +37,11 @@ type PhysicalDimensionsDialogMode = 'FORM_INPUT' | 'MEASURE';
 export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) => {
   const [mode, setMode] = useState<PhysicalDimensionsDialogMode>('FORM_INPUT');
 
+  const [widthStr, setWidthStr] = useState('');
+  const [heightStr, setHeightStr] = useState('');
+
+  const [unit, setUnit] = useState('');
+
   return (
     <FloatingPanel 
       open={props.open} 
@@ -79,7 +84,9 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     <Input
                       id="width"
                       placeholder="–"
-                      className="tabular-nums grow h-8" />
+                      className="tabular-nums grow h-8" 
+                      value={widthStr} 
+                      onChange={e => setWidthStr(e.target.value)} />
                   </Field>
                     
                   <span className="text-muted-foreground">×</span>
@@ -91,7 +98,9 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     <Input
                       id="height"
                       placeholder="–"
-                      className="tabular-nums grow h-8" />
+                      className="tabular-nums grow h-8" 
+                      value={heightStr} 
+                      onChange={e => setHeightStr(e.target.value)} />
                   </Field>
 
                   <Field>
@@ -101,7 +110,9 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     <Input
                       id="unit"
                       placeholder="e.g. mm"
-                      className="tabular-nums shrink-0 h-8" />
+                      className="tabular-nums shrink-0 h-8" 
+                      value={unit}
+                      onChange={e => setUnit(e.target.value)} />
                   </Field>
                 </FieldGroup>
               </FieldSet>
