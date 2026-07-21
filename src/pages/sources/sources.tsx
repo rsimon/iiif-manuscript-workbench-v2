@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Panel, Separator } from 'react-resizable-panels';
-import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel-group';
+import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel';
 import { MetadataInspector } from './metadata-inspector';
 import { SourcePreview } from './source-preview';
 import { SourceTree } from './source-tree';

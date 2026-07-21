@@ -1,10 +1,11 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
-import { SourcePreviewControls } from './source-preview-controls';
 import type { CozyImageResource } from 'cozy-iiif';
-import { SourcePreviewToolbar } from './source-preview-toolbar';
+import { MeasurementProvider, MeasurementTool } from '@/dialogs/physical-dimensions';
 import { useSourceNavigation } from '../use-source-navigation';
-import { MeasurementProvider } from '@/dialogs/physical-dimensions/measurement-context';
+import { SourcePreviewControls } from './source-preview-controls';
+import { SourcePreviewToolbar } from './source-preview-toolbar';
+import { OpenSeadragonSVGOverlay } from '@/components/openseadragon-svg-layer';
 
 const ViewerContext = createContext<OpenSeadragon.Viewer | null>(null);
 
@@ -22,6 +23,8 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
+
+  const [enableMeasurementTool, setEnableMeasurementTool] = useState(false);
 
   const { 
     selectedCanvas,
@@ -64,12 +67,6 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       gestureSettingsMouse: {
         clickToZoom: false,
         dblClickToZoom: true
-      },
-      viewportMargins: {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20
       }
     });
 
@@ -128,7 +125,13 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       <MeasurementProvider>
         <div 
           className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-          <div ref={elementRef} className="size-full" />
+          <div ref={elementRef} className="size-full">
+            <OpenSeadragonSVGOverlay
+              viewer={viewer}
+              overlayAbove={(viewer && enableMeasurementTool) ? (
+                <MeasurementTool viewer={viewer} />
+              ) : undefined} />
+          </div>
 
           <SourcePreviewControls 
             isInspectorOpen={props.isInspectorOpen} 
@@ -142,7 +145,8 @@ export const SourcePreview = (props: SourcePreviewProps) => {
               selectedPageIndex={currentSelectedIndex}
               totalPageCount={visibleCanvases.length}
               onNext={selectNext} 
-              onPrevious={selectPrevious} />
+              onPrevious={selectPrevious}
+              onToggleMeasurement={enabled => setEnableMeasurementTool(enabled)} />
           )}
         </div>
       </MeasurementProvider>

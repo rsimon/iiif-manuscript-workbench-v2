@@ -1,8 +1,9 @@
 import { useState } from 'react';
-import type { ButtonProps } from '@base-ui/react';
+import { Toggle as TogglePrimitive } from '@base-ui/react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import { PhysicalDimensionsDialog } from '@/dialogs/physical-dimensions';
 import { Button } from '@/shadcn/button';
+import { Toggle } from '@/shadcn/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { Separator } from '@/shadcn/separator';
 import { useAppStore } from '@/store/app-store';
@@ -17,32 +18,24 @@ import {
   IconRulerMeasure 
 } from '@tabler/icons-react';
 
-interface SourcePreviewToolbarButtonProps extends ButtonProps {
-
-  tooltip: string;
-
-}
-
-const SourcePreviewToolbarButton = (props: SourcePreviewToolbarButtonProps) => {
+const SourcePreviewToolbarToggle = (props: TogglePrimitive.Props & { tooltip: string }) => {
   const { children, ...rest } = props;
 
   return (
     <Tooltip>
       <TooltipTrigger
         render={
-          <Button
-            variant="ghost"
+          <Toggle
             className="rounded-full"
             {...rest}>
             {children}
-          </Button>
+          </Toggle>
         }/>
       <TooltipContent>
         {props.tooltip}
       </TooltipContent>
     </Tooltip>
   )
-
 }
 
 interface SourcePreviewToolbarProps {
@@ -60,6 +53,8 @@ interface SourcePreviewToolbarProps {
   onNext(): void;
 
   onPrevious(): void;
+
+  onToggleMeasurement(enabled: boolean): void;
 
 }
 
@@ -143,10 +138,11 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
           )}
         </PhysicalDimensionsDialog>
 
-        <SourcePreviewToolbarButton
-          tooltip="Measure">
+        <SourcePreviewToolbarToggle
+          tooltip="Measure"
+          onPressedChange={pressed => props.onToggleMeasurement(pressed)}>
           <IconRulerMeasure className="size-4.5" />
-        </SourcePreviewToolbarButton>
+        </SourcePreviewToolbarToggle>
 
         <Separator orientation="vertical" />
 
