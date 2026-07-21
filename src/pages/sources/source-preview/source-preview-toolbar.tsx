@@ -134,7 +134,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
           ) : (
             <Button
               variant="outline"
-              className="rounded-full border-primary border-dashed text-xs text-primary hover:text-primary">
+              className="rounded-full border-primary border-dashed font-normal text-primary hover:text-primary">
               <IconPlus /> Set dimensions
             </Button>
           )}

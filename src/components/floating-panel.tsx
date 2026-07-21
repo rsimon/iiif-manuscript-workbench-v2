@@ -53,7 +53,7 @@ export const FloatingPanelContent = (props: FloatingPanelContentProps) => {
   const positionRef = useRef({ x: 0, y: 0 });
 
   return (
-    <Popover.Portal>
+    <Popover.Portal className="pointer-events-none">
       <Popover.Positioner
         side={props.side ?? 'bottom'}
         align={props.align ?? 'start'}
@@ -72,7 +72,7 @@ export const FloatingPanelContent = (props: FloatingPanelContentProps) => {
 
           <div
             ref={headerRef}
-            className="flex cursor-move items-center justify-between border-b bg-muted/40 px-1 py-1 select-none">
+            className="pointer-events-auto flex cursor-move items-center justify-between border-b bg-muted/40 px-1 py-1 select-none">
             <div className="flex gap-1.5 items-center text-xs">
               <IconGripVertical 
                 className="size-3.5 text-muted-foreground" />
@@ -88,7 +88,7 @@ export const FloatingPanelContent = (props: FloatingPanelContentProps) => {
             </Popover.Close>
           </div>
 
-          <div>
+          <div className="pointer-events-auto">
             {props.children}
           </div>
         </Popover.Popup>
