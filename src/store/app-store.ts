@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
-import type { ReconstructionCanvas, SourceManifest } from '@/types';
+import type { PhysicalSize, ReconstructionCanvas, SourceManifest } from '@/types';
 import {
   appendEmptyCanvas,
   mergeInto,
@@ -17,6 +17,8 @@ interface AppStore {
 
   sources: SourceManifest[];
 
+  sizes: Map<string, PhysicalSize>;
+
   reconstruction: ReconstructionCanvas[];
 
   // Actions: sources
@@ -26,7 +28,7 @@ interface AppStore {
 
   // Actions: reconstruction
   addCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
-  addCanvasesToReconstruction: (arg: { sourceId: string, canvas: CozyCanvas}[]) => void;
+  addCanvasesToReconstruction: (sources: { sourceId: string, canvas: CozyCanvas}[]) => void;
   appendEmptyCanvas: (width?: number, height?: number) => void;
   mergeCanvases: (toMerge: ReconstructionCanvas[]) => void;
   moveCanvas: (canvasId: string, direction: MoveDirection) => void;
@@ -36,6 +38,7 @@ interface AppStore {
   // renameCanvas: (canvasId: string, label: string) => void;
 
   // Actions: combined
+  setPhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
   resetAll: () => void;
 
 }
@@ -52,6 +55,8 @@ export const useAppStore = create<AppStore>()(
 
       reconstruction: [],
 
+      sizes: new Map(),
+
       addSource: (url, manifest) => set(({ sources }) => {
         // Check if already added
         if (sources.some(s => s.url === url)) return {};
@@ -66,7 +71,7 @@ export const useAppStore = create<AppStore>()(
 
       removeAllSources: () => set({ sources: [] }),
 
-      addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction }) => {
+      addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction, sizes }) => {
         // Don't re-add
         if (reconstruction.find(r => r.id === canvas.id)) return {};
 
@@ -79,27 +84,29 @@ export const useAppStore = create<AppStore>()(
               label: canvas.getLabel(),
               source: {
                 sourceManifestId: sourceId,
-                canvas
+                canvas,
+                physicalSize: sizes.get(canvas.id)
               }
             }
           ]
         };
       }),
 
-      addCanvasesToReconstruction: arg => set(({ reconstruction }) => {
-        const toAdd = arg.filter(t => !reconstruction.some(r => r.id === t.canvas.id));
+      addCanvasesToReconstruction: sources => set(({ reconstruction, sizes }) => {
+        const toAdd = sources.filter(s => !reconstruction.some(r => r.id === s.canvas.id));
         if (toAdd.length === 0) return {};
 
         return {
           reconstruction: [
             ...reconstruction,
-            ...toAdd.map(t => ({
+            ...toAdd.map(s => ({
               type: 'original' as const,
-              id: t.canvas.id,
-              label: t.canvas.getLabel(),
+              id: s.canvas.id,
+              label: s.canvas.getLabel(),
               source: {
-                sourceManifestId: t.sourceId,
-                canvas: t.canvas
+                sourceManifestId: s.sourceId,
+                canvas: s.canvas,
+                physicalSize: sizes.get(s.canvas.id)
               }
             }))
           ]
@@ -128,9 +135,40 @@ export const useAppStore = create<AppStore>()(
 
       updateReconstruction: reconstruction => set({ reconstruction }),
 
+      setPhysicalSize: (sourceCanvasId, size) => set(({ reconstruction, sizes }) => {
+        // Update 'sizes' map
+        const updatedSizes = new Map(sizes);
+        if (size)
+          updatedSizes.set(sourceCanvasId, size);
+        else
+          updatedSizes.delete(sourceCanvasId);
+
+        // Traverse reconstruction and update, in case it's already added
+        const updatedReconstruction = reconstruction.map(r => {
+          if (r.type === 'original') {
+            return r.source.canvas.id === sourceCanvasId ? {
+              ...r, 
+              physicalSize: size
+            } : r;
+          } else {
+            const isAffected = r.sources.some(s => s.canvas.id === sourceCanvasId);
+            return isAffected ? {
+              ...r,
+              sources: r.sources.map(source => source.canvas.id === sourceCanvasId ? {
+                ...source,
+                physicalSize: size
+              } : source)
+            } : r;
+          }
+        });
+
+        return { sizes: updatedSizes, reconstruction: updatedReconstruction };
+      }),
+
       resetAll: () => set(() => ({
         reconstruction: [],
-        sources: []
+        sources: [],
+        sizes: new Map()
       }))
     }), {
       name: 'iiif-workbench-state',
@@ -139,6 +177,8 @@ export const useAppStore = create<AppStore>()(
 
       partialize: state => ({
         ...state,
+
+        sizes: Array.from(state.sizes.entries()),
 
         sources: state.sources.map(s => ({
           ...s,
@@ -166,6 +206,8 @@ export const useAppStore = create<AppStore>()(
         return {
           ...current,
           ...persisted,
+
+          sizes: new Map(persisted.sizes ?? []),
 
           sources: (persisted.sources ?? []).map((s: any) => ({
             url: s.url,

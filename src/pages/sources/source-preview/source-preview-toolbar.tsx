@@ -1,6 +1,9 @@
-import type { ButtonProps } from '@base-ui/react';
+import { useState } from 'react';
+import { Toggle as TogglePrimitive } from '@base-ui/react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
+import { PhysicalDimensionsDialog, useMeasurement } from '@/dialogs/physical-dimensions';
 import { Button } from '@/shadcn/button';
+import { Toggle } from '@/shadcn/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { Separator } from '@/shadcn/separator';
 import { useAppStore } from '@/store/app-store';
@@ -15,32 +18,24 @@ import {
   IconRulerMeasure 
 } from '@tabler/icons-react';
 
-interface SourcePreviewToolbarButtonProps extends ButtonProps {
-
-  tooltip: string;
-
-}
-
-const SourcePreviewToolbarButton = (props: SourcePreviewToolbarButtonProps) => {
+const SourcePreviewToolbarToggle = (props: TogglePrimitive.Props & { tooltip: string }) => {
   const { children, ...rest } = props;
 
   return (
     <Tooltip>
       <TooltipTrigger
         render={
-          <Button
-            variant="ghost"
-            className="rounded-full"
+          <Toggle
+            className="rounded-full disabled:text-muted-foreground/80"
             {...rest}>
             {children}
-          </Button>
+          </Toggle>
         }/>
       <TooltipContent>
         {props.tooltip}
       </TooltipContent>
     </Tooltip>
   )
-
 }
 
 interface SourcePreviewToolbarProps {
@@ -67,8 +62,15 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
   const hasNext = props.selectedPageIndex < props.totalPageCount - 1;
   const hasPrev = props.selectedPageIndex > 0;
 
+  const size = useAppStore(state => state.sizes.get(props.selectedCanvas.id));
+  const setSize = useAppStore(state => state.setPhysicalSize);
+
   const addToReconstruction = useAppStore(state => state.addCanvasToReconstruction);
   const removeFromReconstruction = useAppStore(state => state.removeCanvasFromReconstruction);
+
+  const [showDimensionsDialog, setShowDimensionsDialog] = useState(false);
+
+  const { setEnableTapeMeasure } = useMeasurement();
 
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
@@ -112,16 +114,36 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
 
         <Separator orientation="vertical" />
 
-        <Button
-          variant="ghost"
-          className="rounded-full font-normal text-xs text-muted-foreground">
-          <IconDimensions /> 215 x 280 mm
-        </Button>
+        <PhysicalDimensionsDialog
+          canvasLabel={props.selectedCanvas.getLabel()}
+          canvasWidth={props.selectedCanvas.width}
+          canvasHeight={props.selectedCanvas.height}
+          physicalSize={size}
+          open={showDimensionsDialog}
+          onOpenChange={setShowDimensionsDialog}
+          onSizeChanged={size => setSize(props.selectedCanvas.id, size)}>
+          {size ? (
+            <Button
+              variant="ghost"
+              className="rounded-full font-normal text-xs text-muted-foreground">
+              <IconDimensions /> 
+              <span>{size.width} x {size.height} {size.unit}</span>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="rounded-full border-primary border-dashed font-normal text-primary hover:text-primary aria-expanded:text-primary">
+              <IconPlus /> Set dimensions
+            </Button>
+          )}
+        </PhysicalDimensionsDialog>
 
-        <SourcePreviewToolbarButton
-          tooltip="Measure">
+        <SourcePreviewToolbarToggle
+          disabled={!size}
+          tooltip="Measure"
+          onPressedChange={pressed => setEnableTapeMeasure(pressed)}>
           <IconRulerMeasure className="size-4.5" />
-        </SourcePreviewToolbarButton>
+        </SourcePreviewToolbarToggle>
 
         <Separator orientation="vertical" />
 

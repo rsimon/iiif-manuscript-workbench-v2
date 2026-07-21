@@ -16,6 +16,18 @@ export interface SourceCanvas {
 
   canvas: CozyCanvas;
 
+  physicalSize?: PhysicalSize;
+
+}
+
+export interface PhysicalSize {
+
+  width: number;
+
+  height: number;
+
+  unit: string;
+
 }
 
 /** Reconstruction **/
@@ -29,6 +41,8 @@ export interface OriginalCanvas {
   label: string;
 
   source: SourceCanvas;
+
+  physicalSize?: PhysicalSize;
 
 }
 
@@ -45,6 +59,8 @@ export interface CompositeCanvas {
   width: number;
 
   height: number;
+
+  physicalSize?: PhysicalSize;
 
 }
 
