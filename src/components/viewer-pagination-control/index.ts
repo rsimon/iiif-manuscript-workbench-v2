@@ -1,0 +1,1 @@
+export * from './viewer-pagination-control';

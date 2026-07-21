@@ -25,7 +25,7 @@ export const ThumbnailStrip = () => {
   } 
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col bg-white">
       {reconstruction.length === 0 ? (
         <div className="flex h-full items-center justify-center p-4 text-center text-sm text-muted-foreground">
           No reconstruction canvases yet.

@@ -4,6 +4,7 @@ import type { Viewer as OpenSeadragonViewer } from 'openseadragon';
 import type { CozyImageResource } from 'cozy-iiif';
 import { usePreviewStore } from '../preview-store';
 import { ViewerControls } from './viewer-controls';
+import { ViewerToolbar } from './viewer-toolbar';
 
 interface ViewerProps {
 
@@ -94,13 +95,15 @@ useEffect(() => {
   }, [viewer, selected]);
 
   return (
-    <div className="size-full relative">
+    <div className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
       <div ref={elementRef} className="size-full" />
 
       <ViewerControls 
         viewer={viewer} 
         isInspectorOpen={props.isInspectorOpen}
         onChangeInspectorOpen={props.onChangeInspectorOpen} />
+
+      <ViewerToolbar />
     </div>
   )
 

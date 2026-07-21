@@ -8,6 +8,8 @@ interface PreviewStore {
 
   // Actions: selection
   setSelected: (selected?: ReconstructionCanvas) => void;
+  selectNext: () => void;
+  selectPrevious: () => void;
 
 }
 
@@ -17,6 +19,25 @@ export const usePreviewStore = create<PreviewStore>()(set => ({
 
   setSelected: selected => set(() => ({ selected })),
 
+  selectNext: () => set(({ selected }) => {
+    if (!selected) return {};
+
+    const { reconstruction } = useAppStore.getState();
+    const currentIdx = reconstruction.indexOf(selected);
+    if (currentIdx === -1 || currentIdx > reconstruction.length - 2) return {};
+
+    return { selected: reconstruction[currentIdx + 1]};
+  }),
+
+  selectPrevious: () => set(({ selected }) => {
+    if (!selected) return {};
+
+    const { reconstruction } = useAppStore.getState();
+    const currentIdx = reconstruction.indexOf(selected);
+    if (currentIdx === -1 || currentIdx < 1) return {};
+
+    return { selected: reconstruction[currentIdx - 1] };
+  })
 }));
 
 // Helper: automatically selects the first available canvas
