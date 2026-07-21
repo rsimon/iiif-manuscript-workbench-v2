@@ -6,7 +6,7 @@ import { ThumbnailStrip } from './thumbnail-strip';
 import { MetadataInspector } from './metadata-inspector';
 
 export const Preview = () => {
-  const [isMetadataOpen, setIsMetadataOpen] = useState(false);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
   return (
     <main className="bg-muted grow">
@@ -21,14 +21,16 @@ export const Preview = () => {
         <Separator />
 
         <Panel>
-          <Viewer />
+          <Viewer 
+            isInspectorOpen={isInspectorOpen} 
+            onChangeInspectorOpen={setIsInspectorOpen} />
         </Panel>
 
         <Separator />
         
         <AnimatedPanel 
-          open={isMetadataOpen}
-          onOpenChange={setIsMetadataOpen}
+          open={isInspectorOpen}
+          onOpenChange={setIsInspectorOpen}
           minSize={40}
           openSize={300}
           className="bg-white border-l">

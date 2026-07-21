@@ -11,7 +11,7 @@ interface OpenSeadragonSVGOverlayProps {
 
 }
 
-export const OpenSeadragonSVGOverlay = (props: OpenSeadragonSVGOverlayProps) => {
+export const OpenSeadragonSvgOverlay = (props: OpenSeadragonSVGOverlayProps) => {
   const { viewer } = props;
 
   const belowSvgRef = useRef<SVGSVGElement>(null);

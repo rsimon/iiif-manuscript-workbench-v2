@@ -5,7 +5,7 @@ import { MeasurementTool } from '@/dialogs/physical-dimensions';
 import { useSourceNavigation } from '../use-source-navigation';
 import { SourcePreviewControls } from './source-preview-controls';
 import { SourcePreviewToolbar } from './source-preview-toolbar';
-import { OpenSeadragonSVGOverlay } from '@/components/openseadragon-svg-overlay';
+import { OpenSeadragonSvgOverlay } from '@/components/openseadragon';
 
 const ViewerContext = createContext<OpenSeadragon.Viewer | null>(null);
 
@@ -123,7 +123,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       <div 
         className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
         <div ref={elementRef} className="size-full">
-          <OpenSeadragonSVGOverlay
+          <OpenSeadragonSvgOverlay
             viewer={viewer}
             topLayer={(
               <MeasurementTool viewer={viewer} />
@@ -132,7 +132,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
 
         <SourcePreviewControls 
           isInspectorOpen={props.isInspectorOpen} 
-          setInspectorOpen={props.setInspectorOpen} />
+          onChangeInspectorOpen={props.setInspectorOpen} />
 
         {(selectedManifest && selectedCanvas) && (
           <SourcePreviewToolbar 

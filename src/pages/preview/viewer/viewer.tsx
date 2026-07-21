@@ -1,10 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import type { Viewer as OpenSeadragonViewer } from 'openseadragon';
-import { usePreviewStore } from '../preview-store';
 import type { CozyImageResource } from 'cozy-iiif';
+import { usePreviewStore } from '../preview-store';
+import { ViewerControls } from './viewer-controls';
 
-export const Viewer = () => {
+interface ViewerProps {
+
+  isInspectorOpen: boolean;
+
+  onChangeInspectorOpen(open: boolean): void;
+
+}
+
+export const Viewer = (props: ViewerProps) => {
   const selected = usePreviewStore(state => state.selected);
 
   const elementRef = useRef<HTMLDivElement>(null);
@@ -85,7 +94,14 @@ useEffect(() => {
   }, [viewer, selected]);
 
   return (
-    <div ref={elementRef} className="size-full" />
+    <div className="size-full relative">
+      <div ref={elementRef} className="size-full" />
+
+      <ViewerControls 
+        viewer={viewer} 
+        isInspectorOpen={props.isInspectorOpen}
+        onChangeInspectorOpen={props.onChangeInspectorOpen} />
+    </div>
   )
 
 }
