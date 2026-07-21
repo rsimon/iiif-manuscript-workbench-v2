@@ -1,6 +1,7 @@
 import { createContext, useContext, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Point } from 'openseadragon';
+import type { PhysicalSize } from '@/types';
 
 export interface ActiveMeasureState {
 
@@ -22,13 +23,23 @@ export interface IdleMeasureState {
 
 export type TapeMeasureState = ActiveMeasureState | IdleMeasureState;
 
-export interface TapeMeasureOpts { showLabel?: boolean };
+export interface TapeMeasureOpts { 
+
+  showLabel?: boolean;
+
+  canvasSize?: PhysicalSize;
+
+}
 
 interface MeasurementContextValue {
 
   isTapeMeasureEnabled: boolean;
 
   setEnableTapeMeasure(enabled: boolean, opts?: TapeMeasureOpts): void;
+
+  tapeMeasureOpts: TapeMeasureOpts;
+
+  setTapeMeasureOpts(opts?: TapeMeasureOpts): void;
 
   tapeMeasureState: TapeMeasureState;
 
@@ -41,22 +52,29 @@ const MeasurementContext = createContext<MeasurementContextValue | undefined>(un
 export const MeasurementProvider = ({ children }: { children: React.ReactNode }) => {
   const [tapeMeasureState, setTapeMeasureState] = useState<TapeMeasureState>({ phase: 'idle'});
 
-  const [_isTapeMeasureEnabled, _setEnableTapeMeasure] = useState<TapeMeasureOpts | null>(null);
+  const [tapeMeasureOpts, _setTapeMeasureOpts] = useState<TapeMeasureOpts>({});
 
-  const isTapeMeasureEnabled = Boolean(_isTapeMeasureEnabled);
+  const [isTapeMeasureEnabled, setIsTapeMeasureEnabled] = useState(false);
   
+  // Shorthand
   const setEnableTapeMeasure = (enabled: boolean, opts: TapeMeasureOpts= {}) => {
+    setIsTapeMeasureEnabled(enabled);
     if (enabled) 
-      _setEnableTapeMeasure(opts);
+      _setTapeMeasureOpts(opts);
     else 
-      _setEnableTapeMeasure(null);
+      _setTapeMeasureOpts({});
   }
+
+  // For convenience
+  const setTapeMeasureOpts = (opts: TapeMeasureOpts = {}) => _setTapeMeasureOpts(opts);
 
   return (
     <MeasurementContext.Provider 
       value={{ 
         isTapeMeasureEnabled,
         setEnableTapeMeasure,
+        tapeMeasureOpts,
+        setTapeMeasureOpts,
         tapeMeasureState, 
         setTapeMeasureState 
       }}>

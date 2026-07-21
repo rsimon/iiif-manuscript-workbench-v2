@@ -48,7 +48,6 @@ export const ToolCornerHandle = (props: ToolCornerHandleProps) => {
 
     viewer.addHandler('update-viewport', onUpdateViewport);
 
-    // Initial radius
     onUpdateViewport();
 
     return () => {

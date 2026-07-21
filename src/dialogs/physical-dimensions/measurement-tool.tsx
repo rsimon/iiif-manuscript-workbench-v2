@@ -1,8 +1,9 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Point } from 'openseadragon';
 import type { CanvasClickEvent, Viewer } from 'openseadragon';
 import { useMeasurement } from './measurement-context';
 import { getDistance } from './measurement-utils';
+import { MeasurementLabel } from './measurement-label';
 
 interface MeasurementToolProps {
 
@@ -13,7 +14,28 @@ interface MeasurementToolProps {
 export const MeasurementTool = (props: MeasurementToolProps) => {
   const { viewer } = props;
 
-  const { isTapeMeasureEnabled, tapeMeasureState, setTapeMeasureState } = useMeasurement();
+  const { 
+    isTapeMeasureEnabled, 
+    tapeMeasureOpts,
+    tapeMeasureState, 
+    setTapeMeasureState 
+  } = useMeasurement();
+
+  const label = useMemo(() => {
+    if (!tapeMeasureOpts.showLabel || tapeMeasureState.phase === 'idle') return;
+
+    if (tapeMeasureOpts.canvasSize) {
+      const { width, unit } = tapeMeasureOpts.canvasSize;
+      
+      const dx = width * (tapeMeasureState.end.x - tapeMeasureState.start.x);
+      const dy = width * (tapeMeasureState.end.y - tapeMeasureState.start.y);
+
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      return `${Math.round(100 * dist) / 100} ${unit}`;
+    } else {
+      return `${tapeMeasureState.distancePx} px`;
+    }
+  }, [tapeMeasureOpts, tapeMeasureState]); 
 
   useEffect(() => {
     if (!viewer || !isTapeMeasureEnabled) return;
@@ -25,7 +47,12 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
 
       setTapeMeasureState(m => {
         if (m.phase === 'idle' || m.phase === 'committed') {
-          return { phase: 'dragging', start: pt, end: pt, distancePx: 0  };
+          return { 
+            phase: 'dragging', 
+            start: pt, 
+            end: pt, 
+            distancePx: 0
+          };
         } else { // m.phase === 'dragging'
           return { ...m, phase: 'committed' };
         }
@@ -35,10 +62,11 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
     const onPointerMove = (evt: PointerEvent) => {
       const pt = viewer.viewport.pointFromPixel(new Point(evt.offsetX, evt.offsetY));
 
-      setTapeMeasureState(m => m.phase === 'dragging'
-        ? { ...m, end: pt, distancePx: getDistance(m.start, pt, viewer) }
-        : m
-      );
+      setTapeMeasureState(m => m.phase === 'dragging' ? { 
+        ...m, 
+        end: pt, 
+        distancePx: getDistance(m.start, pt, viewer)
+      } : m);
     }
 
     viewer.element.style.cursor = 'crosshair';
@@ -72,9 +100,10 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
             x1="0.5" y1="0"
             x2="0.5" y2="8"
             stroke="oklch(75% 0.35 328)"
-            strokeWidth="1" />
+            strokeWidth={1} />
         </marker>
       </defs>
+
       <line
         x1={tapeMeasureState.start.x} y1={tapeMeasureState.start.y}
         x2={tapeMeasureState.end.x}   y2={tapeMeasureState.end.y}
@@ -83,6 +112,15 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
         vectorEffect="non-scaling-stroke" 
         markerStart="url(#measure-tick)"
         markerEnd="url(#measure-tick)"  />
+
+      {label && (
+        <MeasurementLabel
+          x={(tapeMeasureState.start.x + tapeMeasureState.end.x) / 2}
+          y={(tapeMeasureState.start.y + tapeMeasureState.end.y) / 2}
+          text={label}
+          viewer={viewer}
+        />
+      )}
     </g>
   ) : null;
 

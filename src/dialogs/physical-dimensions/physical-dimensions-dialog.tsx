@@ -63,6 +63,7 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
 
   useEffect(() => {
     setMode('FORM_INPUT');
+    setEnableTapeMeasure(false);
 
     if (!props.open || !props.physicalSize) {
       setWidthStr('');

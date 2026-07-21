@@ -141,7 +141,10 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
         <SourcePreviewToolbarToggle
           disabled={!size}
           tooltip="Measure"
-          onPressedChange={pressed => setEnableTapeMeasure(pressed, { showLabel: true })}>
+          onPressedChange={pressed => setEnableTapeMeasure(pressed, { 
+            showLabel: true,
+            canvasSize: size
+          })}>
           <IconRulerMeasure className="size-4.5" />
         </SourcePreviewToolbarToggle>
 
