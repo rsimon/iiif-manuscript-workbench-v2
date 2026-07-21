@@ -36,7 +36,7 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
       const pt = viewer.viewport.pointFromPixel(new Point(evt.offsetX, evt.offsetY));
 
       setTapeMeasureState(m => m.phase === 'dragging'
-        ? { ...m, end: pt, distancePx: getDistance(m.start, pt) }
+        ? { ...m, end: pt, distancePx: getDistance(m.start, pt, viewer) }
         : m
       );
     }

@@ -1,8 +1,9 @@
-import { useEffect, useState, type ReactElement } from 'react';
+import { useEffect, useState, type ChangeEvent, type ReactElement } from 'react';
 import { IconForms, IconRulerMeasure } from '@tabler/icons-react';
 import { Input } from '@/shadcn/input';
 import { Button } from '@/shadcn/button';
 import type { PhysicalSize } from '@/types';
+import { useMeasurement } from './measurement-context';
 import { parseNumber } from './measurement-utils';
 import { 
   FloatingPanel, 
@@ -47,6 +48,8 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
   const [widthStr, setWidthStr] = useState('');
   const [heightStr, setHeightStr] = useState('');
 
+  const [distStr, setDistStr] = useState('');
+
   const [unit, setUnit] = useState('');
 
   const width = parseNumber(widthStr);
@@ -54,7 +57,13 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
 
   const isValid = width !== undefined && height !== undefined && unit.trim();
 
+  const { setEnableTapeMeasure, tapeMeasureState } = useMeasurement();
+
+  const measuredDistance = tapeMeasureState.phase !== 'idle' ? tapeMeasureState.distancePx : 0;
+
   useEffect(() => {
+    setMode('FORM_INPUT');
+
     if (!props.open || !props.physicalSize) {
       setWidthStr('');
       setHeightStr('');
@@ -66,7 +75,33 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
     }
   }, [props.canvasLabel, props.open, props.physicalSize]);
 
-  const handleApplyScale = () => {
+  useEffect(() => {
+    setEnableTapeMeasure(mode === 'MEASURE');
+    if (mode === 'MEASURE') {
+      setWidthStr('');
+      setHeightStr('');
+    } else {
+      setWidthStr(props.physicalSize?.width.toString() || '');
+      setHeightStr(props.physicalSize?.height.toString() || '');
+    }
+  }, [mode]);
+
+  const onDistanceChanged = (e: ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setDistStr(value);
+
+    const dist = parseNumber(value);
+    if (dist !== undefined && tapeMeasureState.phase !== 'idle') {
+      const physicalPerPixel = dist / measuredDistance;
+      const physicalWidth = Math.round(100 * props.canvasWidth * physicalPerPixel) / 100;
+      const physicalHeight = Math.round(100 * props.canvasHeight * physicalPerPixel) / 100;
+
+      setWidthStr(physicalWidth.toString());
+      setHeightStr(physicalHeight.toString());
+    }
+  }
+
+  const onApplyScale = () => {
     if (!isValid) return;
 
     props.onSizeChanged({
@@ -74,6 +109,8 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
       height,
       unit: unit.trim()
     });
+
+    setEnableTapeMeasure(false);
 
     props.onOpenChange(false);
   }
@@ -158,7 +195,7 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
               <div className="flex gap-2 justify-between items-end">
                 <Button 
                   disabled={!isValid}
-                  onClick={handleApplyScale}
+                  onClick={onApplyScale}
                   size="sm"
                   className="bg-black hover:bg-black/80">
                   Apply scale
@@ -178,7 +215,7 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
               <FieldSet className="gap-0.5 items-start">
                 <FieldLegend variant="label">Measured distance</FieldLegend>
 
-                <FieldDescription className="px-1 py-1.5 text-xs leading-relaxed">
+                <FieldDescription className="py-1.5 text-xs leading-relaxed">
                   Click two points with a known distance apart to calibrate the physical size.
                 </FieldDescription>
 
@@ -191,7 +228,7 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                       readOnly 
                       id="measured-px"
                       className="bg-muted tabular-nums text-muted-foreground text-sm h-8"
-                      value="200 px" />
+                      value={`${measuredDistance.toLocaleString()} px`} />
                   </Field>
 
                   <span className="text-muted-foreground">=</span>
@@ -202,7 +239,10 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     </FieldLabel>
                     <Input
                       id="measured-value"
-                      className="grow tabular-nums h-8" />
+                      placeholder="–"
+                      className="grow tabular-nums h-8" 
+                      value={distStr}
+                      onChange={onDistanceChanged} />
                   </Field>
 
                   <Field>
@@ -212,13 +252,17 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
                     <Input
                       id="unit"
                       placeholder="Unit"
-                      className="tabular-nums shrink-0 h-8" />
+                      className="tabular-nums shrink-0 h-8" 
+                      value={unit}
+                      onChange={e => setUnit(e.target.value)} />
                   </Field>
                 </FieldGroup>
               </FieldSet>
 
               <div className="flex gap-2 justify-between items-end">
                 <Button 
+                  disabled={!isValid}
+                  onClick={onApplyScale}
                   size="sm"
                   className="bg-black hover:bg-black/80">
                   Apply scale
