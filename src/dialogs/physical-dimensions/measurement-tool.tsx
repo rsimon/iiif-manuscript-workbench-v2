@@ -5,7 +5,9 @@ import { useMeasurement } from './measurement-context';
 
 interface MeasurementToolProps {
 
-  viewer: Viewer;
+  viewer?: Viewer | null;
+
+  enabled: boolean;
 
 }
 
@@ -16,10 +18,12 @@ const viewportDistance = (a: Point, b: Point) => {
 }
 
 export const MeasurementTool = (props: MeasurementToolProps) => {
+  const { viewer } = props;
+
   const { measurement, setMeasurement } = useMeasurement();
 
   useEffect(() => {
-    const { viewer } = props;
+    if (!viewer) return;
 
     const onCanvasClick = (evt: CanvasClickEvent) => {
       if (!evt.quick) return;
@@ -57,9 +61,9 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
 
       setMeasurement({ phase: 'idle' });
     };
-  }, [props.viewer]);
+  }, [viewer]);
 
-  return (measurement && measurement.phase !== 'idle') ? (
+  return (viewer && measurement && measurement.phase !== 'idle') ? (
     <g pointerEvents="none">
       <defs>
         <marker

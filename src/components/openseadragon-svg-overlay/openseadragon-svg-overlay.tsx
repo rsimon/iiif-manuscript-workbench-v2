@@ -1,17 +1,17 @@
 import { useEffect, useRef, type ReactElement } from 'react';
 import { Viewer } from 'openseadragon';
 
-interface OpenSeadragonSVGLayerProps {
+interface OpenSeadragonSVGOverlayProps {
 
   viewer?: Viewer | null;
 
-  overlayBelow?: ReactElement;
+  bottomLayer?: ReactElement;
 
-  overlayAbove?: ReactElement;
+  topLayer?: ReactElement;
 
 }
 
-export const OpenSeadragonSVGOverlay = (props: OpenSeadragonSVGLayerProps) => {
+export const OpenSeadragonSVGOverlay = (props: OpenSeadragonSVGOverlayProps) => {
   const { viewer } = props;
 
   const belowSvgRef = useRef<SVGSVGElement>(null);
@@ -79,39 +79,41 @@ export const OpenSeadragonSVGOverlay = (props: OpenSeadragonSVGLayerProps) => {
 
   return viewer ? (
     <>
-      {/* Elements BELOW the OSD image layer */}
-      <svg
-        ref={belowSvgRef}
-        className="absolute inset-0 size-full pointer-events-none z-0">
-        <defs>
-          <filter
-            id="shadow"
-            filterUnits="objectBoundingBox"
-            primitiveUnits="objectBoundingBox"
-            x="-20%"  y="-20%"
-            width="200%" height="200%">
-            <feDropShadow
-              dx="0.005"
-              dy="0.025"
-              stdDeviation="0.05"
-              floodColor="rgba(0,0,0,0.35)"
-            />
-          </filter>
-        </defs>
+      {props.bottomLayer && ( // Elements BELOW the OSD image
+        <svg
+          ref={belowSvgRef}
+          className="absolute inset-0 size-full pointer-events-none z-0">
+          <defs>
+            <filter
+              id="shadow"
+              filterUnits="objectBoundingBox"
+              primitiveUnits="objectBoundingBox"
+              x="-20%"  y="-20%"
+              width="200%" height="200%">
+              <feDropShadow
+                dx="0.005"
+                dy="0.025"
+                stdDeviation="0.05"
+                floodColor="rgba(0,0,0,0.35)"
+              />
+            </filter>
+          </defs>
 
-        <g ref={belowGroupRef} className="pointer-events-auto">
-          {props.overlayBelow}
-        </g>
-      </svg>
+          <g ref={belowGroupRef} className="pointer-events-auto">
+            {props.bottomLayer}
+          </g>
+        </svg>
+      )}
 
-      {/* Elements ABOVE the OSD image layer */}
-      <svg
-        ref={aboveSvgRef}
-        className="absolute inset-0 size-full pointer-events-none z-50">
-        <g ref={aboveGroupRef} className="pointer-events-auto">
-          {props.overlayAbove}
-        </g>
-      </svg>
+      {props.bottomLayer && ( // elements ABOVE the OSD image
+        <svg
+          ref={aboveSvgRef}
+          className="absolute inset-0 size-full pointer-events-none z-50">
+          <g ref={aboveGroupRef} className="pointer-events-auto">
+            {props.topLayer}
+          </g>
+        </svg>
+      )}
     </>
   ) : null;
 
