@@ -4,6 +4,7 @@ import { SourcePreviewControls } from './source-preview-controls';
 import type { CozyImageResource } from 'cozy-iiif';
 import { SourcePreviewToolbar } from './source-preview-toolbar';
 import { useSourceNavigation } from '../use-source-navigation';
+import { MeasurementProvider } from '@/dialogs/physical-dimensions/measurement-context';
 
 const ViewerContext = createContext<OpenSeadragon.Viewer | null>(null);
 
@@ -124,25 +125,27 @@ export const SourcePreview = (props: SourcePreviewProps) => {
 
   return (
     <ViewerContext.Provider value={viewer}>
-      <div 
-        className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-        <div ref={elementRef} className="size-full" />
+      <MeasurementProvider>
+        <div 
+          className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
+          <div ref={elementRef} className="size-full" />
 
-        <SourcePreviewControls 
-          isInspectorOpen={props.isInspectorOpen} 
-          setInspectorOpen={props.setInspectorOpen} />
+          <SourcePreviewControls 
+            isInspectorOpen={props.isInspectorOpen} 
+            setInspectorOpen={props.setInspectorOpen} />
 
-        {(selectedManifest && selectedCanvas) && (
-          <SourcePreviewToolbar 
-            isInReconstruction={isInReconstruction(selectedManifest.id, selectedCanvas.id)}
-            selectedCanvas={selectedCanvas}
-            selectedManifest={selectedManifest} 
-            selectedPageIndex={currentSelectedIndex}
-            totalPageCount={visibleCanvases.length}
-            onNext={selectNext} 
-            onPrevious={selectPrevious} />
-        )}
-      </div>
+          {(selectedManifest && selectedCanvas) && (
+            <SourcePreviewToolbar 
+              isInReconstruction={isInReconstruction(selectedManifest.id, selectedCanvas.id)}
+              selectedCanvas={selectedCanvas}
+              selectedManifest={selectedManifest} 
+              selectedPageIndex={currentSelectedIndex}
+              totalPageCount={visibleCanvases.length}
+              onNext={selectNext} 
+              onPrevious={selectPrevious} />
+          )}
+        </div>
+      </MeasurementProvider>
     </ViewerContext.Provider>
   )
 

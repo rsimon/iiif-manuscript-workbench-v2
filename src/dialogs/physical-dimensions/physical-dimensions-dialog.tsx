@@ -3,6 +3,7 @@ import { IconForms, IconRulerMeasure } from '@tabler/icons-react';
 import { Input } from '@/shadcn/input';
 import { Button } from '@/shadcn/button';
 import type { PhysicalSize } from '@/types';
+import { parseNumber } from './measurement-utils';
 import { 
   FloatingPanel, 
   FloatingPanelContent, 
@@ -35,14 +36,6 @@ interface PhysicalDimensionsDialogProps {
 }
 
 type PhysicalDimensionsDialogMode = 'FORM_INPUT' | 'MEASURE';
-
-const parseNumber = (value: string) => {
-  const trimmed = value.trim();
-  if (!trimmed) return;
-
-  const parsed = Number(trimmed);
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
 
 export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) => {
   const [mode, setMode] = useState<PhysicalDimensionsDialogMode>('FORM_INPUT');
