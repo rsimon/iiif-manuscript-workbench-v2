@@ -22,12 +22,13 @@ export interface IdleMeasureState {
 
 export type TapeMeasureState = ActiveMeasureState | IdleMeasureState;
 
+export interface TapeMeasureOpts { showLabel?: boolean };
 
 interface MeasurementContextValue {
 
   isTapeMeasureEnabled: boolean;
 
-  setEnableTapeMeasure(enabled: boolean): void;
+  setEnableTapeMeasure(enabled: boolean, opts?: TapeMeasureOpts): void;
 
   tapeMeasureState: TapeMeasureState;
 
@@ -38,8 +39,18 @@ interface MeasurementContextValue {
 const MeasurementContext = createContext<MeasurementContextValue | undefined>(undefined);
 
 export const MeasurementProvider = ({ children }: { children: React.ReactNode }) => {
-  const [isTapeMeasureEnabled, setEnableTapeMeasure] = useState(false);
   const [tapeMeasureState, setTapeMeasureState] = useState<TapeMeasureState>({ phase: 'idle'});
+
+  const [_isTapeMeasureEnabled, _setEnableTapeMeasure] = useState<TapeMeasureOpts | null>(null);
+
+  const isTapeMeasureEnabled = Boolean(_isTapeMeasureEnabled);
+  
+  const setEnableTapeMeasure = (enabled: boolean, opts: TapeMeasureOpts= {}) => {
+    if (enabled) 
+      _setEnableTapeMeasure(opts);
+    else 
+      _setEnableTapeMeasure(null);
+  }
 
   return (
     <MeasurementContext.Provider 
