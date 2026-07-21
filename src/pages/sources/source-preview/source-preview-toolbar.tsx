@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Toggle as TogglePrimitive } from '@base-ui/react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
-import { PhysicalDimensionsDialog } from '@/dialogs/physical-dimensions';
+import { PhysicalDimensionsDialog, useMeasurement } from '@/dialogs/physical-dimensions';
 import { Button } from '@/shadcn/button';
 import { Toggle } from '@/shadcn/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
@@ -54,8 +54,6 @@ interface SourcePreviewToolbarProps {
 
   onPrevious(): void;
 
-  onToggleMeasurement(enabled: boolean): void;
-
 }
 
 export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
@@ -71,6 +69,8 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
   const removeFromReconstruction = useAppStore(state => state.removeCanvasFromReconstruction);
 
   const [showDimensionsDialog, setShowDimensionsDialog] = useState(false);
+
+  const { setEnableTapeMeasure } = useMeasurement();
 
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
@@ -141,7 +141,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
         <SourcePreviewToolbarToggle
           disabled={!size}
           tooltip="Measure"
-          onPressedChange={pressed => props.onToggleMeasurement(pressed)}>
+          onPressedChange={pressed => setEnableTapeMeasure(pressed)}>
           <IconRulerMeasure className="size-4.5" />
         </SourcePreviewToolbarToggle>
 

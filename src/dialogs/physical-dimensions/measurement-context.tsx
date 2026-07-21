@@ -2,13 +2,7 @@ import { createContext, useContext, useState } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
 import type { Point } from 'openseadragon';
 
-export interface Scale { 
-
-  factor: number; unit: string;
-
-}
-
-export interface ActiveMeasurementState {
+export interface ActiveMeasureState {
 
   phase: 'dragging' | 'committed';
 
@@ -16,44 +10,44 @@ export interface ActiveMeasurementState {
 
   end: Point;
 
-  viewportDistance: number;
+  distancePx: number;
 
 }
 
-export interface IdleMeasurementState {
+export interface IdleMeasureState {
 
   phase: 'idle';
 
 }
 
-export type MeasurementState = ActiveMeasurementState | IdleMeasurementState;
+export type TapeMeasureState = ActiveMeasureState | IdleMeasureState;
 
 
 interface MeasurementContextValue {
 
-  canvasScale?: Scale;
+  isTapeMeasureEnabled: boolean;
 
-  setCanvasScale: Dispatch<SetStateAction<Scale | undefined>>;
+  setEnableTapeMeasure(enabled: boolean): void;
 
-  measurement: MeasurementState;
+  tapeMeasureState: TapeMeasureState;
 
-  setMeasurement: Dispatch<SetStateAction<MeasurementState>>;
+  setTapeMeasureState: Dispatch<SetStateAction<TapeMeasureState>>;
 
 }
 
 const MeasurementContext = createContext<MeasurementContextValue | undefined>(undefined);
 
 export const MeasurementProvider = ({ children }: { children: React.ReactNode }) => {
-  const [canvasScale, setCanvasScale] = useState<Scale | undefined>();
-  const [measurement, setMeasurement] = useState<MeasurementState>({ phase: 'idle'});
+  const [isTapeMeasureEnabled, setEnableTapeMeasure] = useState(false);
+  const [tapeMeasureState, setTapeMeasureState] = useState<TapeMeasureState>({ phase: 'idle'});
 
   return (
     <MeasurementContext.Provider 
       value={{ 
-        canvasScale,
-        setCanvasScale,
-        measurement, 
-        setMeasurement 
+        isTapeMeasureEnabled,
+        setEnableTapeMeasure,
+        tapeMeasureState, 
+        setTapeMeasureState 
       }}>
       {children}
     </MeasurementContext.Provider>

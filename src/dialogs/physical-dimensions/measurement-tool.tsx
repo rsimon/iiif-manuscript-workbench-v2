@@ -2,37 +2,30 @@ import { useEffect } from 'react';
 import { Point } from 'openseadragon';
 import type { CanvasClickEvent, Viewer } from 'openseadragon';
 import { useMeasurement } from './measurement-context';
+import { getDistance } from './measurement-utils';
 
 interface MeasurementToolProps {
 
   viewer?: Viewer | null;
 
-  enabled: boolean;
-
-}
-
-const viewportDistance = (a: Point, b: Point) => {
-  const dx = a.x - b.x;
-  const dy = a.y - b.y;
-  return Math.sqrt(dx * dx + dy * dy);
 }
 
 export const MeasurementTool = (props: MeasurementToolProps) => {
-  const { viewer, enabled } = props;
+  const { viewer } = props;
 
-  const { measurement, setMeasurement } = useMeasurement();
+  const { isTapeMeasureEnabled, tapeMeasureState, setTapeMeasureState } = useMeasurement();
 
   useEffect(() => {
-    if (!viewer || !enabled) return;
+    if (!viewer || !isTapeMeasureEnabled) return;
 
     const onCanvasClick = (evt: CanvasClickEvent) => {
       if (!evt.quick) return;
 
       const pt = viewer.viewport.pointFromPixel(evt.position);
 
-      setMeasurement(m => {
+      setTapeMeasureState(m => {
         if (m.phase === 'idle' || m.phase === 'committed') {
-          return { phase: 'dragging', start: pt, end: pt, viewportDistance: 0 };
+          return { phase: 'dragging', start: pt, end: pt, distancePx: 0  };
         } else { // m.phase === 'dragging'
           return { ...m, phase: 'committed' };
         }
@@ -42,8 +35,8 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
     const onPointerMove = (evt: PointerEvent) => {
       const pt = viewer.viewport.pointFromPixel(new Point(evt.offsetX, evt.offsetY));
 
-      setMeasurement(m => m.phase === 'dragging'
-        ? { ...m, end: pt, viewportDistance: viewportDistance(m.start, pt) }
+      setTapeMeasureState(m => m.phase === 'dragging'
+        ? { ...m, end: pt, distancePx: getDistance(m.start, pt) }
         : m
       );
     }
@@ -59,11 +52,11 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
       viewer.removeHandler('canvas-click', onCanvasClick);
       viewer.element.removeEventListener('pointermove', onPointerMove);
 
-      setMeasurement({ phase: 'idle' });
+      setTapeMeasureState({ phase: 'idle' });
     };
-  }, [viewer, enabled]);
+  }, [viewer, isTapeMeasureEnabled]);
 
-  return (viewer && enabled && measurement && measurement.phase !== 'idle') ? (
+  return (viewer && isTapeMeasureEnabled && tapeMeasureState.phase !== 'idle') ? (
     <g pointerEvents="none">
       <defs>
         <marker
@@ -83,8 +76,8 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
         </marker>
       </defs>
       <line
-        x1={measurement.start.x} y1={measurement.start.y}
-        x2={measurement.end.x}   y2={measurement.end.y}
+        x1={tapeMeasureState.start.x} y1={tapeMeasureState.start.y}
+        x2={tapeMeasureState.end.x}   y2={tapeMeasureState.end.y}
         stroke="oklch(75% 0.35 328)"
         strokeWidth={2.5}
         vectorEffect="non-scaling-stroke" 

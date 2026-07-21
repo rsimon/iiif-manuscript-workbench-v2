@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Panel, Separator } from 'react-resizable-panels';
 import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel';
+import { MeasurementProvider } from '@/dialogs/physical-dimensions';
 import { MetadataInspector } from './metadata-inspector';
 import { SourcePreview } from './source-preview';
 import { SourceTree } from './source-tree';
@@ -21,9 +22,11 @@ export const Sources = () => {
         <Separator />
 
         <Panel>
-          <SourcePreview
-            isInspectorOpen={isInspectorOpen}
-            setInspectorOpen={setInspectorOpen} />
+          <MeasurementProvider>
+            <SourcePreview
+              isInspectorOpen={isInspectorOpen}
+              setInspectorOpen={setInspectorOpen} />
+          </MeasurementProvider>
         </Panel>
 
         <Separator />

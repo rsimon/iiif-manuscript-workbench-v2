@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import type { CozyImageResource } from 'cozy-iiif';
-import { MeasurementProvider, MeasurementTool } from '@/dialogs/physical-dimensions';
+import { MeasurementTool } from '@/dialogs/physical-dimensions';
 import { useSourceNavigation } from '../use-source-navigation';
 import { SourcePreviewControls } from './source-preview-controls';
 import { SourcePreviewToolbar } from './source-preview-toolbar';
@@ -23,8 +23,6 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [viewer, setViewer] = useState<OpenSeadragon.Viewer | null>(null);
-
-  const [enableMeasurementTool, setEnableMeasurementTool] = useState(false);
 
   const { 
     selectedCanvas,
@@ -122,36 +120,31 @@ export const SourcePreview = (props: SourcePreviewProps) => {
 
   return (
     <ViewerContext.Provider value={viewer}>
-      <MeasurementProvider>
-        <div 
-          className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-          <div ref={elementRef} className="size-full">
-            <OpenSeadragonSVGOverlay
-              viewer={viewer}
-              topLayer={(
-                <MeasurementTool 
-                  viewer={viewer} 
-                  enabled={enableMeasurementTool} />
-              )} />
-          </div>
-
-          <SourcePreviewControls 
-            isInspectorOpen={props.isInspectorOpen} 
-            setInspectorOpen={props.setInspectorOpen} />
-
-          {(selectedManifest && selectedCanvas) && (
-            <SourcePreviewToolbar 
-              isInReconstruction={isInReconstruction(selectedManifest.id, selectedCanvas.id)}
-              selectedCanvas={selectedCanvas}
-              selectedManifest={selectedManifest} 
-              selectedPageIndex={currentSelectedIndex}
-              totalPageCount={visibleCanvases.length}
-              onNext={selectNext} 
-              onPrevious={selectPrevious}
-              onToggleMeasurement={enabled => setEnableMeasurementTool(enabled)} />
-          )}
+      <div 
+        className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
+        <div ref={elementRef} className="size-full">
+          <OpenSeadragonSVGOverlay
+            viewer={viewer}
+            topLayer={(
+              <MeasurementTool viewer={viewer} />
+            )} />
         </div>
-      </MeasurementProvider>
+
+        <SourcePreviewControls 
+          isInspectorOpen={props.isInspectorOpen} 
+          setInspectorOpen={props.setInspectorOpen} />
+
+        {(selectedManifest && selectedCanvas) && (
+          <SourcePreviewToolbar 
+            isInReconstruction={isInReconstruction(selectedManifest.id, selectedCanvas.id)}
+            selectedCanvas={selectedCanvas}
+            selectedManifest={selectedManifest} 
+            selectedPageIndex={currentSelectedIndex}
+            totalPageCount={visibleCanvases.length}
+            onNext={selectNext} 
+            onPrevious={selectPrevious} />
+        )}
+      </div>
     </ViewerContext.Provider>
   )
 
