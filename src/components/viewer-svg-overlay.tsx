@@ -1,7 +1,7 @@
 import { useEffect, useRef, type ReactElement } from 'react';
 import { Viewer } from 'openseadragon';
 
-interface OpenSeadragonSVGOverlayProps {
+interface ViewerSvgOverlayProps {
 
   viewer?: Viewer | null;
 
@@ -11,7 +11,7 @@ interface OpenSeadragonSVGOverlayProps {
 
 }
 
-export const OpenSeadragonSvgOverlay = (props: OpenSeadragonSVGOverlayProps) => {
+export const ViewerSvgOverlay= (props: ViewerSvgOverlayProps) => {
   const { viewer } = props;
 
   const belowSvgRef = useRef<SVGSVGElement>(null);

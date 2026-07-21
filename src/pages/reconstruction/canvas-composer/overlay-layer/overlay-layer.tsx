@@ -1,4 +1,4 @@
-import { OpenSeadragonSvgOverlay } from '@/components/openseadragon';
+import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { useComposerStore } from '../composer-store';
 import { CanvasIndicatorBackground, CanvasIndicatorForeground } from './canvas-indicator';
 import { ImageTool } from './image-tool';
@@ -8,7 +8,7 @@ export const OverlayLayer = () => {
   const layout = useComposerStore(state => state.layout);
 
   return viewer ? (
-    <OpenSeadragonSvgOverlay 
+    <ViewerSvgOverlay 
       viewer={viewer}
       bottomLayer={(
         <CanvasIndicatorBackground layout={layout} viewer={viewer} />

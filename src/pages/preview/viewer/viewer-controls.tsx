@@ -1,5 +1,5 @@
 import type { Viewer } from 'openseadragon';
-import { OpenSeadragonZoomControls } from '@/components/openseadragon';
+import { ViewerZoomControls } from '@/components/viewer-zoom-controls';
 import { Button } from '@/shadcn/button';
 import { IconLayoutSidebarRight } from '@tabler/icons-react';
 
@@ -17,7 +17,7 @@ export const ViewerControls = (props: ViewerControlsProps) => {
 
   return (
     <div className="absolute top-3 right-3 flex gap-1.5">
-      <OpenSeadragonZoomControls viewer={props.viewer} />
+      <ViewerZoomControls viewer={props.viewer} />
 
       <Button
         variant="ghost"

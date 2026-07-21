@@ -2,13 +2,13 @@ import type { Viewer } from 'openseadragon';
 import { Button } from '@/shadcn/button';
 import { IconZoomIn, IconZoomOut } from '@tabler/icons-react';
 
-interface OpenSeadragonZoomControlsProps {
+interface ViewerZoomControlsProps {
 
   viewer?: Viewer | null;
 
 }
 
-export const OpenSeadragonZoomControls = ({ viewer }: OpenSeadragonZoomControlsProps) => {
+export const ViewerZoomControls = ({ viewer }: ViewerZoomControlsProps) => {
 
   const onZoom = (factor: number) => {
     viewer?.viewport.zoomBy(factor);
