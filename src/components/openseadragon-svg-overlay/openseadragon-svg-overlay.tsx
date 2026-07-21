@@ -23,11 +23,7 @@ export const OpenSeadragonSVGOverlay = (props: OpenSeadragonSVGOverlayProps) => 
   const containerSizeRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
 
   useEffect(() => {
-    if (
-      !viewer || 
-      !belowGroupRef.current || 
-      !aboveGroupRef.current 
-    ) return;
+    if (!viewer) return;
 
     const setViewBox = (x: number, y: number) => {
       const viewBox = `0 0 ${x} ${y}`;
@@ -75,7 +71,7 @@ export const OpenSeadragonSVGOverlay = (props: OpenSeadragonSVGOverlayProps) => 
       viewer.removeHandler('update-viewport', onUpdateViewport);
       resizeObserver.disconnect();
     };
-  }, [viewer]);
+  }, [viewer, props.topLayer, props.bottomLayer]);
 
   return viewer ? (
     <>
@@ -105,7 +101,7 @@ export const OpenSeadragonSVGOverlay = (props: OpenSeadragonSVGOverlayProps) => 
         </svg>
       )}
 
-      {props.bottomLayer && ( // elements ABOVE the OSD image
+      {props.topLayer && ( // elements ABOVE the OSD image
         <svg
           ref={aboveSvgRef}
           className="absolute inset-0 size-full pointer-events-none z-50">

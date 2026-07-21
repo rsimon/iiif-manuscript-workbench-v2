@@ -18,12 +18,12 @@ const viewportDistance = (a: Point, b: Point) => {
 }
 
 export const MeasurementTool = (props: MeasurementToolProps) => {
-  const { viewer } = props;
+  const { viewer, enabled } = props;
 
   const { measurement, setMeasurement } = useMeasurement();
 
   useEffect(() => {
-    if (!viewer) return;
+    if (!viewer || !enabled) return;
 
     const onCanvasClick = (evt: CanvasClickEvent) => {
       if (!evt.quick) return;
@@ -61,9 +61,9 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
 
       setMeasurement({ phase: 'idle' });
     };
-  }, [viewer]);
+  }, [viewer, enabled]);
 
-  return (viewer && measurement && measurement.phase !== 'idle') ? (
+  return (viewer && enabled && measurement && measurement.phase !== 'idle') ? (
     <g pointerEvents="none">
       <defs>
         <marker

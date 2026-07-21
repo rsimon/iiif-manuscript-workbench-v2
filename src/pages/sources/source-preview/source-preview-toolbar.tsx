@@ -26,7 +26,7 @@ const SourcePreviewToolbarToggle = (props: TogglePrimitive.Props & { tooltip: st
       <TooltipTrigger
         render={
           <Toggle
-            className="rounded-full"
+            className="rounded-full disabled:text-muted-foreground/80"
             {...rest}>
             {children}
           </Toggle>
@@ -139,6 +139,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
         </PhysicalDimensionsDialog>
 
         <SourcePreviewToolbarToggle
+          disabled={!size}
           tooltip="Measure"
           onPressedChange={pressed => props.onToggleMeasurement(pressed)}>
           <IconRulerMeasure className="size-4.5" />
