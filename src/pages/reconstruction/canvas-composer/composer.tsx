@@ -4,8 +4,8 @@ import { useShallow } from 'zustand/react/shallow';
 import { cn } from '@/shadcn/utils';
 import { useComposerStore } from './composer-store';
 import { getDraggableImageKey } from './composer-utils';
-import { OverlayLayer } from './overlay-layer';
 import { useComposerSelection } from './use-composer-selection';
+import { OverlayLayer } from './overlay-layer';
 
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
