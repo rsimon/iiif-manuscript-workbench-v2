@@ -121,7 +121,9 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
 
         <PhysicalDimensionsDialog
           canvasLabel={props.selectedCanvas.getLabel()}
-          size={size}
+          canvasWidth={props.selectedCanvas.width}
+          canvasHeight={props.selectedCanvas.height}
+          physicalSize={size}
           open={showDimensionsDialog}
           onOpenChange={setShowDimensionsDialog}
           onSizeChanged={size => setSize(props.selectedCanvas.id, size)}>

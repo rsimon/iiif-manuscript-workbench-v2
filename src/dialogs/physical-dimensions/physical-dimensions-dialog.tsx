@@ -26,8 +26,12 @@ interface PhysicalDimensionsDialogProps {
   open: boolean;
 
   canvasLabel: string;
+
+  canvasWidth: number;
+
+  canvasHeight: number;
   
-  size?: PhysicalSize;
+  physicalSize?: PhysicalSize;
 
   onOpenChange(open: boolean): void;
 
@@ -51,16 +55,16 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
   const isValid = width !== undefined && height !== undefined && unit.trim();
 
   useEffect(() => {
-    if (!props.open || !props.size) {
+    if (!props.open || !props.physicalSize) {
       setWidthStr('');
       setHeightStr('');
       setUnit('');
     } else {
-      setWidthStr(props.size.width.toString());
-      setHeightStr(props.size.height.toString());
-      setUnit(props.size.unit);
+      setWidthStr(props.physicalSize.width.toString());
+      setHeightStr(props.physicalSize.height.toString());
+      setUnit(props.physicalSize.unit);
     }
-  }, [props.canvasLabel, props.open, props.size]);
+  }, [props.canvasLabel, props.open, props.physicalSize]);
 
   const handleApplyScale = () => {
     if (!isValid) return;
@@ -95,7 +99,7 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
 
             <FieldContent>
               <p className="text-muted-foreground text-sm tabular-nums">
-                1,234 × 2,312 px
+                {props.canvasWidth.toLocaleString()} × {props.canvasHeight.toLocaleString()} px
               </p>
             </FieldContent>
           </Field>
