@@ -60,7 +60,7 @@ export const FloatingPanelContent = (props: FloatingPanelContentProps) => {
         sideOffset={props.sideOffset ?? 8}
         positionMethod="fixed"
         disableAnchorTracking
-        className="z-90">
+        className="z-40">
         <Popover.Popup
           ref={popupRef}
           className={cn(
