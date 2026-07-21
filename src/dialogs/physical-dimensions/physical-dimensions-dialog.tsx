@@ -1,4 +1,4 @@
-import { useState, type ReactNode } from 'react';
+import { useEffect, useState, type ReactElement } from 'react';
 import { IconForms, IconRulerMeasure } from '@tabler/icons-react';
 import { Input } from '@/shadcn/input';
 import { Button } from '@/shadcn/button';
@@ -20,9 +20,11 @@ import {
 
 interface PhysicalDimensionsDialogProps {
   
-  children: ReactNode;
+  children: ReactElement;
 
   open: boolean;
+
+  canvasLabel: string;
   
   size?: PhysicalSize;
 
@@ -34,6 +36,14 @@ interface PhysicalDimensionsDialogProps {
 
 type PhysicalDimensionsDialogMode = 'FORM_INPUT' | 'MEASURE';
 
+const parseNumber = (value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return;
+
+  const parsed = Number(trimmed);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) => {
   const [mode, setMode] = useState<PhysicalDimensionsDialogMode>('FORM_INPUT');
 
@@ -42,16 +52,47 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
 
   const [unit, setUnit] = useState('');
 
+  const width = parseNumber(widthStr);
+  const height = parseNumber(heightStr);
+
+  const isValid = width !== undefined && height !== undefined && unit.trim();
+
+  useEffect(() => {
+    if (!props.open || !props.size) {
+      setWidthStr('');
+      setHeightStr('');
+      setUnit('');
+    } else {
+      setWidthStr(props.size.width.toString());
+      setHeightStr(props.size.height.toString());
+      setUnit(props.size.unit);
+    }
+  }, [props.canvasLabel, props.open, props.size]);
+
+  const handleApplyScale = () => {
+    if (!isValid) return;
+
+    props.onSizeChanged({
+      width,
+      height,
+      unit: unit.trim()
+    });
+
+    props.onOpenChange(false);
+  }
+
   return (
     <FloatingPanel 
       open={props.open} 
       onOpenChange={props.onOpenChange}>
-      <FloatingPanelTrigger>
-        {props.children}
-      </FloatingPanelTrigger>
+      <FloatingPanelTrigger render={props.children} />
 
       <FloatingPanelContent 
-        title="Physical dimensions"
+        title={(
+          <span>
+            <span>Physical dimensions</span> <span className="text-muted-foreground">[{props.canvasLabel}]</span>
+          </span>
+        )}
         align="center"
         sideOffset={14}
         className="w-sm">
@@ -119,7 +160,8 @@ export const PhysicalDimensionsDialog = (props: PhysicalDimensionsDialogProps) =
 
               <div className="flex gap-2 justify-between items-end">
                 <Button 
-                  disabled
+                  disabled={!isValid}
+                  onClick={handleApplyScale}
                   size="sm"
                   className="bg-black hover:bg-black/80">
                   Apply scale

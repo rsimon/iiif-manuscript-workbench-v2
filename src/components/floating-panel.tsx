@@ -1,4 +1,4 @@
-import { useRef, type ReactNode, type RefObject } from 'react';
+import { useRef, type ReactElement, type ReactNode, type RefObject } from 'react';
 import { Popover } from '@base-ui/react/popover';
 import { useDraggable } from '@neodrag/react';
 import { cn } from '@/shadcn/utils';
@@ -39,7 +39,7 @@ interface FloatingPanelContentProps {
 
   className?: string;
 
-  title: string;
+  title: ReactElement;
 
   side?: Popover.Positioner.Props['side'];
 

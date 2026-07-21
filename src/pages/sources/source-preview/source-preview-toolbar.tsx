@@ -120,6 +120,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
         <Separator orientation="vertical" />
 
         <PhysicalDimensionsDialog
+          canvasLabel={props.selectedCanvas.getLabel()}
           size={size}
           open={showDimensionsDialog}
           onOpenChange={setShowDimensionsDialog}
@@ -134,7 +135,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
           ) : (
             <Button
               variant="outline"
-              className="rounded-full border-primary border-dashed font-normal text-primary hover:text-primary">
+              className="rounded-full border-primary border-dashed font-normal text-primary hover:text-primary aria-expanded:text-primary">
               <IconPlus /> Set dimensions
             </Button>
           )}
