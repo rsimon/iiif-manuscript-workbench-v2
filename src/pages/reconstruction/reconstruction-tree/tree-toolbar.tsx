@@ -1,12 +1,10 @@
-import { IconArrowMerge, IconFilePlus } from '@tabler/icons-react';
+import { IconArrowMerge } from '@tabler/icons-react';
 import { PanelActionButton } from '@/components/panel-action-button';
 import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../reconstruction-store';
 
 export const ReconstructionTreeToolbar = () => {
   const merge = useAppStore(state => state.mergeCanvases);
-  const appendEmpty = useAppStore(state => state.appendEmptyCanvas);
-
   const selected = useReconstructionStore(state => state.selection);
 
   return (
@@ -17,12 +15,6 @@ export const ReconstructionTreeToolbar = () => {
           tooltip="Merge selected canvases"
           onClick={() => merge(selected)}>
           <IconArrowMerge className="size-4" />
-        </PanelActionButton>
-
-        <PanelActionButton
-          tooltip="Create empty canvas"
-          onClick={() => appendEmpty()}>
-          <IconFilePlus className="size-4" />
         </PanelActionButton>
       </div>
     </div>

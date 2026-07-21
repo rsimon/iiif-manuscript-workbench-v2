@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { IconPlus } from '@tabler/icons-react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { monitorForElements, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
@@ -16,6 +17,7 @@ import { ReconstructionTreeToolbar } from './tree-toolbar';
 export const ReconstructionTree = () => {
   const canvases = useAppStore(state => state.reconstruction);
   const onChange = useAppStore(state => state.updateReconstruction);
+  const appendEmpty = useAppStore(state => state.appendEmptyCanvas);
 
   const selection = useReconstructionStore(state => state.selection) ?? [];
   const setSelection = useReconstructionStore(state => state.setSelection);
@@ -156,6 +158,16 @@ export const ReconstructionTree = () => {
               onSelect={event => onSelect(index, event)}
               pinnedEdge={fallback?.index === index ? fallback.edge : undefined} />
           ))}
+
+          <li>
+            <button 
+              className="mt-0.5 flex gap-2 text-muted-foreground/60 text-sm items-center w-full
+                cursor-pointer rounded-md justify-center p-4 border border-neutral-400/50
+                border-dashed hover:bg-neutral-200/50 hover:text-muted-foreground hover:border-neutral-400/80"
+              onClick={() => appendEmpty()}>
+              <IconPlus className="size-4" /> Add empty canvas
+            </button>
+          </li>
         </ul>
       </ScrollArea>
     </div>
