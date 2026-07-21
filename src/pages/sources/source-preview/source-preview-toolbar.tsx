@@ -76,7 +76,6 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
       <div className="bg-white flex items-center gap-1 min-w-20 rounded-full p-1 pointer-events-auto
         ring-1 ring-black/5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.10)]">
-
         <div className="flex items-center gap-0.5">
           <Button
             disabled={!hasPrev}
@@ -132,7 +131,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
           ) : (
             <Button
               variant="outline"
-              className="rounded-full border-primary border-dashed font-normal text-primary hover:text-primary aria-expanded:text-primary">
+              className="rounded-full border-primary/50 border-dashed font-normal text-primary hover:text-primary aria-expanded:text-primary">
               <IconPlus /> Set dimensions
             </Button>
           )}
