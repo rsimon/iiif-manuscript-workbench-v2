@@ -64,6 +64,8 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
 
   const [isTapeMeasurePressed, setIsTapeMeasurePressed] = useState(false);
 
+  useEffect(() => setIsTapeMeasurePressed(false), [props.selectedCanvas])
+
   const onShowDimensionsDialog = (open: boolean) => {
     setIsTapeMeasurePressed(false);
     setShowDimensionsDialog(open);

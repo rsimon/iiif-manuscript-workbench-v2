@@ -12,7 +12,7 @@ import { ImportSourceDialog } from '@/dialogs/import-source';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 import { EmptySourceTree } from './empty-source-tree';
-import { CanvasTreeItem, SourceTreeItem } from './source-tree-item';
+import { CanvasTreeItem, ManifestTreeItem } from './source-tree-item';
 import { SourceTreeToolbar } from './source-tree-toolbar';
 import { useSourceNavigation } from '../use-source-navigation';
 
@@ -66,7 +66,7 @@ export const SourceTree = () => {
   const renderManifestGroup = (idx: number) => {
     const source = sources[idx];
     return (
-      <SourceTreeItem
+      <ManifestTreeItem
         source={source}
         isCollapsed={collapsed.has(source.manifest.id)}
         isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}

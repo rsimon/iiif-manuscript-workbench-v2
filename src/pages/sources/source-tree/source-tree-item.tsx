@@ -3,15 +3,11 @@ import type { CozyCanvas } from 'cozy-iiif';
 import { Button } from '@/shadcn/button';
 import { Checkbox } from '@/shadcn/checkbox';
 import { Label } from '@/shadcn/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { cn, withStopPropagation } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { SourceManifest } from '@/types';
 import { SourceTreeItemActions } from './source-tree-item-actions';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger
-} from '@/shadcn/tooltip';
 
 interface ManifestTreeItemProps {
 
@@ -27,7 +23,7 @@ interface ManifestTreeItemProps {
 
 }
 
-export const SourceTreeItem = (props: ManifestTreeItemProps) => {
+export const ManifestTreeItem = (props: ManifestTreeItemProps) => {
   const { manifest } = props.source;
 
   const allChecked = props.inReconstruction === manifest.canvases.length;
@@ -107,6 +103,7 @@ interface CanvasTreeItemProps {
 }
 
 export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
+  const physicalSize = useAppStore(state => state.sizes.get(props.canvas.id));
 
   return (
     <div
@@ -142,7 +139,14 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
           className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/10"
           loading="lazy" />
 
-        <span className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</span>
+        <div className="space-y-px">
+          <div className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</div>
+          {physicalSize && (
+            <div className="text-[11px] tracking-wide text-muted-foreground">
+              {physicalSize.width} x {physicalSize.height} {physicalSize.unit}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

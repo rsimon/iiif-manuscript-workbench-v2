@@ -17,6 +17,7 @@ interface AppStore {
 
   sources: SourceManifest[];
 
+  // Physical sizes by canvas ID
   sizes: Map<string, PhysicalSize>;
 
   reconstruction: ReconstructionCanvas[];
