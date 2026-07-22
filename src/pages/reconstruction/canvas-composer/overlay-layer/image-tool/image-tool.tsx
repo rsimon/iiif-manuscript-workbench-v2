@@ -135,12 +135,14 @@ export const ImageTool = (props: ImageToolProps) => {
     const hasChangedItem = intersectingItems.every(r => 
       r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
 
-    if (hasChangedItem && selectedImage.canChangeItem) {
+    if (hasChangedItem && selectedImage.canChangeItem && intersecting.length > 0) {
       const destinationId = hasChangedItem && selectedImage.canChangeItem
         ? intersecting[0].reconstructionCanvasId : selectedImage.item.reconstructionCanvasId;
 
+      console.log('moving!')
       moveImageToCanvas(selectedImage.item.reconstructionCanvasId, destinationId, selectedImage.image);
     } else {
+      console.log('updating');
       updateImage(selectedImage.item.reconstructionCanvasId, {
         ...selectedImage.image, 
         x, y

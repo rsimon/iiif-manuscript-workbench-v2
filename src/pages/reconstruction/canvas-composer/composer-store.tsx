@@ -3,7 +3,7 @@ import { Viewer, TiledImage } from 'openseadragon';
 import { dequal } from 'dequal/lite';
 import pDebounce from 'p-debounce';
 import { useAppStore } from '@/store/app-store';
-import type { ReconstructionCanvas, SourceCanvas } from '@/types';
+import type { ReconstructionCanvas } from '@/types';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
 import { applyEdits, getDraggableImageKey, getSourceCanvas, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
@@ -89,7 +89,7 @@ export const useComposerStore = create<ComposerState>(set => ({
     };
   }),
 
-  moveImageToCanvas: (fromId, toId, image) => set(({ imagesByCanvasId }) => {
+  moveImageToCanvas: (fromId, toId, image) => set(({ imagesByCanvasId, layout, selectedImage }) => {
     const key = getDraggableImageKey(image);
 
     // Make sure the from/to info is valid
@@ -99,9 +99,9 @@ export const useComposerStore = create<ComposerState>(set => ({
     if (!isValidSource || !isValidTarget) return {};
 
     // Next, make sure the image can be moved, without splitting a source canvas!
-    const { reconstruction, updateReconstruction } = useAppStore.getState();
+    const { reconstruction } = useAppStore.getState();
     const fromCanvas = reconstruction.find(rc => rc.id === fromId); 
-
+    
     // Should never happen
     if (!fromCanvas) return {};
 
@@ -109,55 +109,28 @@ export const useComposerStore = create<ComposerState>(set => ({
     const isValidChange = sourceCanvas?.canvas.images.length === 1;
     if (!isValidChange) return {};  
 
-    const removeFromCanvas = (canvas: ReconstructionCanvas, sourceCanvasId: string): ReconstructionCanvas => {
-      if (canvas.type === 'original') {
-        if (canvas.source.canvas.id === sourceCanvasId) {
-          // Single-source original canvas -> zero-source composite
-          return { 
-            ...canvas,
-            type: 'composite',
-            width: canvas.source.canvas.width,
-            height: canvas.source.canvas.height,
-            sources: []
-          };
-        } else {
-          // Should never happen - the source canvas to remove was not in this reconstruction canvas
-          return canvas;
-        }
-      } else {
-        return {
-          ...canvas,
-          sources: canvas.sources.filter(s => s.canvas.id !== sourceCanvasId)
-        }
-      }
-    }
+    // All good - now update the imagesByCanvas map and schedule the app store sync
+    const updatedImagesByCanvasId = new Map(imagesByCanvasId);
 
-    const addToCanvas = (canvas: ReconstructionCanvas, sourceCanvas: SourceCanvas): ReconstructionCanvas => {
-      if (canvas.type === 'original') {
-        return {
-          ...canvas,
-          type: 'composite',
-          width: canvas.source.canvas.width,
-          height: canvas.source.canvas.height,
-          sources: [canvas.source, sourceCanvas]
-        }
-      } else {
-        return {
-          ...canvas,
-          sources: [...canvas.sources, sourceCanvas]
-        }
-      }
-    }
-    
-    // All good - now update the source canvas association in the app store
-    const updated = reconstruction.map(r => 
-      r.id === fromId ? removeFromCanvas(r, sourceCanvas.canvas.id) :
-      r.id === toId ? addToCanvas(r, sourceCanvas) :
-      r);
+    const nextFrom = (updatedImagesByCanvasId.get(fromId) || []).filter(i => getDraggableImageKey(i) !== key);
+    const nextTo = [...(updatedImagesByCanvasId.get(toId) || []), image];
 
-    updateReconstruction(updated);
+    updatedImagesByCanvasId.set(fromId, nextFrom);
+    updatedImagesByCanvasId.set(toId, nextTo);
 
-    return {};
+    const updatedSelectedImage = 
+      selectedImage && getDraggableImageKey(selectedImage.image) === key ? { 
+        image, 
+        canChangeItem: selectedImage.canChangeItem,
+        item: layout.items.find(i => i.reconstructionCanvasId === toId)
+      } : undefined;
+
+    scheduleAppStoreSync();
+
+    return {
+      imagesByCanvasId: updatedImagesByCanvasId,
+      ...(updatedSelectedImage ? { selectedImage: updatedSelectedImage } : {})
+    };
   })
 }));
 
