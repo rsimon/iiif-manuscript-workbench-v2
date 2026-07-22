@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState, type PointerEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from 'react';
 import { Point, type Viewer } from 'openseadragon';
 import { ToolCornerHandle } from './tool-corner-handle';
-import type { ComposerLayoutItem, CornerHandleType, HandleType, ResizeHandleType } from '../../composer-types';
+import type { ComposerLayoutItem, CornerHandleType, DraggableImage, HandleType, ResizeHandleType } from '../../composer-types';
 import { useComposerStore } from '../../composer-store';
-import { getDraggableImageKey, getIntersectingItems, getItemCanvasSize } from '../../composer-utils';
+import { getDraggableImageKey, getIntersectingItems, getItemAt, getItemCanvasSize } from '../../composer-utils';
 import { cornersToSvgPoints, getImageCorners } from './image-tool-utils';
 import { useAppStore } from '@/store/app-store';
 
@@ -47,6 +47,16 @@ interface DragStart {
 
   canvasWidth: number;
 
+  layoutX: number;
+
+  layoutY: number;
+
+  layoutWidth: number;
+
+  itemId: string;
+
+  image: DraggableImage;
+
 }
 
 export const ImageTool = (props: ImageToolProps) => {
@@ -57,6 +67,8 @@ export const ImageTool = (props: ImageToolProps) => {
   const [origin, setOrigin] = useState<Point>();
 
   const [dragStart, setDragStart] = useState<DragStart>();
+
+  const dragStartRef = useRef<DragStart | undefined>(undefined);
 
   const [intersectingItems, setIntersectingItems] = useState<ComposerLayoutItem[]>([]);
 
@@ -86,6 +98,7 @@ export const ImageTool = (props: ImageToolProps) => {
   useEffect(() => {
     setOrigin(undefined);
     setDragStart(undefined);
+    dragStartRef.current = undefined;
 
     if (selectedImage) {
       const { x, y, width } = selectedImage.image;
@@ -124,29 +137,73 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   const onMoveImage = (delta: number[]) => {
-    if (!selectedImage || !dragStart) return;
+    const drag = dragStartRef.current;
+    if (!selectedImage || !drag) return;
 
-    const x = dragStart.x + delta[0] * dragStart.canvasWidth;
-    const y = dragStart.y + delta[1] * dragStart.canvasWidth;
+    const layoutX = drag.layoutX + delta[0];
+    const layoutY = drag.layoutY + delta[1];
+    const imageAspect = drag.image.resource.height / drag.image.resource.width;
+    const layoutHeight = drag.layoutWidth * imageAspect;
 
-    const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
-    const intersecting = updateIntersectingItems(liveCorners);
+    updateIntersectingItems([
+      new Point(layoutX, layoutY),
+      new Point(layoutX + drag.layoutWidth, layoutY),
+      new Point(layoutX + drag.layoutWidth, layoutY + layoutHeight),
+      new Point(layoutX, layoutY + layoutHeight)
+    ]);
 
-    const hasChangedItem = intersectingItems.every(r => 
-      r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
+    const destination = getItemAt(
+      new Point(layoutX + drag.layoutWidth / 2, layoutY + layoutHeight / 2),
+      layout
+    );
 
-    if (hasChangedItem && selectedImage.canChangeItem && intersecting.length > 0) {
-      const destinationId = hasChangedItem && selectedImage.canChangeItem
-        ? intersecting[0].reconstructionCanvasId : selectedImage.item.reconstructionCanvasId;
+    if (destination && destination.reconstructionCanvasId !== drag.itemId && selectedImage.canChangeItem) {
+      const source = useAppStore.getState().reconstruction.find(r =>
+        r.id === drag.itemId);
+      const target = useAppStore.getState().reconstruction.find(r =>
+        r.id === destination.reconstructionCanvasId);
 
-      console.log('moving!')
-      moveImageToCanvas(selectedImage.item.reconstructionCanvasId, destinationId, selectedImage.image);
+      if (!source || !target) return;
+
+      const [targetWidth] = getItemCanvasSize(target);
+      const targetImage = {
+        ...drag.image,
+        x: (layoutX - destination.x) * targetWidth,
+        y: (layoutY - destination.y) * targetWidth,
+        width: drag.layoutWidth * targetWidth
+      };
+
+      moveImageToCanvas(
+        drag.itemId,
+        destination.reconstructionCanvasId,
+        targetImage
+      );
+
+      const nextDrag = {
+        ...drag,
+        x: targetImage.x,
+        y: targetImage.y,
+        width: targetImage.width,
+        canvasWidth: targetWidth,
+        itemId: destination.reconstructionCanvasId,
+        image: targetImage
+      };
+      dragStartRef.current = nextDrag;
+      setDragStart(nextDrag);
     } else {
-      console.log('updating');
-      updateImage(selectedImage.item.reconstructionCanvasId, {
-        ...selectedImage.image, 
-        x, y
-      });
+      const canvas = useAppStore.getState().reconstruction.find(r => r.id === drag.itemId);
+      if (!canvas) return;
+
+      const [canvasWidth] = getItemCanvasSize(canvas);
+      const item = layout.items.find(i => i.reconstructionCanvasId === drag.itemId);
+      if (!item) return;
+
+      const x = (layoutX - item.x) * canvasWidth;
+      const y = (layoutY - item.y) * canvasWidth;
+      const updatedImage = { ...drag.image, x, y };
+
+      dragStartRef.current = { ...drag, x, y, image: updatedImage };
+      updateImage(drag.itemId, updatedImage);
     }
   }
 
@@ -203,9 +260,20 @@ export const ImageTool = (props: ImageToolProps) => {
 
     const { x, y, width } = selectedImage.image;
 
-    setDragStart({
-      x, y, width, canvasWidth
-    });
+    const item = layout.items.find(i => i.reconstructionCanvasId === selectedImage.item.reconstructionCanvasId);
+    if (!item) return;
+
+    const nextDrag = {
+      x, y, width, canvasWidth,
+      layoutX: item.x + x / canvasWidth,
+      layoutY: item.y + y / canvasWidth,
+      layoutWidth: width / canvasWidth,
+      itemId: item.reconstructionCanvasId,
+      image: selectedImage.image
+    };
+
+    dragStartRef.current = nextDrag;
+    setDragStart(nextDrag);
 
     setIsDraggingImage(true);
     setOrigin(getPoint(evt));
