@@ -7,6 +7,7 @@ import type { ReconstructionCanvas } from '@/types';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
 import { applyEdits, getDraggableImageKey, getSourceCanvas, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
+import { withViewTransition } from '../view-transition';
 
 export interface ComposerState {
 
@@ -136,13 +137,13 @@ export const useComposerStore = create<ComposerState>(set => ({
 
 // Debounced upwards sync to root app state
 const scheduleAppStoreSync = pDebounce(() => {
-  const { reconstruction, updateReconstruction } = useAppStore.getState();
+  const { baseURI, reconstruction, updateReconstruction } = useAppStore.getState();
   const { imagesByCanvasId } = useComposerStore.getState();
 
-  const next = applyEdits(reconstruction, imagesByCanvasId);
+  const next = applyEdits(reconstruction, imagesByCanvasId, baseURI);
   const changed = next.length !== reconstruction.length || next.some((r, i) => r !== reconstruction[i]);
 
-  if (changed) updateReconstruction(next);
+  if (changed) withViewTransition(() => updateReconstruction(next));
 }, 250);
 
 // Downwards sync from app store to local state

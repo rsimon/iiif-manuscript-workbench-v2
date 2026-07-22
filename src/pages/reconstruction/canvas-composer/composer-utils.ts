@@ -141,7 +141,8 @@ export const getSourceCanvas = (image: DraggableImage, canvas: ReconstructionCan
 // Applies composer edits back into an app-level reconstruction
 export const applyEdits = (
   reconstruction: ReconstructionCanvas[],
-  imagesByCanvasId: Map<string, DraggableImage[]>
+  imagesByCanvasId: Map<string, DraggableImage[]>,
+  baseURI: string
 ): ReconstructionCanvas[] => {
   const sourceCanvases = new Map<string, SourceCanvas>();
   const currentImagesBySourceCanvasId = new Map<string, DraggableImage[]>();
@@ -164,7 +165,13 @@ export const applyEdits = (
     .map(r => {
       // Images in the composer (with user edits)
       const composerImages = imagesByCanvasId.get(r.id)!;
-      const sourceCanvasIds = [...new Set(composerImages.map(image => image.sourceCanvasId))];
+      const sourceCanvasIdSet = new Set(composerImages.map(image => image.sourceCanvasId));
+
+      if (r.type === 'original' && composerImages.length > 0) {
+        sourceCanvasIdSet.add(r.source.canvas.id);
+      }
+
+      const sourceCanvasIds = [...sourceCanvasIdSet];
       const sources = sourceCanvasIds
         .map(sourceCanvasId => sourceCanvases.get(sourceCanvasId))
         .filter((source): source is SourceCanvas => !!source);
@@ -183,7 +190,7 @@ export const applyEdits = (
 
         return {
           type: 'composite',
-          id: r.id,
+          id: `${baseURI}/${crypto.randomUUID()}`,
           label: r.label,
           sources: sources.map(applySourceEdits),
           width: r.source.canvas.width,

@@ -1,11 +1,12 @@
 import { useCallback } from 'react';
-import { flushSync } from 'react-dom';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/tree-item';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { OriginalCanvas, ReconstructionCanvas, SourceCanvas } from '@/types';
+
+export { withViewTransition } from '../view-transition';
 
 export type DragPayload =
   | { kind: 'root'; id: string; index: number; itemType: ReconstructionCanvas['type'] }
@@ -113,17 +114,6 @@ export const useDragAndDrop = () => {
     mergeInto,
     reorderRoot
   }
-}
-
-export const withViewTransition = (update: () => void) => {
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (!('startViewTransition' in document) || reducedMotion) {
-    update();
-    return;
-  }
-
-  document.startViewTransition(() => flushSync(update));
 }
 
 export const viewTransitionName = (id: string) =>
