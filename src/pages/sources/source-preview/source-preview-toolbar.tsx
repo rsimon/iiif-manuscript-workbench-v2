@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Toggle as TogglePrimitive } from '@base-ui/react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
 import { ViewerPaginationControl } from '@/components/viewer-pagination-control';
@@ -76,6 +76,21 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
       canvasSize: size
     })
   }
+
+  useEffect(() => {
+    if (!isTapeMeasurePressed) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape')
+        onPressTapeMeasure(false);
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+    }
+  }, [isTapeMeasurePressed]);
 
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
