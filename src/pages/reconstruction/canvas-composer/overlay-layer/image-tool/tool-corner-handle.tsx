@@ -12,6 +12,8 @@ interface ToolCornerHandleProps {
 
   direction: HandleDirection;
 
+  invalid?: boolean;
+
   type: CornerHandleType;
 
   viewer: Viewer;
@@ -64,7 +66,7 @@ export const ToolCornerHandle = (props: ToolCornerHandleProps) => {
         cursor: `${props.direction.toLowerCase()}-resize`
       }}
       fill="white"
-      stroke="oklch(70.5% 0.213 47.604)"
+      stroke={props.invalid ? 'oklch(57.7% 0.245 27.325)' : 'oklch(70.5% 0.213 47.604)'}
       strokeWidth={2}
       vectorEffect="non-scaling-stroke"
       onPointerDown={props.onPointerDown} 

@@ -1,10 +1,14 @@
 import { Point } from 'openseadragon';
+import { useAppStore } from '@/store/app-store';
 import type { DraggableImageSelection } from '../../composer-types';
 import { getItemCanvasSize } from '../../composer-utils';
-import { useAppStore } from '@/store/app-store';
 
-// Returns list of corner points, OSD viewport coordinates
-export const getImageCorners = (selected: DraggableImageSelection): Point[] => {
+/**
+ * Returns list of corner points, OSD viewport coordinates. Optionally 
+ * supports "overrides" for image position, in case image corners should 
+ * be computed from live data, before Zustand state has updated.
+ */
+export const getImageCorners = (selected: DraggableImageSelection, ox?: number, oy?: number, ow?: number): Point[] => {
   const { image, item } = selected;
 
   // Snapshot read: canvas pixel size is structural (same category as
@@ -16,9 +20,9 @@ export const getImageCorners = (selected: DraggableImageSelection): Point[] => {
 
   const aspect = image.resource.width / image.resource.height;
 
-  const x = item.x + image.x / canvasWidth;
-  const y = item.y + image.y / canvasWidth;
-  const w = image.width / canvasWidth;
+  const x = item.x + (ox || image.x) / canvasWidth;
+  const y = item.y + (oy || image.y) / canvasWidth;
+  const w = (ow || image.width) / canvasWidth;
   const h = w / aspect;
 
   return [

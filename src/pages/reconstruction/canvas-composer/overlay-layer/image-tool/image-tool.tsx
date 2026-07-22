@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type PointerEvent } from 'react';
 import { Point, type Viewer } from 'openseadragon';
 import { ToolCornerHandle } from './tool-corner-handle';
-import type { CornerHandleType, HandleType, ResizeHandleType } from '../../composer-types';
+import type { ComposerLayoutItem, CornerHandleType, HandleType, ResizeHandleType } from '../../composer-types';
 import { useComposerStore } from '../../composer-store';
-import { getDraggableImageKey, getItemAt, getItemCanvasSize } from '../../composer-utils';
+import { getDraggableImageKey, getIntersectingItems, getItemCanvasSize } from '../../composer-utils';
 import { cornersToSvgPoints, getImageCorners } from './image-tool-utils';
 import { useAppStore } from '@/store/app-store';
 
@@ -58,6 +58,8 @@ export const ImageTool = (props: ImageToolProps) => {
 
   const [dragStart, setDragStart] = useState<DragStart>();
 
+  const [intersectingItems, setIntersectingItems] = useState<ComposerLayoutItem[]>([]);
+
   const selectedImage = useComposerStore(state => state.selectedImage);
 
   const updateImage = useComposerStore(state => state.updateImage);
@@ -74,6 +76,12 @@ export const ImageTool = (props: ImageToolProps) => {
   useEffect(() => {
     setOrigin(undefined);
     setDragStart(undefined);
+
+    if (selectedImage) {
+      const { x, y, width } = selectedImage.image;
+      const liveCorners = getImageCorners(selectedImage, x, y, width);
+      updateIntersectingItems(liveCorners);
+    }
   }, [selectionKey]);
 
   const corners = useMemo(() => {
@@ -91,7 +99,18 @@ export const ImageTool = (props: ImageToolProps) => {
     return viewport.pointFromPixel(new Point(offsetX, offsetY));
   }
 
-  const onMoveImage = (delta: number[], position: Point) => {
+  const updateIntersectingItems = (corners: Point[]) => {
+    const intersectingItems = getIntersectingItems({
+      x1: corners[0].x,
+      y1: corners[0].y,
+      x2: corners[2].x,
+      y2: corners[2].y
+    }, layout);
+
+    setIntersectingItems(intersectingItems);
+  }
+
+  const onMoveImage = (delta: number[]) => {
     if (!selectedImage || !dragStart) return;
 
     const x = dragStart.x + delta[0] * dragStart.canvasWidth;
@@ -102,8 +121,8 @@ export const ImageTool = (props: ImageToolProps) => {
       x, y
     });
 
-    const intersectingItem = getItemAt(position, layout);
-    console.log(intersectingItem?.reconstructionCanvasId);
+    const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
+    updateIntersectingItems(liveCorners);
   }
 
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
@@ -135,6 +154,9 @@ export const ImageTool = (props: ImageToolProps) => {
       ...selectedImage.image,
       x, y, width
     });
+
+    const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
+    updateIntersectingItems(liveCorners);
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
@@ -148,11 +170,10 @@ export const ImageTool = (props: ImageToolProps) => {
     const target = evt.target as Element;
     target.setPointerCapture(evt.pointerId);
 
+    const { x, y, width } = selectedImage.image;
+
     setDragStart({
-      x: selectedImage.image.x,
-      y: selectedImage.image.y,
-      width: selectedImage.image.width,
-      canvasWidth
+      x, y, width, canvasWidth
     });
 
     setIsDraggingImage(true);
@@ -168,7 +189,7 @@ export const ImageTool = (props: ImageToolProps) => {
     const delta = [pt.x - origin.x, pt.y - origin.y];
 
     if (handle === 'SHAPE') {
-      onMoveImage(delta, pt);
+      onMoveImage(delta);
     } else {
       onResizeImage(handle, delta);
     }
@@ -178,9 +199,22 @@ export const ImageTool = (props: ImageToolProps) => {
     const target = evt.target as Element;
     target.releasePointerCapture(evt.pointerId);
 
+    // Revert position if dropped outside a canvas
+    if (selectedImage && dragStart && intersectingItems.length === 0) {
+      updateImage(selectedImage.item.reconstructionCanvasId, {
+        ...selectedImage.image,
+        x: dragStart.x,
+        y: dragStart.y,
+        width: dragStart.width
+      });
+
+      const revertedCorners = getImageCorners(selectedImage, dragStart.x, dragStart.y, dragStart.width);
+      updateIntersectingItems(revertedCorners);
+    }
+
     setOrigin(undefined);
     setDragStart(undefined);
-    setIsDraggingImage(false);
+    requestAnimationFrame(() => setIsDraggingImage(false));
   }
 
   const onPointerCancel = () => {
@@ -190,33 +224,49 @@ export const ImageTool = (props: ImageToolProps) => {
     setIsDraggingImage(false);
   }
 
-  return (
+  const invalid = intersectingItems.length === 0;
+
+  return selectedImage ? (
     <>
       <g>
-        <polygon
-          className="cursor-grab pointer-events-none"
-          points={cornersToSvgPoints(corners)}
-          fill="transparent"
-          stroke="white"
-          strokeWidth={5}
-          vectorEffect="non-scaling-stroke" />
+        {intersectingItems.length > 0 && (
+          <polygon
+            className="cursor-grab pointer-events-none"
+            points={cornersToSvgPoints(corners)}
+            fill="transparent"
+            stroke="white"
+            strokeWidth={5}
+            vectorEffect="non-scaling-stroke" />
+        )}
 
         <polygon
           className="cursor-grab"
           points={cornersToSvgPoints(corners)}
-          fill="transparent"
-          stroke="oklch(70.5% 0.213 47.604)"
-          strokeWidth={2.5}
+          fill={invalid ? 'oklch(57.7% 0.245 27.325 / 0.3)' : 'transparent'}
+          stroke={invalid ? 'oklch(57.7% 0.245 27.325)' : 'oklch(70.5% 0.213 47.604)'}
+          strokeWidth={invalid ? 1.5 : 2.5}
           vectorEffect="non-scaling-stroke"
-          strokeDasharray="5 2"
+          strokeDasharray={invalid ? undefined : '5 2'}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove('SHAPE')}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel} />
 
+        {invalid && (
+          <line 
+            x1={corners[0].x}
+            y1={corners[0].y} 
+            x2={corners[2].x} 
+            y2={corners[2].y} 
+            stroke="oklch(57.7% 0.245 27.325)" 
+            strokeWidth={1} 
+            vectorEffect="non-scaling-stroke" />
+        )}
+        
         {corners.map((corner, i) => (
           <ToolCornerHandle
             key={i}
+            invalid={invalid}
             direction={
               i === 0 ? 'NW' :
               i === 1 ? 'NE' :
@@ -230,9 +280,9 @@ export const ImageTool = (props: ImageToolProps) => {
             onPointerMove={onPointerMove(HANDLE_TYPES[i])}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerCancel} />
-        ))}
+        ))} 
       </g>
     </>
-  )
+  ) : null;
 
 }

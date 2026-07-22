@@ -55,6 +55,22 @@ export const getItemCanvasSize = (canvas: ReconstructionCanvas): [number, number
     ? [canvas.source.canvas.width, canvas.source.canvas.height]
     : [canvas.width, canvas.height];
 
+export const getIntersectingItems = (
+  rect: { x1: number; y1: number; x2: number; y2: number },
+  layout: ComposerLayout
+): ComposerLayoutItem[] => {
+  const minX = Math.min(rect.x1, rect.x2);
+  const maxX = Math.max(rect.x1, rect.x2);
+  const minY = Math.min(rect.y1, rect.y2);
+  const maxY = Math.max(rect.y1, rect.y2);
+
+  return layout.items.filter(item => {
+    const itemRight = item.x + item.width;
+    const itemBottom = item.y + item.height;
+    return item.x <= maxX && itemRight >= minX && item.y <= maxY && itemBottom >= minY;
+  });
+}
+
 export const getItemAt = (point: Point, layout: ComposerLayout): ComposerLayoutItem => {
   const hits = layout.items.filter(item => {
     const right = item.x + item.width;
