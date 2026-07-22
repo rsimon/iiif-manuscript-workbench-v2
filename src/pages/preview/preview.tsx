@@ -3,17 +3,17 @@ import { Panel, Separator } from 'react-resizable-panels';
 import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel';
 import { Viewer } from './viewer';
 import { ThumbnailStrip } from './thumbnail-strip';
-import { Metadata } from './metadata/metadata';
+import { PreviewMetadata } from './preview-metadata';
 
 export const Preview = () => {
-  const [isMetadataOpen, setIsMetadataOpen] = useState(false);
+  const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
   return (
     <main className="bg-muted grow">
       <AnimatedPanelGroup className="flex grow h-full min-h-0">
         <Panel
-          minSize={240}
-          defaultSize={300}
+          minSize={100}
+          defaultSize={240}
           className="border-r">
           <ThumbnailStrip />
         </Panel>
@@ -21,18 +21,20 @@ export const Preview = () => {
         <Separator />
 
         <Panel>
-          <Viewer />
+          <Viewer 
+            isInspectorOpen={isInspectorOpen} 
+            onChangeInspectorOpen={setIsInspectorOpen} />
         </Panel>
 
         <Separator />
         
         <AnimatedPanel 
-          open={isMetadataOpen}
-          onOpenChange={setIsMetadataOpen}
+          open={isInspectorOpen}
+          onOpenChange={setIsInspectorOpen}
           minSize={40}
           openSize={300}
           className="bg-white border-l">
-          <Metadata />
+          <PreviewMetadata />
         </AnimatedPanel>
       </AnimatedPanelGroup>
     </main>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Panel, Separator } from 'react-resizable-panels';
 import { AnimatedPanel, AnimatedPanelGroup } from '@/components/animated-panel';
 import { MeasurementProvider } from '@/dialogs/physical-dimensions';
-import { MetadataInspector } from './metadata-inspector';
+import { SourceMetadata } from './source-metadata';
 import { SourcePreview } from './source-preview';
 import { SourceTree } from './source-tree';
 
@@ -37,7 +37,7 @@ export const Sources = () => {
           minSize={40}
           openSize={300}
           className="bg-white border-l">
-          <MetadataInspector />
+          <SourceMetadata />
         </AnimatedPanel>
       </AnimatedPanelGroup>
     </main>

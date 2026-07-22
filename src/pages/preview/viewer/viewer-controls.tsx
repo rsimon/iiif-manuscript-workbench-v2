@@ -1,21 +1,23 @@
+import type { Viewer } from 'openseadragon';
+import { ViewerZoomControls } from '@/components/viewer-zoom-controls';
 import { Button } from '@/shadcn/button';
 import { IconLayoutSidebarRight } from '@tabler/icons-react';
-import { ViewerZoomControls } from '@/components/viewer-zoom-controls';
-import { useViewer } from './source-preview';
 
-interface SourcePreviewControlsProps {
+interface ViewerControlsProps {
+
+  viewer?: Viewer | null;
 
   isInspectorOpen: boolean;
 
   onChangeInspectorOpen(open: boolean): void;
 
 }
-export const SourcePreviewControls = (props: SourcePreviewControlsProps) => {
-  const viewer = useViewer();
+
+export const ViewerControls = (props: ViewerControlsProps) => {
 
   return (
     <div className="absolute top-3 right-3 flex gap-1.5">
-      <ViewerZoomControls viewer={viewer} />
+      <ViewerZoomControls viewer={props.viewer} />
 
       <Button
         variant="ghost"
