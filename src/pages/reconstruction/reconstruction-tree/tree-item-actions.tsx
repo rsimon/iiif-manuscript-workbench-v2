@@ -25,6 +25,8 @@ interface ReconstructionTreeItemProps {
 
   item: ReconstructionCanvas;
 
+  onRenameCanvas(): void;
+
 }
 
 export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps) => {
@@ -52,8 +54,10 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
         <IconDots className="size-4" />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent>
-        <DropdownMenuItem>
+      <DropdownMenuContent
+        onClick={withStopPropagation()}>
+        <DropdownMenuItem
+          onClick={props.onRenameCanvas}>
           <IconPencil /> Rename canvas
         </DropdownMenuItem>
 

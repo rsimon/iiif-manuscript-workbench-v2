@@ -8,6 +8,7 @@ import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-
 import { cn, withStopPropagation } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
+import { EditableCanvasLabel } from './editable-canvas-label';
 import { ITEM_GAP, TreeDropIndicator, viewTransitionName } from './use-drag-and-drop';
 import type { DragPayload } from './use-drag-and-drop';
 import { ReconstructionTreeItemActions } from './tree-item-actions';
@@ -29,11 +30,15 @@ interface ReconstructionTreeItemProps {
 export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
   const { item, index, isSelected, onSelect, pinnedEdge } = props;
 
+  const renameCanvas = useAppStore(state => state.renameCanvas);
+
   const ref = useRef<HTMLLIElement>(null);
   const handleRef = useRef<HTMLDivElement>(null);
 
   const [isDragging, setIsDragging] = useState(false);
   const [instruction, setInstruction] = useState<Instruction | null>(null);
+
+  const [isEditingLabel, setIsEditingLabel] = useState(false);
 
   useEffect(() => {
     const element = ref.current;
@@ -87,7 +92,6 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
       style={{ viewTransitionName: viewTransitionName(item.id) }}>
       <div
         className="group"
-        onMouseDown={e => e.preventDefault()}
         onClick={onSelect}>
         <div className="flex items-stretch cursor-default">
           <div
@@ -104,24 +108,36 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
           {item.type === 'original' ? (
             <div className="grow flex justify-between pr-1.5 items-start">
               <TreeItemContent 
+                editable
                 source={item.source}
-                label={item.label} />
+                label={item.label} 
+                isEditing={isEditingLabel} 
+                onIsEditingChange={setIsEditingLabel} 
+                onCommmitEdit={label => renameCanvas(item.id, label)} />
               
               <ReconstructionTreeItemActions 
                 className="mt-1.5" 
-                item={props.item} />
+                item={props.item} 
+                onRenameCanvas={() => setIsEditingLabel(true)}/>
             </div>
           ) : (
             <div className="px-1.5 pt-2.5 pb-1 pr-2 grow">
               <div className="flex justify-between items-start">
                 <div className="flex gap-2 items-center pb-1">
                   <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
-                  <span className="text-sm">{item.label}</span>
+
+                  <EditableCanvasLabel
+                    value={item.label}
+                    isEditing={isEditingLabel}
+                    onIsEditingChange={setIsEditingLabel}
+                    onCommit={label => renameCanvas(item.id, label)} />
+
                   <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
                 </div>
 
                 <ReconstructionTreeItemActions 
-                  item={props.item} />
+                  item={props.item} 
+                  onRenameCanvas={() => setIsEditingLabel(true)}/>
               </div>
 
               <div>
@@ -218,6 +234,14 @@ interface TreeItemContentProps {
 
   source: SourceCanvas;
 
+  editable?: boolean;
+
+  isEditing?: boolean;
+
+  onIsEditingChange?(editing: boolean): void;
+
+  onCommmitEdit?(label: string): void;
+
 }
 
 const TreeItemContent = (props: TreeItemContentProps) => {
@@ -233,10 +257,19 @@ const TreeItemContent = (props: TreeItemContentProps) => {
         className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/20"
         loading="lazy" />
 
-      <div className="flex flex-col gap-0.5 justify-start min-w-0">
-        <span className="min-w-0 truncate text-sm">
-          {label}
-        </span>
+      <div className="flex flex-col gap-0.5 justify-start items-start min-w-0">
+        {props.editable ? (
+          <EditableCanvasLabel
+            value={label}
+            isEditing={props.isEditing}
+            onIsEditingChange={props.onIsEditingChange}
+            onCommit={props.onCommmitEdit} />
+        ) : (
+          <span className="min-w-0 truncate text-sm">
+            {label}
+          </span>
+        )}
+
         <span className="text-muted-foreground text-xs">
           {sources.find(s => s.manifest.id === source.sourceManifestId)?.manifest.getLabel()}
         </span>

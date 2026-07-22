@@ -35,8 +35,8 @@ interface AppStore {
   moveCanvas: (canvasId: string, direction: MoveDirection) => void;
   removeCanvasFromReconstruction: (canvasId: string) => void;
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
+  renameCanvas: (canvasId: string, label: string) => void;
   updateReconstruction: (updated: ReconstructionCanvas[]) => void;
-  // renameCanvas: (canvasId: string, label: string) => void;
 
   // Actions: combined
   setPhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
@@ -132,6 +132,12 @@ export const useAppStore = create<AppStore>()(
 
       removeCanvasesFromReconstruction: canvasIds => set(({ reconstruction }) => ({
         reconstruction: removeCanvasFromReconstruction(reconstruction, canvasIds)
+      })),
+
+      renameCanvas: (canvasId, label) => set(({ reconstruction }) => ({
+        reconstruction: reconstruction.map(r => r.id === canvasId ? {
+          ...r, label
+        } : r)
       })),
 
       updateReconstruction: reconstruction => set({ reconstruction }),
