@@ -2,11 +2,11 @@ import { create } from 'zustand';
 import { Viewer, TiledImage } from 'openseadragon';
 import { dequal } from 'dequal/lite';
 import pDebounce from 'p-debounce';
-import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
-import { TwoColumnLayout } from './layout';
-import { applyEdits, getDraggableImageKey, toDraggableImages } from './composer-utils';
 import { useAppStore } from '@/store/app-store';
-import type { ReconstructionCanvas } from '@/types';
+import type { ReconstructionCanvas, SourceCanvas } from '@/types';
+import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
+import { applyEdits, getDraggableImageKey, getSourceCanvas, toDraggableImages } from './composer-utils';
+import { TwoColumnLayout } from './layout';
 
 export interface ComposerState {
 
@@ -14,6 +14,7 @@ export interface ComposerState {
 
   layout: ComposerLayout;
 
+  // Images by reconstruction canvas ID
   imagesByCanvasId: Map<string, DraggableImage[]>,
 
   // Non-reactive & mutable by convention, use without re-render
@@ -32,6 +33,8 @@ export interface ComposerState {
   setIsDraggingImage(isDraggingImage: boolean): void;
 
   updateImage(canvasId: string, updated: DraggableImage): void;
+
+  moveImageToCanvas(fromReconstructionCanvasId: string, toReconstructionCanvasId: string, image: DraggableImage): void;
 
 }
 
@@ -84,6 +87,77 @@ export const useComposerStore = create<ComposerState>(set => ({
       imagesByCanvasId: updatedImagesByCanvasId,
       ...(updatedSelectedImage ? { selectedImage: updatedSelectedImage } : {})
     };
+  }),
+
+  moveImageToCanvas: (fromId, toId, image) => set(({ imagesByCanvasId }) => {
+    const key = getDraggableImageKey(image);
+
+    // Make sure the from/to info is valid
+    const isValidSource = imagesByCanvasId.get(fromId)?.some(i => getDraggableImageKey(i) === key);
+    const isValidTarget = imagesByCanvasId.get(toId)?.every(i => getDraggableImageKey(i) !== key);
+
+    if (!isValidSource || !isValidTarget) return {};
+
+    // Next, make sure the image can be moved, without splitting a source canvas!
+    const { reconstruction, updateReconstruction } = useAppStore.getState();
+    const fromCanvas = reconstruction.find(rc => rc.id === fromId); 
+
+    // Should never happen
+    if (!fromCanvas) return {};
+
+    const sourceCanvas = getSourceCanvas(image, fromCanvas);  
+    const isValidChange = sourceCanvas?.canvas.images.length === 1;
+    if (!isValidChange) return {};  
+
+    const removeFromCanvas = (canvas: ReconstructionCanvas, sourceCanvasId: string): ReconstructionCanvas => {
+      if (canvas.type === 'original') {
+        if (canvas.source.canvas.id === sourceCanvasId) {
+          // Single-source original canvas -> zero-source composite
+          return { 
+            ...canvas,
+            type: 'composite',
+            width: canvas.source.canvas.width,
+            height: canvas.source.canvas.height,
+            sources: []
+          };
+        } else {
+          // Should never happen - the source canvas to remove was not in this reconstruction canvas
+          return canvas;
+        }
+      } else {
+        return {
+          ...canvas,
+          sources: canvas.sources.filter(s => s.canvas.id !== sourceCanvasId)
+        }
+      }
+    }
+
+    const addToCanvas = (canvas: ReconstructionCanvas, sourceCanvas: SourceCanvas): ReconstructionCanvas => {
+      if (canvas.type === 'original') {
+        return {
+          ...canvas,
+          type: 'composite',
+          width: canvas.source.canvas.width,
+          height: canvas.source.canvas.height,
+          sources: [canvas.source, sourceCanvas]
+        }
+      } else {
+        return {
+          ...canvas,
+          sources: [...canvas.sources, sourceCanvas]
+        }
+      }
+    }
+    
+    // All good - now update the source canvas association in the app store
+    const updated = reconstruction.map(r => 
+      r.id === fromId ? removeFromCanvas(r, sourceCanvas.canvas.id) :
+      r.id === toId ? addToCanvas(r, sourceCanvas) :
+      r);
+
+    updateReconstruction(updated);
+
+    return {};
   })
 }));
 

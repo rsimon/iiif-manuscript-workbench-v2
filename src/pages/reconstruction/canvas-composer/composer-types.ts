@@ -48,6 +48,12 @@ export interface DraggableImageSelection {
 
   item: ComposerLayoutItem;
 
+  // Images can only be associated with a different item
+  // if they are the only image on the source canvas - in 
+  // other words: source canvases are always treated as a 
+  // unit, and it's not possible to "split" them.
+  canChangeItem: boolean;
+
 }
 
 export type CornerHandleType = 

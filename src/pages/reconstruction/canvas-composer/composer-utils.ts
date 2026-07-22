@@ -118,7 +118,24 @@ export const getImageAt = (
     return areaA - areaB;
   })[0];
 
-  return hit ? { item, image: hit } : undefined;
+  const canChangeItem = getSourceCanvas(hit, rc)?.canvas.images.length === 1;
+  return hit ? { item, image: hit, canChangeItem } : undefined;
+}
+
+export const getSourceCanvas = (image: DraggableImage, canvas: ReconstructionCanvas) => {
+  const sourceCanvas = canvas.type === 'original' 
+    ? canvas.source 
+    : canvas.sources.find(s => s.canvas.id === image.sourceCanvasId);
+
+  const isValidSource = sourceCanvas && sourceCanvas.canvas.id === image.sourceCanvasId;
+  if (!isValidSource) {
+    // Should never happen
+    console.warn(`Source canvas integrity error: hit points to ${image.sourceCanvasId}, but not found in reconstruction canvas`);
+    console.warn(canvas);
+    return;
+  }
+
+  return sourceCanvas;
 }
 
 // Applies composer edits back into an app-level reconstruction

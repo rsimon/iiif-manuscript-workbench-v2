@@ -63,6 +63,7 @@ export const ImageTool = (props: ImageToolProps) => {
   const selectedImage = useComposerStore(state => state.selectedImage);
 
   const updateImage = useComposerStore(state => state.updateImage);
+  const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
 
   const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
 
@@ -70,8 +71,17 @@ export const ImageTool = (props: ImageToolProps) => {
   // this does NOT change on every drag-driven position update, so it's safe
   // to use as an effect dependency for resetting drag state on (re)selection.
   const selectionKey = selectedImage
-    ? `${selectedImage.item.reconstructionCanvasId}:${getDraggableImageKey(selectedImage.image)}`
+    ? getDraggableImageKey(selectedImage.image)
     : undefined;
+
+  const isValidDestination = useMemo(() => {
+    if (intersectingItems.length === 0 || !selectedImage) return false;
+
+    const hasChangedItem = intersectingItems.every(r => 
+      r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
+
+    return !hasChangedItem || selectedImage.canChangeItem;
+  }, [intersectingItems, selectedImage]);
 
   useEffect(() => {
     setOrigin(undefined);
@@ -108,6 +118,9 @@ export const ImageTool = (props: ImageToolProps) => {
     }, layout);
 
     setIntersectingItems(intersectingItems);
+
+    // For convenience
+    return intersectingItems;
   }
 
   const onMoveImage = (delta: number[]) => {
@@ -116,13 +129,23 @@ export const ImageTool = (props: ImageToolProps) => {
     const x = dragStart.x + delta[0] * dragStart.canvasWidth;
     const y = dragStart.y + delta[1] * dragStart.canvasWidth;
 
-    updateImage(selectedImage.item.reconstructionCanvasId, {
-      ...selectedImage.image, 
-      x, y
-    });
-
     const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
-    updateIntersectingItems(liveCorners);
+    const intersecting = updateIntersectingItems(liveCorners);
+
+    const hasChangedItem = intersectingItems.every(r => 
+      r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
+
+    if (hasChangedItem && selectedImage.canChangeItem) {
+      const destinationId = hasChangedItem && selectedImage.canChangeItem
+        ? intersecting[0].reconstructionCanvasId : selectedImage.item.reconstructionCanvasId;
+
+      moveImageToCanvas(selectedImage.item.reconstructionCanvasId, destinationId, selectedImage.image);
+    } else {
+      updateImage(selectedImage.item.reconstructionCanvasId, {
+        ...selectedImage.image, 
+        x, y
+      });
+    }
   }
 
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
@@ -150,13 +173,19 @@ export const ImageTool = (props: ImageToolProps) => {
     const x = h < 0 ? (dragStart.x + dragStart.width) - width : dragStart.x;
     const y = v < 0 ? (dragStart.y + initialHeight) - height : dragStart.y;
 
-    updateImage(selectedImage.item.reconstructionCanvasId, {
+    const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
+    const intersecting = updateIntersectingItems(liveCorners);
+
+    const hasChangedItem = intersecting.length > 0 && selectedImage.canChangeItem &&
+      intersecting.every(r => r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
+
+    const destinationId = hasChangedItem 
+      ? intersecting[0].reconstructionCanvasId : selectedImage.item.reconstructionCanvasId;
+
+    updateImage(destinationId, {
       ...selectedImage.image,
       x, y, width
     });
-
-    const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
-    updateIntersectingItems(liveCorners);
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
@@ -196,11 +225,13 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   const onPointerUp = (evt: React.PointerEvent) => {
+    if (!selectedImage || !dragStart) return; // Should never happen
+
     const target = evt.target as Element;
     target.releasePointerCapture(evt.pointerId);
 
     // Revert position if dropped outside a canvas
-    if (selectedImage && dragStart && intersectingItems.length === 0) {
+    if (intersectingItems.length === 0) {
       updateImage(selectedImage.item.reconstructionCanvasId, {
         ...selectedImage.image,
         x: dragStart.x,
@@ -224,8 +255,6 @@ export const ImageTool = (props: ImageToolProps) => {
     setIsDraggingImage(false);
   }
 
-  const invalid = intersectingItems.length === 0;
-
   return selectedImage ? (
     <>
       <g>
@@ -242,17 +271,17 @@ export const ImageTool = (props: ImageToolProps) => {
         <polygon
           className="cursor-grab"
           points={cornersToSvgPoints(corners)}
-          fill={invalid ? 'oklch(57.7% 0.245 27.325 / 0.3)' : 'transparent'}
-          stroke={invalid ? 'oklch(57.7% 0.245 27.325)' : 'oklch(70.5% 0.213 47.604)'}
-          strokeWidth={invalid ? 1.5 : 2.5}
+          fill={isValidDestination ? 'transparent' : 'oklch(57.7% 0.245 27.325 / 0.3)'}
+          stroke={isValidDestination ? 'oklch(70.5% 0.213 47.604)' : 'oklch(57.7% 0.245 27.325)'}
+          strokeWidth={isValidDestination ? 2.5 : 1.5}
           vectorEffect="non-scaling-stroke"
-          strokeDasharray={invalid ? undefined : '5 2'}
+          strokeDasharray={isValidDestination ?  '5 2' : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove('SHAPE')}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel} />
 
-        {invalid && (
+        {!isValidDestination && (
           <line 
             x1={corners[0].x}
             y1={corners[0].y} 
@@ -266,7 +295,7 @@ export const ImageTool = (props: ImageToolProps) => {
         {corners.map((corner, i) => (
           <ToolCornerHandle
             key={i}
-            invalid={invalid}
+            invalid={!isValidDestination}
             direction={
               i === 0 ? 'NW' :
               i === 1 ? 'NE' :
