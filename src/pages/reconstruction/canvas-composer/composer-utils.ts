@@ -118,7 +118,7 @@ export const getImageAt = (
     return areaA - areaB;
   })[0];
 
-  const canChangeItem = getSourceCanvas(hit, rc)?.canvas.images.length === 1;
+  const canChangeItem = hit ? getSourceCanvas(hit, rc)?.canvas.images.length === 1 : false;
   return hit ? { item, image: hit, canChangeItem } : undefined;
 }
 
@@ -143,22 +143,58 @@ export const applyEdits = (
   reconstruction: ReconstructionCanvas[],
   imagesByCanvasId: Map<string, DraggableImage[]>
 ): ReconstructionCanvas[] => {
+  const sourceCanvases = new Map<string, SourceCanvas>();
+  const currentImagesBySourceCanvasId = new Map<string, DraggableImage[]>();
+
+  reconstruction.forEach(r => {
+    const images = toDraggableImages(r);
+    const sources = r.type === 'original' ? [r.source] : r.sources;
+
+    sources.forEach(source => {
+      sourceCanvases.set(source.canvas.id, source);
+      currentImagesBySourceCanvasId.set(
+        source.canvas.id,
+        images.filter(image => image.sourceCanvasId === source.canvas.id)
+      );
+    });
+  });
+
   return reconstruction
     .filter(r => imagesByCanvasId.has(r.id))
     .map(r => {
       // Images in the composer (with user edits)
       const composerImages = imagesByCanvasId.get(r.id)!;
+      const sourceCanvasIds = [...new Set(composerImages.map(image => image.sourceCanvasId))];
+      const sources = sourceCanvasIds
+        .map(sourceCanvasId => sourceCanvases.get(sourceCanvasId))
+        .filter((source): source is SourceCanvas => !!source);
 
-      // Images in the current reconstruction state (to be replaced)
-      const currentImages = toDraggableImages(r);
+      const applySourceEdits = (source: SourceCanvas) => applyEditsToSource(
+        source,
+        composerImages,
+        currentImagesBySourceCanvasId.get(source.canvas.id) ?? []
+      );
 
       if (r.type === 'original') {
-        const nextSource = applyEditsToSource(r.source, composerImages, currentImages);
-        return nextSource === r.source ? r : { ...r, source: nextSource };
+        if (sourceCanvasIds.length === 1 && sourceCanvasIds[0] === r.source.canvas.id) {
+          const nextSource = applySourceEdits(r.source);
+          return nextSource === r.source ? r : { ...r, source: nextSource };
+        }
+
+        return {
+          type: 'composite',
+          id: r.id,
+          label: r.label,
+          sources: sources.map(applySourceEdits),
+          width: r.source.canvas.width,
+          height: r.source.canvas.height
+        };
       } else {
-        const nextSources = r.sources.map(source => applyEditsToSource(source, composerImages, currentImages));
-        const changed = nextSources.some((s, i) => s !== r.sources[i]);
-        return changed ? { ...r, sources: nextSources } : r;
+        const nextSources = sources.map(applySourceEdits);
+        const unchanged = nextSources.length === r.sources.length &&
+          nextSources.every((source, index) => source === r.sources[index]);
+
+        return unchanged ? r : { ...r, sources: nextSources };
       }
     });
 }
