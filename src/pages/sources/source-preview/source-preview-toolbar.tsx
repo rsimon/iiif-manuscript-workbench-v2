@@ -62,6 +62,21 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
 
   const { setEnableTapeMeasure } = useMeasurement();
 
+  const [isTapeMeasurePressed, setIsTapeMeasurePressed] = useState(false);
+
+  const onShowDimensionsDialog = (open: boolean) => {
+    setIsTapeMeasurePressed(false);
+    setShowDimensionsDialog(open);
+  }
+
+  const onPressTapeMeasure = (pressed: boolean) => {
+    setIsTapeMeasurePressed(pressed);
+    setEnableTapeMeasure(pressed, { 
+      showLabel: true,
+      canvasSize: size
+    })
+  }
+
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
       <div className="bg-white flex items-center gap-1 min-w-20 rounded-full p-1 pointer-events-auto
@@ -82,7 +97,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
           canvasHeight={props.selectedCanvas.height}
           physicalSize={size}
           open={showDimensionsDialog}
-          onOpenChange={setShowDimensionsDialog}
+          onOpenChange={onShowDimensionsDialog}
           onSizeChanged={size => setSize(props.selectedCanvas.id, size)}>
           {size ? (
             <Button
@@ -101,12 +116,10 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
         </PhysicalDimensionsDialog>
 
         <SourcePreviewToolbarToggle
-          disabled={!size}
+          disabled={!size || showDimensionsDialog}
           tooltip="Measure"
-          onPressedChange={pressed => setEnableTapeMeasure(pressed, { 
-            showLabel: true,
-            canvasSize: size
-          })}>
+          pressed={isTapeMeasurePressed}
+          onPressedChange={onPressTapeMeasure}>
           <IconRulerMeasure className="size-4.5" />
         </SourcePreviewToolbarToggle>
 
