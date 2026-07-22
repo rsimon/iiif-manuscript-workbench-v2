@@ -6,6 +6,7 @@ import { Label } from '@/shadcn/label';
 import { cn, withStopPropagation } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { SourceManifest } from '@/types';
+import { SourceTreeItemActions } from './source-tree-item-actions';
 import {
   Tooltip,
   TooltipContent,
@@ -48,7 +49,7 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
 
   return (
     <div className="py-1 text-sm bg-white/80 backdrop-blur">
-      <div className="flex pr-1.5 gap-1 rounded-md justify-between items-center">
+      <div className="group flex pr-1.5 gap-1 rounded-md justify-between items-center">
         <div
           className="flex gap-0.5 min-w-0 flex-1 items-center">
           <Button
@@ -75,13 +76,16 @@ export const SourceTreeItem = (props: ManifestTreeItemProps) => {
             {manifest.getLabel()}
           </Label>
         </div>
-
+  
         <div className={cn(
-          'tracking-wide text-xs',
+          'tracking-wide text-xs group-hover:hidden group-has-data-popup-open:hidden ',
           props.inReconstruction === 0 ? 'text-muted-foreground/80' : 'text-primary'
         )}>
           {props.inReconstruction.toLocaleString()}/{manifest.canvases.length.toLocaleString()}
         </div>
+
+        <SourceTreeItemActions 
+          manifestId={manifest.id} />
       </div>
     </div>
   )

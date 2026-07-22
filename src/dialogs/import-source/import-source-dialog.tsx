@@ -258,12 +258,15 @@ export const ImportSourceDialog = (props: ImportSourceDialogProps) => {
           {step.phase === 'input' ? (
             <>
               <Button
-                variant="outline"
+                variant="ghost"
+                className="tracking-wide"
                 onClick={() => props.onOpenChange(false)}>
                 Cancel
               </Button>
               
-              <Button onClick={onImport}>
+              <Button 
+                className="tracking-wide"
+                onClick={onImport}>
                 Import
               </Button>
             </>

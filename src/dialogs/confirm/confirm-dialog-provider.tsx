@@ -66,13 +66,15 @@ export const ConfirmDialogProvider = (props: { children: ReactNode }) => {
 
             <AlertDialogFooter>
               <Button
-                variant="outline"
+                variant="ghost"
+                className="tracking-wide"
                 onClick={() => settle(false)}>
                 {options.cancelLabel || 'Cancel'}
               </Button>
 
               <Button
                 variant={options.variant === 'destructive' ? 'destructive' : 'default'}
+                className="tracking-wide"
                 onClick={() => settle(true)}>
                 {options.confirmLabel || 'Confirm'}
               </Button>
