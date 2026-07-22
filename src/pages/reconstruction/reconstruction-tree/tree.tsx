@@ -117,7 +117,7 @@ export const ReconstructionTree = () => {
       dropTargetForElements({
         element,
         getData: ({ input }) => {
-          const items = Array.from(element.children) as HTMLElement[];
+          const items = Array.from(element.children).slice(0, canvases.length) as HTMLElement[];
           if (items.length === 0) return {};
 
           const boundaryIndex = items.findIndex(el => {
