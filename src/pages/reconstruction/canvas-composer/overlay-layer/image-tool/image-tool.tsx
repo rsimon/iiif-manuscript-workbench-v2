@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type PointerEvent } from 'react';
 import { Point, type Viewer } from 'openseadragon';
 import { ToolCornerHandle } from './tool-corner-handle';
 import type { CornerHandleType, HandleType, ResizeHandleType } from '../../composer-types';
 import { useComposerStore } from '../../composer-store';
-import { getDraggableImageKey, getItemCanvasSize } from '../../composer-utils';
+import { getDraggableImageKey, getItemAt, getItemCanvasSize } from '../../composer-utils';
 import { cornersToSvgPoints, getImageCorners } from './image-tool-utils';
 import { useAppStore } from '@/store/app-store';
 
@@ -50,7 +50,9 @@ interface DragStart {
 }
 
 export const ImageTool = (props: ImageToolProps) => {
-  const { viewport } = props.viewer;
+  const { viewport, canvas: canvasEl } = props.viewer;
+
+  const layout = useComposerStore(state => state.layout);
 
   const [origin, setOrigin] = useState<Point>();
 
@@ -79,16 +81,29 @@ export const ImageTool = (props: ImageToolProps) => {
     return getImageCorners(selectedImage);
   }, [selectedImage]);
 
-  const onMoveImage = (delta: number[]) => {
+  const getPoint = (evt: PointerEvent) => {
+    const { x, y } = canvasEl.getBoundingClientRect();
+
+    const { clientX, clientY } = evt;
+    const offsetX = clientX - x;
+    const offsetY = clientY - y;
+
+    return viewport.pointFromPixel(new Point(offsetX, offsetY));
+  }
+
+  const onMoveImage = (delta: number[], position: Point) => {
     if (!selectedImage || !dragStart) return;
 
-    const [dx, dy] = delta;
+    const x = dragStart.x + delta[0] * dragStart.canvasWidth;
+    const y = dragStart.y + delta[1] * dragStart.canvasWidth;
 
     updateImage(selectedImage.item.reconstructionCanvasId, {
-      ...selectedImage.image,
-      x: dragStart.x + dx * dragStart.canvasWidth,
-      y: dragStart.y + dy * dragStart.canvasWidth
+      ...selectedImage.image, 
+      x, y
     });
+
+    const intersectingItem = getItemAt(position, layout);
+    console.log(intersectingItem?.reconstructionCanvasId);
   }
 
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
@@ -141,19 +156,19 @@ export const ImageTool = (props: ImageToolProps) => {
     });
 
     setIsDraggingImage(true);
-
-    const pt = viewport.pointFromPixel(new Point(evt.clientX, evt.clientY));
-    setOrigin(pt);
+    setOrigin(getPoint(evt));
   }
 
   const onPointerMove = (handle: HandleType) => (evt: React.PointerEvent) => {
     if (!origin) return;
 
-    const { x, y } = viewport.pointFromPixel(new Point(evt.clientX, evt.clientY));
-    const delta = [x - origin.x, y - origin.y];
+    const pt = getPoint(evt);
+    if (!pt) return;
+
+    const delta = [pt.x - origin.x, pt.y - origin.y];
 
     if (handle === 'SHAPE') {
-      onMoveImage(delta);
+      onMoveImage(delta, pt);
     } else {
       onResizeImage(handle, delta);
     }
@@ -176,46 +191,48 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   return (
-    <g>
-      <polygon
-        className="cursor-grab pointer-events-none"
-        points={cornersToSvgPoints(corners)}
-        fill="transparent"
-        stroke="white"
-        strokeWidth={5}
-        vectorEffect="non-scaling-stroke" />
+    <>
+      <g>
+        <polygon
+          className="cursor-grab pointer-events-none"
+          points={cornersToSvgPoints(corners)}
+          fill="transparent"
+          stroke="white"
+          strokeWidth={5}
+          vectorEffect="non-scaling-stroke" />
 
-      <polygon
-        className="cursor-grab"
-        points={cornersToSvgPoints(corners)}
-        fill="transparent"
-        stroke="oklch(70.5% 0.213 47.604)"
-        strokeWidth={2.5}
-        vectorEffect="non-scaling-stroke"
-        strokeDasharray="5 2"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove('SHAPE')}
-        onPointerUp={onPointerUp}
-        onPointerCancel={onPointerCancel} />
-
-      {corners.map((corner, i) => (
-        <ToolCornerHandle
-          key={i}
-          direction={
-            i === 0 ? 'NW' :
-            i === 1 ? 'NE' :
-            i === 2 ? 'SE' :
-            'SW'
-          }
-          corner={corner}
-          type={HANDLE_TYPES[i]}
-          viewer={props.viewer}
+        <polygon
+          className="cursor-grab"
+          points={cornersToSvgPoints(corners)}
+          fill="transparent"
+          stroke="oklch(70.5% 0.213 47.604)"
+          strokeWidth={2.5}
+          vectorEffect="non-scaling-stroke"
+          strokeDasharray="5 2"
           onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove(HANDLE_TYPES[i])}
+          onPointerMove={onPointerMove('SHAPE')}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel} />
-      ))}
-    </g>
+
+        {corners.map((corner, i) => (
+          <ToolCornerHandle
+            key={i}
+            direction={
+              i === 0 ? 'NW' :
+              i === 1 ? 'NE' :
+              i === 2 ? 'SE' :
+              'SW'
+            }
+            corner={corner}
+            type={HANDLE_TYPES[i]}
+            viewer={props.viewer}
+            onPointerDown={onPointerDown}
+            onPointerMove={onPointerMove(HANDLE_TYPES[i])}
+            onPointerUp={onPointerUp}
+            onPointerCancel={onPointerCancel} />
+        ))}
+      </g>
+    </>
   )
 
 }

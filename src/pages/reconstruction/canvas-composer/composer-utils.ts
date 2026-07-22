@@ -77,11 +77,11 @@ export const getImageAt = (
 ): DraggableImageSelection | undefined => {
   const item = getItemAt(point, layout);
   if (!item) return;
-
+  
   const rc = reconstruction.find(r => r.id === item.reconstructionCanvasId);
   if (!rc) return;
 
-  const [canvasWidth, canvasHeight] = getItemCanvasSize(rc);
+  const [canvasWidth] = getItemCanvasSize(rc);
   const images = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
   const hit = images.filter(image => {
@@ -89,7 +89,7 @@ export const getImageAt = (
     const aspect = image.resource.height / image.resource.width;
 
     const viewportX = item.x + image.x / canvasWidth;
-    const viewportY = item.y + image.y / canvasHeight;
+    const viewportY = item.y + image.y / canvasWidth;
     const viewportW = image.width / canvasWidth;
 
     const viewportR = viewportX + viewportW;
