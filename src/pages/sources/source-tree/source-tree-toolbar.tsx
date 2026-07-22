@@ -4,8 +4,12 @@ import { PanelActionButton } from '@/components/panel-action-button';
 import { Switch } from '@/shadcn/switch';
 import { cn } from '@/shadcn/utils';
 import { useSourcesStore } from '../sources-store';
+import { useSourceNavigation } from '../use-source-navigation';
 
 export const SourceTreeToolbar = () => {
+  const selection = useSourcesStore(state => state.selection);
+  const setSelection = useSourcesStore(state => state.setSelection);
+
   const numCollapsed = useSourcesStore(state => state.collapsed.size);
 
   const isAllExpanded = numCollapsed === 0;
@@ -16,11 +20,27 @@ export const SourceTreeToolbar = () => {
   const showInReconstructionOnly = useSourcesStore(state => state.showInReconstructionOnly);
   const setShowInReconstructionOnly = useSourcesStore(state => state.setShowInReconstructionOnly);
 
+  const { isInReconstruction, visibleCanvases } = useSourceNavigation();
+
   const onToggleExpand = () => {
     if (isAllExpanded) 
       collapseAll();
     else 
       expandAll();
+  }
+
+  const onToggleShowReconstructionOnly = (filter: boolean) => {
+    // Change selection in case the user switches to filtered view and
+    // the selected image is NOT in the reconstruction
+    if (filter && selection?.manifestId && selection?.canvasId) {
+      const shouldChange = !isInReconstruction(selection.manifestId, selection.canvasId);
+      if (shouldChange && visibleCanvases.length > 0) {
+        const firstVisible = visibleCanvases[0];
+        setSelection({ manifestId: firstVisible.manifestId, canvasId: firstVisible.canvas.id });
+      }
+    }
+
+    setShowInReconstructionOnly(filter);
   }
 
   return (
@@ -51,7 +71,7 @@ export const SourceTreeToolbar = () => {
           id="show-in-reconstruction" 
           size="sm"
           checked={showInReconstructionOnly}
-          onCheckedChange={setShowInReconstructionOnly} />
+          onCheckedChange={onToggleShowReconstructionOnly} />
       </div>
     </div>
   )
