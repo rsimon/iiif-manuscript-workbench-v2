@@ -130,6 +130,8 @@ export const getImageAt = (
     return;
   }
 
+  // Splitting images inside source canvases is not supported - only
+  // allow changing association for this hit if it's the only image in its canvas
   const canChangeItem = hit ? sourceCanvas.canvas.images.length === 1 : false;
   return hit ? { item, image: hit, canChangeItem } : undefined;
 }
