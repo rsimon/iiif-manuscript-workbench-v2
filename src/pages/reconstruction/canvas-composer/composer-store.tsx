@@ -179,8 +179,8 @@ useAppStore.subscribe((state, prevState) => {
       : toDraggableImages(r)
   ]));
 
-  // Skip updated if nothing actually differs - prevents infinite loop
-  // from the 'upwards sync' to the app state after a user edit
+  // Important: we'll skip updates if nothing actually differs - to prevents
+  // infinite loop from the 'upwards sync' to the app state after a user edit
   const imagesChanged =
     imagesByCanvasId.size !== prevImages.size ||
       [...imagesByCanvasId].some(([id, images]) => prevImages.get(id) !== images);
@@ -194,7 +194,7 @@ useAppStore.subscribe((state, prevState) => {
     const prevCanvasId = prevSelectedImage.item.reconstructionCanvasId;
 
     // Did association between selected image and canvas change
-    // because the canvas was modified (original -> composite)
+    // because the canvas was modified (original -> composite)?
     const associationUnchanged = imagesByCanvasId.get(prevCanvasId)
       ?.some(img => getDraggableImageKey(img) === key);
 

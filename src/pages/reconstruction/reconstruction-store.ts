@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 
 interface ReconstructionStore {
@@ -18,3 +19,35 @@ export const useReconstructionStore = create<ReconstructionStore>()(set => ({
   })),
 
 }));
+
+// Helper
+const getSourceCanvasIds = (r: ReconstructionCanvas) =>
+  r.type === 'original' ? [r.source.canvas.id] : r.sources.map(s => s.canvas.id);
+
+// Keep selection in sync in case reconstruction canvases change their type
+// (original -> composite and vice versa) and ID after user edits
+useAppStore.subscribe((state, prevState) => {
+  if (state.reconstruction === prevState.reconstruction) return;
+
+  const { selection } = useReconstructionStore.getState();
+  if (selection.length === 0) return;
+
+  const resolved = selection
+    .map(canvas => {
+      const sameId = state.reconstruction.find(r => r.id === canvas.id);
+      if (sameId) return sameId;
+
+      // Selected canvas no longer exists in the reconstruction - find corresponding match
+      const ids = new Set(getSourceCanvasIds(canvas));
+      return state.reconstruction.find(r => getSourceCanvasIds(r).some(id => ids.has(id)));
+    })
+    .filter(r => !!r);
+
+  // Two old selection entries could resolve to the same new canvas (eg. merge)
+  const deduped = [...new Map(resolved.map(r => [r.id, r])).values()];
+
+  const unchanged = deduped.length === selection.length &&
+    deduped.every((r, i) => r === selection[i]);
+
+  if (!unchanged) useReconstructionStore.setState({ selection: deduped });
+});
