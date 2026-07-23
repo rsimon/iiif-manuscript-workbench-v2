@@ -103,6 +103,8 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
+    evt.stopPropagation(); // Stop even from reaching OSD
+
     if (!selectedImage) return;
 
     const target = evt.target as Element;
@@ -132,7 +134,9 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   const onPointerMove = (handle: HandleType) => (evt: React.PointerEvent) => {
-    if (!origin.current) return;
+    evt.stopPropagation();
+
+    if (!origin.current || !evt.buttons) return;
 
     const pt = getPoint(evt, props.viewer);
     if (!pt) return;
@@ -148,10 +152,13 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   const onPointerUp = (evt: React.PointerEvent) => {
-    if (!selectedImage || !initialShape.current) return; // Should never happen
+    evt.stopPropagation();
 
     const target = evt.target as Element;
     target.releasePointerCapture(evt.pointerId);
+    setIsDraggingImage(false);
+
+    if (!selectedImage || !initialShape.current) return; // Should never happen
 
     const { x, y, width } = initialShape.current.image;
 
@@ -315,7 +322,7 @@ export const ImageTool = (props: ImageToolProps) => {
       <g>
         {intersectingItems.length > 0 && (
           <polygon
-            className="cursor-grab pointer-events-none"
+            className="pointer-events-none"
             points={cornersToSvgPoints(corners)}
             fill="transparent"
             stroke="white"
