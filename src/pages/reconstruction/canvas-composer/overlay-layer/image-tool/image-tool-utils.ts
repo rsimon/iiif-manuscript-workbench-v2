@@ -1,9 +1,13 @@
 import type { PointerEvent } from 'react';
 import { Point, Viewer } from 'openseadragon';
-import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
-import type { ComposerLayoutItem, CornerHandleType, DraggableImage, DraggableImageSelection, ResizeHandleType } from '../../composer-types';
-import { getItemCanvasSize } from '../../composer-utils';
+import type { 
+  ComposerLayoutItem, 
+  CornerHandleType, 
+  DraggableImage, 
+  DraggableImageSelection, 
+  ResizeHandleType 
+} from '../../composer-types';
 
 /* Initial image state at drag start */
 export interface InitialShape {
@@ -58,18 +62,11 @@ export const RESIZE_SIGNS: Record<ResizeHandleType, { h: number; v: number }> = 
 export const getImageCorners = (selected: DraggableImageSelection, ox?: number, oy?: number, ow?: number): Point[] => {
   const { image, item } = selected;
 
-  // Snapshot read: canvas pixel size is structural (same category as
-  // layout), not something that changes mid-drag - no need to subscribe.
-  const canvas = useAppStore.getState().reconstruction.find(r => r.id === item.reconstructionCanvasId);
-  if (!canvas) return [];
-
-  const [canvasWidth] = getItemCanvasSize(canvas);
-
   const aspect = image.resource.width / image.resource.height;
 
-  const x = item.x + (ox ?? image.x) / canvasWidth;
-  const y = item.y + (oy ?? image.y) / canvasWidth;
-  const w = (ow ?? image.width) / canvasWidth;
+  const x = item.x + (ox ?? image.x) / image.resource.width;
+  const y = item.y + (oy ?? image.y) / image.resource.width;
+  const w = (ow ?? image.width) / image.resource.width;
   const h = w / aspect;
 
   return [

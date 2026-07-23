@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import { useComposerStore } from './composer-store';
-import { getDraggableImageKey, getItemCanvasSize } from './composer-utils';
+import { getDraggableImageKey } from './composer-utils';
 import { useComposerSelection } from './use-composer-selection';
 import { OverlayLayer } from './overlay-layer';
 
@@ -81,20 +81,14 @@ export const CanvasComposer = () => {
     const { tiledImages, isDraggingImage } = useComposerStore.getState();
 
     // All layout items
-    const placements = layout.items.flatMap((item, i) => {
-      const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
-      if (!canvas) return [];
-
-      const [canvasWidth] = getItemCanvasSize(canvas);
-
-      return images[i].map(image => ({
+    const placements = layout.items.flatMap((item, i) =>
+      images[i].map(image => ({
         key: getDraggableImageKey(image),
         tileSource: image.tileSource,
-        x: item.x + image.x / canvasWidth,
-        y: item.y + image.y / canvasWidth,
-        width: image.width / canvasWidth
-      }));
-    });
+        x: item.x + image.x / image.resource.width,
+        y: item.y + image.y / image.resource.width,
+        width: image.width / image.resource.width
+      })));
 
     const toKeep = new Set(placements.map(p => p.key));
 
