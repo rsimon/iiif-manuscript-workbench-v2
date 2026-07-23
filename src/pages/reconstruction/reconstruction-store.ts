@@ -39,7 +39,21 @@ useAppStore.subscribe((state, prevState) => {
 
       // Selected canvas no longer exists in the reconstruction - find corresponding match
       const ids = new Set(getSourceCanvasIds(canvas));
-      return state.reconstruction.find(r => getSourceCanvasIds(r).some(id => ids.has(id)));
+
+      // By-source match: if the destination canvas was changed
+      const bySource = ids.size > 0
+        ? state.reconstruction.find(r => getSourceCanvasIds(r).some(id => ids.has(id)))
+        : undefined;
+      if (bySource) return bySource;
+
+      // If the origin canvas was changed (original -> composite), there's no 
+      // by-source match - fall back to position.
+      const sameLength = state.reconstruction.length === prevState.reconstruction.length;
+      if (!sameLength) return undefined; // De-select as a terminal fallback
+
+      // Just use the same index position - which should normally be safe
+      const prevIndex = prevState.reconstruction.indexOf(canvas);
+      return prevIndex >= 0 ? state.reconstruction[prevIndex] : undefined;
     })
     .filter(r => !!r);
 
