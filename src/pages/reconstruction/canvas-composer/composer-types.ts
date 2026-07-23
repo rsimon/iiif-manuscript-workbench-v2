@@ -32,11 +32,11 @@ export interface DraggableImage {
 
   tileSource: object | string;
 
-  x: number;
+  x: number; // px coordinates relative to reconstruction canvas
 
-  y: number;
+  y: number; // px coordinates relative to reconstruction canvas
 
-  width: number;
+  width: number; // px coordinates relative to reconstruction canvas
 
   index: number;
 
@@ -47,6 +47,12 @@ export interface DraggableImageSelection {
   image: DraggableImage;
 
   item: ComposerLayoutItem;
+
+  // Images can only be associated with a different item
+  // if they are the only image on the source canvas - in 
+  // other words: source canvases are always treated as a 
+  // unit, and it's not possible to "split" them.
+  canChangeItem: boolean;
 
 }
 

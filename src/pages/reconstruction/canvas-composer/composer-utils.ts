@@ -118,30 +118,114 @@ export const getImageAt = (
     return areaA - areaB;
   })[0];
 
-  return hit ? { item, image: hit } : undefined;
+  if (!hit) return;
+
+  const sourceCanvas = rc.type === 'original'
+    ? rc.source
+    : rc.sources.find(s => s.canvas.id === hit.sourceCanvasId);
+
+  const isValidSource = sourceCanvas && sourceCanvas.canvas.id === hit.sourceCanvasId;
+  if (!isValidSource) {
+    // Should never happen
+    console.warn(`Source canvas integrity error: hit points to ${hit.sourceCanvasId}, but not found in reconstruction canvas`);
+    console.warn(rc);
+    return;
+  }
+
+  // Splitting images inside source canvases is not supported - only
+  // allow changing association for this hit if it's the only image in its canvas
+  const canChangeItem = hit ? sourceCanvas.canvas.images.length === 1 : false;
+  return { item, image: hit, canChangeItem };
+}
+
+export const findSourceCanvasById = (
+  sourceCanvasId: string,
+  reconstruction: ReconstructionCanvas[]
+): SourceCanvas | undefined => {
+  for (const canvas of reconstruction) {
+    const sources = canvas.type === 'original' ? [canvas.source] : canvas.sources;
+    const found = sources.find(s => s.canvas.id === sourceCanvasId);
+    if (found) return found;
+  }
 }
 
 // Applies composer edits back into an app-level reconstruction
 export const applyEdits = (
   reconstruction: ReconstructionCanvas[],
-  imagesByCanvasId: Map<string, DraggableImage[]>
+  imagesByCanvasId: Map<string, DraggableImage[]>,
+  baseURI: string
 ): ReconstructionCanvas[] => {
+  const sourceCanvases = new Map<string, SourceCanvas>();
+  const currentImagesBySourceCanvasId = new Map<string, DraggableImage[]>();
+
+  reconstruction.forEach(r => {
+    const images = toDraggableImages(r);
+    const sources = r.type === 'original' ? [r.source] : r.sources;
+
+    sources.forEach(source => {
+      sourceCanvases.set(source.canvas.id, source);
+      currentImagesBySourceCanvasId.set(
+        source.canvas.id,
+        images.filter(image => image.sourceCanvasId === source.canvas.id)
+      );
+    });
+  });
+
   return reconstruction
     .filter(r => imagesByCanvasId.has(r.id))
     .map(r => {
       // Images in the composer (with user edits)
       const composerImages = imagesByCanvasId.get(r.id)!;
+      const sourceCanvasIdSet = new Set(composerImages.map(image => image.sourceCanvasId));
 
-      // Images in the current reconstruction state (to be replaced)
-      const currentImages = toDraggableImages(r);
+      if (r.type === 'original' && composerImages.length > 0)
+        sourceCanvasIdSet.add(r.source.canvas.id);
+
+      const sourceCanvasIds = [...sourceCanvasIdSet];
+      const sources = sourceCanvasIds
+        .map(sourceCanvasId => sourceCanvases.get(sourceCanvasId))
+        .filter(source => !!source);
+
+      const applySourceEdits = (source: SourceCanvas) => applyEditsToSource(
+        source,
+        composerImages,
+        currentImagesBySourceCanvasId.get(source.canvas.id) ?? []
+      );
 
       if (r.type === 'original') {
-        const nextSource = applyEditsToSource(r.source, composerImages, currentImages);
-        return nextSource === r.source ? r : { ...r, source: nextSource };
+        if (sourceCanvasIds.length === 1 && sourceCanvasIds[0] === r.source.canvas.id) {
+          const nextSource = applySourceEdits(r.source);
+          return nextSource === r.source ? r : { ...r, source: nextSource };
+        }
+
+        return {
+          type: 'composite',
+          id: `${baseURI}/${crypto.randomUUID()}`,
+          label: r.label,
+          sources: sources.map(applySourceEdits),
+          width: r.source.canvas.width,
+          height: r.source.canvas.height
+        };
       } else {
-        const nextSources = r.sources.map(source => applyEditsToSource(source, composerImages, currentImages));
-        const changed = nextSources.some((s, i) => s !== r.sources[i]);
-        return changed ? { ...r, sources: nextSources } : r;
+        const nextSources = sources.map(applySourceEdits);
+
+        // Just one source - revert to OriginalCanvas
+        if (nextSources.length === 1) {
+          const source = nextSources[0];
+          
+          return {
+            type: 'original',
+            id: source.canvas.id,
+            label: r.label,
+            source,
+            physicalSize: source.physicalSize
+          };
+        }
+
+        const unchanged = nextSources.length === r.sources.length &&
+          nextSources.every((source, index) => source === r.sources[index]);
+
+        return unchanged ? r : { ...r, sources: nextSources };
       }
     });
 }

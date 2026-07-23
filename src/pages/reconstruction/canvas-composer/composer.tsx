@@ -51,6 +51,8 @@ export const CanvasComposer = () => {
       minZoomImageRatio: 0,
       animationTime: OSD_ANIMATION_TIME,
       springStiffness: OSD_SPRING_STIFFNESS,
+      clickDistThreshold: 10,
+      clickTimeThreshold: 400,
       gestureSettingsMouse: {
         clickToZoom: false,
         dblClickToZoom: true
@@ -84,8 +86,7 @@ export const CanvasComposer = () => {
         x: item.x + image.x / image.resource.width,
         y: item.y + image.y / image.resource.width,
         width: image.width / image.resource.width
-      }))
-    );
+      })));
 
     const toKeep = new Set(placements.map(p => p.key));
 

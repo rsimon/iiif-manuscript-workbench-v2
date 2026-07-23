@@ -1,11 +1,19 @@
-import { useEffect, useMemo, useState, type PointerEvent } from 'react';
-import { Point, type Viewer } from 'openseadragon';
-import { ToolCornerHandle } from './tool-corner-handle';
-import type { ComposerLayoutItem, CornerHandleType, HandleType, ResizeHandleType } from '../../composer-types';
-import { useComposerStore } from '../../composer-store';
-import { getDraggableImageKey, getIntersectingItems, getItemCanvasSize } from '../../composer-utils';
-import { cornersToSvgPoints, getImageCorners } from './image-tool-utils';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Point, Viewer } from 'openseadragon';
 import { useAppStore } from '@/store/app-store';
+import { useReconstructionStore } from '../../../reconstruction-store';
+import { useComposerStore } from '../../composer-store';
+import type { ComposerLayoutItem,  DraggableImage,  HandleType, ResizeHandleType } from '../../composer-types';
+import { getDraggableImageKey, getIntersectingItems, getItemCanvasSize } from '../../composer-utils';
+import { ToolCornerHandle } from './tool-corner-handle';
+import { 
+  cornersToSvgPoints, 
+  getImageCorners, 
+  getPoint, 
+  HANDLE_TYPES, 
+  RESIZE_SIGNS, 
+  type InitialShape 
+} from './image-tool-utils';
 
 interface ImageToolProps {
 
@@ -13,69 +21,41 @@ interface ImageToolProps {
 
 }
 
-const HANDLE_TYPES: CornerHandleType[] = [
-  'TOP_LEFT',
-  'TOP_RIGHT',
-  'BOTTOM_RIGHT',
-  'BOTTOM_LEFT'
-];
-
-// Sign of each handle's effect on the image's x/y position as it's resized:
-// +1 keeps the opposite (min) edge anchored, -1 keeps the opposite (max)
-// edge anchored, 0 means this axis isn't driven by that handle at all.
-const RESIZE_SIGNS: Record<ResizeHandleType, { h: number; v: number }> = {
-  TOP_LEFT: { h: -1, v: -1 },
-  TOP: { h: 0, v: -1 },
-  TOP_RIGHT: { h: 1, v: -1 },
-  RIGHT: { h: 1, v: 0 },
-  BOTTOM_RIGHT: { h: 1, v: 1 },
-  BOTTOM: { h: 0, v: 1 },
-  BOTTOM_LEFT: { h: -1, v: 1 },
-  LEFT: { h: -1, v: 0 }
-};
-
-// Image x/y/width, snapshotted at drag start (pixel-space units, same as
-// DraggableImage), plus the canvas pixel size needed to convert viewport
-// deltas back into that same pixel space.
-interface DragStart {
-
-  x: number;
-
-  y: number;
-
-  width: number;
-
-  canvasWidth: number;
-
-}
-
 export const ImageTool = (props: ImageToolProps) => {
-  const { viewport, canvas: canvasEl } = props.viewer;
-
   const layout = useComposerStore(state => state.layout);
-
-  const [origin, setOrigin] = useState<Point>();
-
-  const [dragStart, setDragStart] = useState<DragStart>();
-
-  const [intersectingItems, setIntersectingItems] = useState<ComposerLayoutItem[]>([]);
-
   const selectedImage = useComposerStore(state => state.selectedImage);
 
   const updateImage = useComposerStore(state => state.updateImage);
-
+  const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
   const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
+
+  const setSelectedCanvas = useReconstructionStore(state => state.setSelection);
+
+  // Last pointer down location (OSD viewport coordinate system)
+  const origin = useRef<Point | undefined>(undefined);
+
+  // Image state when drag started
+  const initialShape = useRef<InitialShape | undefined>(undefined);
+
+  const [intersectingItems, setIntersectingItems] = useState<ComposerLayoutItem[]>([]);
 
   // Stable identity for the current selection - unlike `selectedImage` itself,
   // this does NOT change on every drag-driven position update, so it's safe
   // to use as an effect dependency for resetting drag state on (re)selection.
-  const selectionKey = selectedImage
-    ? `${selectedImage.item.reconstructionCanvasId}:${getDraggableImageKey(selectedImage.image)}`
-    : undefined;
+  const selectionKey = selectedImage ? getDraggableImageKey(selectedImage.image) : undefined;
+
+  const isValidDestination = useMemo(() => {
+    if (intersectingItems.length === 0 || !selectedImage) return false;
+
+    const hasChangedItem = intersectingItems.every(r => 
+      r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
+
+    return !hasChangedItem || selectedImage.canChangeItem;
+  }, [intersectingItems, selectedImage]);
 
   useEffect(() => {
-    setOrigin(undefined);
-    setDragStart(undefined);
+    origin.current = undefined;
+    initialShape.current = undefined;
 
     if (selectedImage) {
       const { x, y, width } = selectedImage.image;
@@ -84,20 +64,29 @@ export const ImageTool = (props: ImageToolProps) => {
     }
   }, [selectionKey]);
 
+  useEffect(() => {
+    if (!selectedImage || !initialShape.current) return;
+    if (initialShape.current.item.reconstructionCanvasId === selectedImage.item.reconstructionCanvasId) return;
+
+    // Selected (= dragged) image and initialShape no longer point to the
+    // same reconstruction canvas ID - this means the canvas was modified,
+    // usually changed from 'original' to 'composite' -> follow!
+    const canvas = useAppStore.getState().reconstruction
+      .find(r => r.id === selectedImage.item.reconstructionCanvasId);
+
+    if (!canvas) return;
+
+    initialShape.current = {
+      ...initialShape.current,
+      item: selectedImage.item,
+      canvas
+    };
+  }, [selectedImage]);
+
   const corners = useMemo(() => {
     if (!selectedImage) return [];
     return getImageCorners(selectedImage);
   }, [selectedImage]);
-
-  const getPoint = (evt: PointerEvent) => {
-    const { x, y } = canvasEl.getBoundingClientRect();
-
-    const { clientX, clientY } = evt;
-    const offsetX = clientX - x;
-    const offsetY = clientY - y;
-
-    return viewport.pointFromPixel(new Point(offsetX, offsetY));
-  }
 
   const updateIntersectingItems = (corners: Point[]) => {
     const intersectingItems = getIntersectingItems({
@@ -108,85 +97,48 @@ export const ImageTool = (props: ImageToolProps) => {
     }, layout);
 
     setIntersectingItems(intersectingItems);
-  }
 
-  const onMoveImage = (delta: number[]) => {
-    if (!selectedImage || !dragStart) return;
-
-    const x = dragStart.x + delta[0] * dragStart.canvasWidth;
-    const y = dragStart.y + delta[1] * dragStart.canvasWidth;
-
-    updateImage(selectedImage.item.reconstructionCanvasId, {
-      ...selectedImage.image, 
-      x, y
-    });
-
-    const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
-    updateIntersectingItems(liveCorners);
-  }
-
-  const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
-    if (!selectedImage || !dragStart) return;
-
-    const [dxViewport, dyViewport] = delta;
-    const dx = dxViewport * dragStart.canvasWidth;
-    const dy = dyViewport * dragStart.canvasWidth;
-
-    const { h, v } = RESIZE_SIGNS[handle];
-
-    // Images can't be distorted: height always follows the resource's own
-    // aspect ratio, so width is the only free variable. Whichever axis the
-    // pointer moved further along (horizontal vs. vertical) drives it.
-    const aspect = selectedImage.image.resource.width / selectedImage.image.resource.height;
-    const initialHeight = dragStart.width / aspect;
-
-    const dWidthFromX = h * dx;
-    const dWidthFromY = v * dy * aspect;
-    const dWidth = Math.abs(dWidthFromX) >= Math.abs(dWidthFromY) ? dWidthFromX : dWidthFromY;
-
-    const width = Math.max(1, dragStart.width + dWidth);
-    const height = width / aspect;
-
-    const x = h < 0 ? (dragStart.x + dragStart.width) - width : dragStart.x;
-    const y = v < 0 ? (dragStart.y + initialHeight) - height : dragStart.y;
-
-    updateImage(selectedImage.item.reconstructionCanvasId, {
-      ...selectedImage.image,
-      x, y, width
-    });
-
-    const liveCorners = getImageCorners(selectedImage, x, y, dragStart.width);
-    updateIntersectingItems(liveCorners);
+    // For convenience
+    return intersectingItems;
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
     if (!selectedImage) return;
 
-    const canvas = useAppStore.getState().reconstruction.find(r => r.id === selectedImage.item.reconstructionCanvasId);
+    const target = evt.target as Element;
+    target.setPointerCapture(evt.pointerId);
+
+    const { image, item } = selectedImage;
+
+    // Get current selection reference canvas
+    const canvas = useAppStore.getState().reconstruction
+      .find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return;
 
     const [canvasWidth] = getItemCanvasSize(canvas);
 
-    const target = evt.target as Element;
-    target.setPointerCapture(evt.pointerId);
+    origin.current = getPoint(evt, props.viewer);
 
-    const { x, y, width } = selectedImage.image;
+    initialShape.current = {
+      image, item, canvas,
+      initialViewportPos: {
+        x: item.x + image.x / canvasWidth,
+        y: item.y + image.y / canvasWidth,
+        width: image.width / canvasWidth
+      }
+    };
 
-    setDragStart({
-      x, y, width, canvasWidth
-    });
-
-    setIsDraggingImage(true);
-    setOrigin(getPoint(evt));
+    setIsDraggingImage(true);    
   }
 
   const onPointerMove = (handle: HandleType) => (evt: React.PointerEvent) => {
-    if (!origin) return;
+    if (!origin.current) return;
 
-    const pt = getPoint(evt);
+    const pt = getPoint(evt, props.viewer);
     if (!pt) return;
 
-    const delta = [pt.x - origin.x, pt.y - origin.y];
+    // X/Y delta in OSD viewport coordinates
+    const delta = [pt.x - origin.current.x, pt.y - origin.current.y];
 
     if (handle === 'SHAPE') {
       onMoveImage(delta);
@@ -196,35 +148,167 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   const onPointerUp = (evt: React.PointerEvent) => {
+    if (!selectedImage || !initialShape.current) return; // Should never happen
+
     const target = evt.target as Element;
     target.releasePointerCapture(evt.pointerId);
 
+    const { x, y, width } = initialShape.current.image;
+
     // Revert position if dropped outside a canvas
-    if (selectedImage && dragStart && intersectingItems.length === 0) {
-      updateImage(selectedImage.item.reconstructionCanvasId, {
+    if (intersectingItems.length === 0) {
+      updateImage(initialShape.current.item.reconstructionCanvasId, {
         ...selectedImage.image,
-        x: dragStart.x,
-        y: dragStart.y,
-        width: dragStart.width
+        x, y, width
       });
 
-      const revertedCorners = getImageCorners(selectedImage, dragStart.x, dragStart.y, dragStart.width);
+      const revertedCorners = getImageCorners(selectedImage, x, y, width);
       updateIntersectingItems(revertedCorners);
     }
 
-    setOrigin(undefined);
-    setDragStart(undefined);
+    origin.current = undefined;
+    initialShape.current = undefined;
+
     requestAnimationFrame(() => setIsDraggingImage(false));
   }
 
   const onPointerCancel = () => {
     // Capture is auto-released by the browser on cancel
-    setOrigin(undefined);
-    setDragStart(undefined);
+    origin.current = undefined;
+    initialShape.current = undefined;
     setIsDraggingImage(false);
   }
 
-  const invalid = intersectingItems.length === 0;
+  const onMoveImage = (delta: number[]) => {
+    if (!selectedImage || !initialShape.current) return;
+
+    const initialImg = initialShape.current.image;
+    const initialItem = initialShape.current.item;
+    const initialPos = initialShape.current.initialViewportPos;
+
+    // New bounds in OSD viewport coordinaets
+    const viewportX = initialPos.x + delta[0];
+    const viewportY = initialPos.y + delta[1];
+    
+    const aspect = initialImg.resource.height / initialImg.resource.width;
+    const viewportHeight = initialPos.width * aspect;
+
+    const intersecting = updateIntersectingItems([
+      new Point(viewportX, viewportY),
+      new Point(viewportX + initialPos.width, viewportY),
+      new Point(viewportX + initialPos.width, viewportY + viewportHeight),
+      new Point(viewportX, viewportY + viewportHeight)
+    ]);
+
+    const destination = intersecting.find(i => 
+      i.reconstructionCanvasId === initialItem.reconstructionCanvasId) 
+      || intersecting[0];
+
+    const hasChangedDestination = destination && 
+      destination.reconstructionCanvasId !== initialItem.reconstructionCanvasId;
+
+    const isValidDestination = destination && 
+      (!hasChangedDestination || selectedImage.canChangeItem);
+      
+    if (hasChangedDestination && isValidDestination) {
+      const { reconstruction} = useAppStore.getState();
+
+      const source = reconstruction.find(r => r.id === initialItem.reconstructionCanvasId);
+      const target = reconstruction.find(r => r.id === destination.reconstructionCanvasId);
+
+      const targetItem = layout.items.find(i => i.reconstructionCanvasId === destination.reconstructionCanvasId);
+
+      // Should never happen
+      if (!source || !target || !targetItem) return;
+
+      // Translate image into the new canvas's local coordinate system
+      const [targetWidth] = getItemCanvasSize(target);
+
+      const targetImage = {
+        ...initialImg,
+        x: (viewportX - destination.x) * targetWidth,
+        y: (viewportY - destination.y) * targetWidth,
+        width: initialImg.width
+      };
+
+      const success = moveImageToCanvas(
+        initialItem.reconstructionCanvasId,
+        destination.reconstructionCanvasId,
+        targetImage);
+
+      if (success) {
+        initialShape.current = {
+          ...initialShape.current,
+          item: targetItem,
+          canvas: target
+        };
+
+        setSelectedCanvas([target]);
+      }
+    } else {
+      const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
+
+      const updatedImage: DraggableImage = {
+        ...initialImg, 
+        x: (viewportX - initialItem.x) * canvasWidth,
+        y: (viewportY - initialItem.y) * canvasWidth
+      }
+
+      updateImage(initialItem.reconstructionCanvasId, updatedImage);
+    }
+  }
+
+  const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
+    if (!selectedImage || !initialShape.current) return;
+
+    const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
+
+    const dx = delta[0] * canvasWidth;
+    const dy = delta[1] * canvasWidth;
+
+    const { h, v } = RESIZE_SIGNS[handle];
+
+    const initialImage = initialShape.current.image;
+
+    const aspect = initialImage.resource.width / initialImage.resource.height;
+    const initialHeight = initialImage.width / aspect;
+
+    const dWidthFromX = h * dx;
+    const dWidthFromY = v * dy * aspect;
+
+    const dWidth = Math.abs(dWidthFromX) >= Math.abs(dWidthFromY) ? dWidthFromX : dWidthFromY;
+
+    const width = Math.max(1, initialImage.width + dWidth);
+    const height = width / aspect;
+
+    const x = h < 0 ? (initialImage.x + initialImage.width) - width : initialImage.x;
+    const y = v < 0 ? (initialImage.y + initialHeight) - height : initialImage.y;
+
+    // const liveCorners = getImageCorners(selectedImage, x, y, width);
+    // const intersecting = updateIntersectingItems(liveCorners);
+
+    updateImage(initialShape.current.item.reconstructionCanvasId, {
+      ...initialImage,
+      x, y, width
+    });
+
+    /*
+    
+
+
+
+    const hasChangedItem = intersecting.length > 0 && selectedImage.canChangeItem &&
+      intersecting.every(r => r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
+
+    const destinationId = hasChangedItem 
+      ? intersecting[0].reconstructionCanvasId : selectedImage.item.reconstructionCanvasId;
+
+    updateImage(destinationId, {
+      ...selectedImage.image,
+      x, y, width
+    });
+    */
+  }
 
   return selectedImage ? (
     <>
@@ -242,17 +326,17 @@ export const ImageTool = (props: ImageToolProps) => {
         <polygon
           className="cursor-grab"
           points={cornersToSvgPoints(corners)}
-          fill={invalid ? 'oklch(57.7% 0.245 27.325 / 0.3)' : 'transparent'}
-          stroke={invalid ? 'oklch(57.7% 0.245 27.325)' : 'oklch(70.5% 0.213 47.604)'}
-          strokeWidth={invalid ? 1.5 : 2.5}
+          fill={isValidDestination ? 'transparent' : 'oklch(57.7% 0.245 27.325 / 0.3)'}
+          stroke={isValidDestination ? 'oklch(70.5% 0.213 47.604)' : 'oklch(57.7% 0.245 27.325)'}
+          strokeWidth={isValidDestination ? 2.5 : 1.5}
           vectorEffect="non-scaling-stroke"
-          strokeDasharray={invalid ? undefined : '5 2'}
+          strokeDasharray={isValidDestination ?  '5 2' : undefined}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove('SHAPE')}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerCancel} />
 
-        {invalid && (
+        {!isValidDestination && (
           <line 
             x1={corners[0].x}
             y1={corners[0].y} 
@@ -266,7 +350,7 @@ export const ImageTool = (props: ImageToolProps) => {
         {corners.map((corner, i) => (
           <ToolCornerHandle
             key={i}
-            invalid={invalid}
+            invalid={!isValidDestination}
             direction={
               i === 0 ? 'NW' :
               i === 1 ? 'NE' :
