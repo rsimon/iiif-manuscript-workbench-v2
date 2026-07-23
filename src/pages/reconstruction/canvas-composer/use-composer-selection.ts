@@ -7,8 +7,20 @@ import { useComposerStore } from './composer-store';
 import { useAppStore } from '@/store/app-store';
 
 export const useComposerSelection = (viewer: Viewer | undefined, layout: ComposerLayout) => {
+  const selection = useReconstructionStore(state => state.selection);
   const setSelectedItems = useReconstructionStore(state => state.setSelection);
   const setSelectedImage = useComposerStore(state => state.setSelectedImage);
+
+  // Clear selected image if canvas selection changes from outside (tree view)
+  useEffect(() => {
+    const { selectedImage } = useComposerStore.getState();
+    if (!selectedImage) return;
+
+    const stillSelected =
+      selection.length === 1 && selection[0].id === selectedImage.item.reconstructionCanvasId;
+
+    if (!stillSelected) setSelectedImage();
+  }, [selection, setSelectedImage]);
 
   useEffect(() => {
     if (!viewer) return;
