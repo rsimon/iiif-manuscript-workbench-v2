@@ -40,6 +40,7 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
               setSelectedImage(hit);
               return current;
             } else {
+              setSelectedImage();
               return [canvas];
             }
           });
