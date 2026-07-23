@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import OpenSeadragon, { TiledImage } from 'openseadragon';
 import { useShallow } from 'zustand/react/shallow';
 import { cn } from '@/shadcn/utils';
-import { useAppStore } from '@/store/app-store';
 import { useComposerStore } from './composer-store';
 import { getDraggableImageKey } from './composer-utils';
 import { useComposerSelection } from './use-composer-selection';
@@ -17,7 +16,6 @@ export const CanvasComposer = () => {
   const layout = useComposerStore(state => state.layout);
   const viewer = useComposerStore(state => state.viewer);
   const setViewer = useComposerStore(state => state.setViewer);
-  const reconstruction = useAppStore(state => state.reconstruction);
 
   useComposerSelection(viewer, layout);
   
@@ -134,7 +132,7 @@ export const CanvasComposer = () => {
         setIsReady(true);
       }
     });
-  }, [viewer, layout, images, reconstruction]);
+  }, [viewer, layout, images]);
 
   return (
     <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] 
