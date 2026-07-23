@@ -6,8 +6,6 @@ import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { OriginalCanvas, ReconstructionCanvas, SourceCanvas } from '@/types';
 
-export { withViewTransition } from '../view-transition';
-
 export type DragPayload =
   | { kind: 'root'; id: string; index: number; itemType: ReconstructionCanvas['type'] }
   | { kind: 'child'; compositeId: string; canvasId: string };

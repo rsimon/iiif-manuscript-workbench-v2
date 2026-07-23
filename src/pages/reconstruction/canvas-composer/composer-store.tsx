@@ -2,12 +2,12 @@ import { create } from 'zustand';
 import { Viewer, TiledImage } from 'openseadragon';
 import { dequal } from 'dequal/lite';
 import pDebounce from 'p-debounce';
+import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
 import { applyEdits, findSourceCanvasById, getDraggableImageKey, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
-import { withViewTransition } from '../view-transition';
 
 export interface ComposerState {
 

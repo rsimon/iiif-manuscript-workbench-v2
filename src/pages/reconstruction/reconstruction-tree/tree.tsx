@@ -6,12 +6,13 @@ import { extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tre
 import { getReorderDestinationIndex } from '@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index';
 import { autoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/element';
 import { unsafeOverflowAutoScrollForElements } from '@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element';
-import { useDragAndDrop, withViewTransition } from './use-drag-and-drop';
-import type { DragPayload, FallbackDropTarget } from './use-drag-and-drop';
-import { ReconstructionTreeItem } from './tree-item';
+import { ScrollArea } from '@/shadcn/scroll-area';
+import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../reconstruction-store';
-import { ScrollArea } from '@/shadcn/scroll-area';
+import { useDragAndDrop } from './use-drag-and-drop';
+import type { DragPayload, FallbackDropTarget } from './use-drag-and-drop';
+import { ReconstructionTreeItem } from './tree-item';
 import { ReconstructionTreeToolbar } from './tree-toolbar';
 
 export const ReconstructionTree = () => {

@@ -1,7 +1,6 @@
-import { cn, withStopPropagation } from '@/shadcn/utils';
+import { cn, withStopPropagation, withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
-import { withViewTransition } from './use-drag-and-drop';
 import {
   IconArrowBarToDown,
   IconArrowBarToUp,
