@@ -32,11 +32,11 @@ export interface DraggableImage {
 
   tileSource: object | string;
 
-  x: number;
+  x: number; // px coordinates relative to reconstruction canvas
 
-  y: number;
+  y: number; // px coordinates relative to reconstruction canvas
 
-  width: number;
+  width: number; // px coordinates relative to reconstruction canvas
 
   index: number;
 
