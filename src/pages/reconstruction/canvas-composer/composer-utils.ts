@@ -122,9 +122,9 @@ export const getImageAt = (
   return hit ? { item, image: hit, canChangeItem } : undefined;
 }
 
-export const getSourceCanvas = (image: DraggableImage, canvas: ReconstructionCanvas) => {
-  const sourceCanvas = canvas.type === 'original' 
-    ? canvas.source 
+const getSourceCanvas = (image: DraggableImage, canvas: ReconstructionCanvas) => {
+  const sourceCanvas = canvas.type === 'original'
+    ? canvas.source
     : canvas.sources.find(s => s.canvas.id === image.sourceCanvasId);
 
   const isValidSource = sourceCanvas && sourceCanvas.canvas.id === image.sourceCanvasId;
@@ -136,6 +136,22 @@ export const getSourceCanvas = (image: DraggableImage, canvas: ReconstructionCan
   }
 
   return sourceCanvas;
+}
+
+// Finds the source canvas by ID anywhere in the reconstruction, regardless of
+// which reconstruction canvas currently "owns" it. Unlike `getSourceCanvas`,
+// this doesn't depend on knowing the (possibly stale, mid-drag) owning
+// reconstruction canvas - the source canvas resource itself is unaffected by
+// which reconstruction canvas the composer currently associates it with.
+export const findSourceCanvasById = (
+  sourceCanvasId: string,
+  reconstruction: ReconstructionCanvas[]
+): SourceCanvas | undefined => {
+  for (const canvas of reconstruction) {
+    const sources = canvas.type === 'original' ? [canvas.source] : canvas.sources;
+    const found = sources.find(s => s.canvas.id === sourceCanvasId);
+    if (found) return found;
+  }
 }
 
 // Applies composer edits back into an app-level reconstruction

@@ -5,7 +5,7 @@ import pDebounce from 'p-debounce';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
-import { applyEdits, getDraggableImageKey, getSourceCanvas, toDraggableImages } from './composer-utils';
+import { applyEdits, findSourceCanvasById, getDraggableImageKey, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
 import { withViewTransition } from '../view-transition';
 
@@ -35,11 +35,11 @@ export interface ComposerState {
 
   updateImage(canvasId: string, updated: DraggableImage): void;
 
-  moveImageToCanvas(fromReconstructionCanvasId: string, toReconstructionCanvasId: string, image: DraggableImage): void;
+  moveImageToCanvas(fromReconstructionCanvasId: string, toReconstructionCanvasId: string, image: DraggableImage): boolean;
 
 }
 
-export const useComposerStore = create<ComposerState>(set => ({
+export const useComposerStore = create<ComposerState>((set, get) => ({
 
   viewer: undefined,
 
@@ -90,25 +90,22 @@ export const useComposerStore = create<ComposerState>(set => ({
     };
   }),
 
-  moveImageToCanvas: (fromId, toId, image) => set(({ imagesByCanvasId, layout, selectedImage }) => {
+  moveImageToCanvas: (fromId, toId, image) => {
+    const { imagesByCanvasId, layout, selectedImage } = get();
+
     const key = getDraggableImageKey(image);
 
     // Make sure the from/to info is valid
     const isValidSource = imagesByCanvasId.get(fromId)?.some(i => getDraggableImageKey(i) === key);
     const isValidTarget = imagesByCanvasId.get(toId)?.every(i => getDraggableImageKey(i) !== key);
 
-    if (!isValidSource || !isValidTarget) return {};
+    if (!isValidSource || !isValidTarget) return false;
 
     // Next, make sure the image can be moved, without splitting a source canvas!
     const { reconstruction } = useAppStore.getState();
-    const fromCanvas = reconstruction.find(rc => rc.id === fromId); 
-    
-    // Should never happen
-    if (!fromCanvas) return {};
-
-    const sourceCanvas = getSourceCanvas(image, fromCanvas);  
+    const sourceCanvas = findSourceCanvasById(image.sourceCanvasId, reconstruction);
     const isValidChange = sourceCanvas?.canvas.images.length === 1;
-    if (!isValidChange) return {};  
+    if (!isValidChange) return false;
 
     // All good - now update the imagesByCanvas map and schedule the app store sync
     const updatedImagesByCanvasId = new Map(imagesByCanvasId);
@@ -119,20 +116,22 @@ export const useComposerStore = create<ComposerState>(set => ({
     updatedImagesByCanvasId.set(fromId, nextFrom);
     updatedImagesByCanvasId.set(toId, nextTo);
 
-    const updatedSelectedImage = 
-      selectedImage && getDraggableImageKey(selectedImage.image) === key ? { 
-        image, 
+    const updatedSelectedImage =
+      selectedImage && getDraggableImageKey(selectedImage.image) === key ? {
+        image,
         canChangeItem: selectedImage.canChangeItem,
-        item: layout.items.find(i => i.reconstructionCanvasId === toId)
+        item: layout.items.find(i => i.reconstructionCanvasId === toId)!
       } : undefined;
 
     scheduleAppStoreSync();
 
-    return {
+    set({
       imagesByCanvasId: updatedImagesByCanvasId,
       ...(updatedSelectedImage ? { selectedImage: updatedSelectedImage } : {})
-    };
-  })
+    });
+
+    return true;
+  }
 }));
 
 // Debounced upwards sync to root app state

@@ -209,16 +209,18 @@ export const ImageTool = (props: ImageToolProps) => {
         width: initialImg.width
       };
 
-      moveImageToCanvas(
+      const success = moveImageToCanvas(
         initialItem.reconstructionCanvasId,
         destination.reconstructionCanvasId,
         targetImage);
 
-      initialShape.current = {
-        ...initialShape.current,
-        item: targetItem,
-        canvas: target
-      };
+      if (success) {
+        initialShape.current = {
+          ...initialShape.current,
+          item: targetItem,
+          canvas: target
+        };
+      }
     } else {
       const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
 
