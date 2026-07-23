@@ -54,7 +54,6 @@ export const ImageTool = (props: ImageToolProps) => {
   }, [intersectingItems, selectedImage]);
 
   useEffect(() => {
-    console.log('clear');
     origin.current = undefined;
     initialShape.current = undefined;
 
@@ -64,6 +63,25 @@ export const ImageTool = (props: ImageToolProps) => {
       updateIntersectingItems(liveCorners);
     }
   }, [selectionKey]);
+
+  useEffect(() => {
+    if (!selectedImage || !initialShape.current) return;
+    if (initialShape.current.item.reconstructionCanvasId === selectedImage.item.reconstructionCanvasId) return;
+
+    // Selected (= dragged) image and initialShape no longer point to the
+    // same reconstruction canvas ID - this means the canvas was modified,
+    // usually changed from 'original' to 'composite' -> follow!
+    const canvas = useAppStore.getState().reconstruction
+      .find(r => r.id === selectedImage.item.reconstructionCanvasId);
+
+    if (!canvas) return;
+
+    initialShape.current = {
+      ...initialShape.current,
+      item: selectedImage.item,
+      canvas
+    };
+  }, [selectedImage]);
 
   const corners = useMemo(() => {
     if (!selectedImage) return [];

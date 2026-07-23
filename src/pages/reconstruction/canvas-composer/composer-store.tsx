@@ -165,7 +165,12 @@ useAppStore.subscribe((state, prevState) => {
   // Images only need recomputing per canvas: reuse the existing array
   // reference for any canvas that didn't itself change.
   const prevById = new Map(prevState.reconstruction.map(r => [r.id, r]));
-  const prevImages = useComposerStore.getState().imagesByCanvasId;
+
+  const { 
+    imagesByCanvasId: prevImages,
+    layout: prevLayout,
+    selectedImage: prevSelectedImage 
+  } = useComposerStore.getState();
 
   const imagesByCanvasId = new Map(state.reconstruction.map(r => [
     r.id,
@@ -180,10 +185,34 @@ useAppStore.subscribe((state, prevState) => {
     imagesByCanvasId.size !== prevImages.size ||
       [...imagesByCanvasId].some(([id, images]) => prevImages.get(id) !== images);
 
-  if (!layoutChanged && !imagesChanged) return;
+  const layout = layoutChanged ? TwoColumnLayout(state.reconstruction) : prevLayout;
+
+  let selectedImage = prevSelectedImage;
+
+  if (prevSelectedImage && (layoutChanged || imagesChanged)) {
+    const key = getDraggableImageKey(prevSelectedImage.image);
+    const prevCanvasId = prevSelectedImage.item.reconstructionCanvasId;
+
+    // Did association between selected image and canvas change
+    // because the canvas was modified (original -> composite)
+    const associationUnchanged = imagesByCanvasId.get(prevCanvasId)
+      ?.some(img => getDraggableImageKey(img) === key);
+
+    const nextCanvasId = associationUnchanged
+      ? prevCanvasId
+      : [...imagesByCanvasId.entries()]
+        .find(([, images]) => images.some(img => getDraggableImageKey(img) === key))?.[0];
+
+    const item = nextCanvasId ? layout.items.find(i => i.reconstructionCanvasId === nextCanvasId) : undefined;
+
+    selectedImage = item ? { ...prevSelectedImage, item } : undefined;
+  }
+
+  if (!layoutChanged && !imagesChanged && selectedImage === prevSelectedImage) return;
 
   useComposerStore.setState({
-    ...(layoutChanged ? { layout: TwoColumnLayout(state.reconstruction) } : {}),
-    ...(imagesChanged ? { imagesByCanvasId } : {})
+    ...(layoutChanged ? { layout } : {}),
+    ...(imagesChanged ? { imagesByCanvasId } : {}),
+    ...(selectedImage !== prevSelectedImage ? { selectedImage } : {})
   });
 });
