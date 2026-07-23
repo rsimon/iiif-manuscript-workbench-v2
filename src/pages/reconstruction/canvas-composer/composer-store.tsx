@@ -141,8 +141,16 @@ const scheduleAppStoreSync = pDebounce(() => {
 
   const next = applyEdits(reconstruction, imagesByCanvasId, baseURI);
   const changed = next.length !== reconstruction.length || next.some((r, i) => r !== reconstruction[i]);
+  if (!changed) return;
 
-  if (changed) withViewTransition(() => updateReconstruction(next));
+  // View transitions block events - so we prevent if it's not needed
+  const isStructuralChange = next.length !== reconstruction.length ||
+    next.some((r, i) => r.id !== reconstruction[i].id || r.type !== reconstruction[i].type);
+
+  if (isStructuralChange) 
+    withViewTransition(() => updateReconstruction(next));
+  else 
+    updateReconstruction(next);
 }, 250);
 
 // Downwards sync from app store to local state
