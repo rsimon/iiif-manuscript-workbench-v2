@@ -135,7 +135,7 @@ export const ImageTool = (props: ImageToolProps) => {
 
     // Revert position if dropped outside a canvas
     if (intersectingItems.length === 0) {
-      updateImage(selectedImage.item.reconstructionCanvasId, {
+      updateImage(initialShape.current.item.reconstructionCanvasId, {
         ...selectedImage.image,
         x, y, width
       });
