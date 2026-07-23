@@ -209,6 +209,20 @@ export const applyEdits = (
         };
       } else {
         const nextSources = sources.map(applySourceEdits);
+
+        // Just one source - revert to OriginalCanvas
+        if (nextSources.length === 1) {
+          const source = nextSources[0];
+          
+          return {
+            type: 'original',
+            id: source.canvas.id,
+            label: r.label,
+            source,
+            physicalSize: source.physicalSize
+          };
+        }
+
         const unchanged = nextSources.length === r.sources.length &&
           nextSources.every((source, index) => source === r.sources[index]);
 
