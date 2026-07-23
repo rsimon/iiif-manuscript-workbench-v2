@@ -103,7 +103,7 @@ export const ImageTool = (props: ImageToolProps) => {
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
-    evt.stopPropagation(); // Stop even from reaching OSD
+    evt.stopPropagation(); // Stop event from reaching OSD's own MouseTracker
 
     if (!selectedImage) return;
 
@@ -156,15 +156,19 @@ export const ImageTool = (props: ImageToolProps) => {
 
     const target = evt.target as Element;
     target.releasePointerCapture(evt.pointerId);
-    setIsDraggingImage(false);
 
-    if (!selectedImage || !initialShape.current) return; // Should never happen
+    const shape = initialShape.current;
 
-    const { x, y, width } = initialShape.current.image;
+    origin.current = undefined;
+    initialShape.current = undefined;
+
+    if (!selectedImage || !shape) return; // Should never happen
+
+    const { x, y, width } = shape.image;
 
     // Revert position if dropped outside a canvas
     if (intersectingItems.length === 0) {
-      updateImage(initialShape.current.item.reconstructionCanvasId, {
+      updateImage(shape.item.reconstructionCanvasId, {
         ...selectedImage.image,
         x, y, width
       });
@@ -173,13 +177,12 @@ export const ImageTool = (props: ImageToolProps) => {
       updateIntersectingItems(revertedCorners);
     }
 
-    origin.current = undefined;
-    initialShape.current = undefined;
-
     requestAnimationFrame(() => setIsDraggingImage(false));
   }
 
-  const onPointerCancel = () => {
+  const onPointerCancel = (evt: React.PointerEvent) => {
+    evt.stopPropagation();
+
     // Capture is auto-released by the browser on cancel
     origin.current = undefined;
     initialShape.current = undefined;
@@ -338,10 +341,10 @@ export const ImageTool = (props: ImageToolProps) => {
           strokeWidth={isValidDestination ? 2.5 : 1.5}
           vectorEffect="non-scaling-stroke"
           strokeDasharray={isValidDestination ?  '5 2' : undefined}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove('SHAPE')}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel} />
+          onPointerDownCapture={onPointerDown}
+          onPointerMoveCapture={onPointerMove('SHAPE')}
+          onPointerUpCapture={onPointerUp}
+          onPointerCancelCapture={onPointerCancel} />
 
         {!isValidDestination && (
           <line 

@@ -69,10 +69,10 @@ export const ToolCornerHandle = (props: ToolCornerHandleProps) => {
       stroke={props.invalid ? 'oklch(57.7% 0.245 27.325)' : 'oklch(70.5% 0.213 47.604)'}
       strokeWidth={2}
       vectorEffect="non-scaling-stroke"
-      onPointerDown={props.onPointerDown} 
-      onPointerMove={props.onPointerMove} 
-      onPointerUp={props.onPointerUp} 
-      onPointerCancel={props.onPointerCancel} />
+      onPointerDownCapture={props.onPointerDown}
+      onPointerMoveCapture={props.onPointerMove}
+      onPointerUpCapture={props.onPointerUp}
+      onPointerCancelCapture={props.onPointerCancel} />
   )
 
 }

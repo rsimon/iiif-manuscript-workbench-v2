@@ -172,12 +172,15 @@ useAppStore.subscribe((state, prevState) => {
     selectedImage: prevSelectedImage 
   } = useComposerStore.getState();
 
-  const imagesByCanvasId = new Map(state.reconstruction.map(r => [
-    r.id,
-    prevById.get(r.id) === r
-      ? prevImages.get(r.id) ?? toDraggableImages(r)
-      : toDraggableImages(r)
-  ]));
+  const imagesByCanvasId = new Map(state.reconstruction.map(r => {
+    const prevForCanvas = prevImages.get(r.id);
+
+    // Maintain object references
+    if (prevById.get(r.id) === r) return [r.id, prevForCanvas ?? toDraggableImages(r)] as const;
+
+    const nextImages = toDraggableImages(r);
+    return [r.id, prevForCanvas && dequal(prevForCanvas, nextImages) ? prevForCanvas : nextImages] as const;
+  }));
 
   // Important: we'll skip updates if nothing actually differs - to prevents
   // infinite loop from the 'upwards sync' to the app state after a user edit
@@ -205,7 +208,9 @@ useAppStore.subscribe((state, prevState) => {
 
     const item = nextCanvasId ? layout.items.find(i => i.reconstructionCanvasId === nextCanvasId) : undefined;
 
-    selectedImage = item ? { ...prevSelectedImage, item } : undefined;
+    selectedImage = item
+      ? (item === prevSelectedImage.item ? prevSelectedImage : { ...prevSelectedImage, item })
+      : undefined;
   }
 
   if (!layoutChanged && !imagesChanged && selectedImage === prevSelectedImage) return;
