@@ -176,14 +176,13 @@ export const applyEdits = (
       const composerImages = imagesByCanvasId.get(r.id)!;
       const sourceCanvasIdSet = new Set(composerImages.map(image => image.sourceCanvasId));
 
-      if (r.type === 'original' && composerImages.length > 0) {
+      if (r.type === 'original' && composerImages.length > 0)
         sourceCanvasIdSet.add(r.source.canvas.id);
-      }
 
       const sourceCanvasIds = [...sourceCanvasIdSet];
       const sources = sourceCanvasIds
         .map(sourceCanvasId => sourceCanvases.get(sourceCanvasId))
-        .filter((source): source is SourceCanvas => !!source);
+        .filter(source => !!source);
 
       const applySourceEdits = (source: SourceCanvas) => applyEditsToSource(
         source,
