@@ -132,3 +132,7 @@
 .openseadragon-canvas {
   outline: none;
 }
+
+::view-transition {
+  pointer-events: none;
+}
