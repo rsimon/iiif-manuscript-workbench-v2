@@ -118,24 +118,20 @@ export const getImageAt = (
     return areaA - areaB;
   })[0];
 
-  const canChangeItem = hit ? getSourceCanvas(hit, rc)?.canvas.images.length === 1 : false;
-  return hit ? { item, image: hit, canChangeItem } : undefined;
-}
+  const sourceCanvas = rc.type === 'original'
+    ? rc.source
+    : rc.sources.find(s => s.canvas.id === hit.sourceCanvasId);
 
-const getSourceCanvas = (image: DraggableImage, canvas: ReconstructionCanvas) => {
-  const sourceCanvas = canvas.type === 'original'
-    ? canvas.source
-    : canvas.sources.find(s => s.canvas.id === image.sourceCanvasId);
-
-  const isValidSource = sourceCanvas && sourceCanvas.canvas.id === image.sourceCanvasId;
+  const isValidSource = sourceCanvas && sourceCanvas.canvas.id === hit.sourceCanvasId;
   if (!isValidSource) {
     // Should never happen
-    console.warn(`Source canvas integrity error: hit points to ${image.sourceCanvasId}, but not found in reconstruction canvas`);
-    console.warn(canvas);
+    console.warn(`Source canvas integrity error: hit points to ${hit.sourceCanvasId}, but not found in reconstruction canvas`);
+    console.warn(rc);
     return;
   }
 
-  return sourceCanvas;
+  const canChangeItem = hit ? sourceCanvas.canvas.images.length === 1 : false;
+  return hit ? { item, image: hit, canChangeItem } : undefined;
 }
 
 export const findSourceCanvasById = (
