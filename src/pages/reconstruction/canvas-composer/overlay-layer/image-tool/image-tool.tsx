@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Point, Viewer } from 'openseadragon';
 import { useAppStore } from '@/store/app-store';
+import { useReconstructionStore } from '../../../reconstruction-store';
 import { useComposerStore } from '../../composer-store';
 import type { ComposerLayoutItem,  DraggableImage,  HandleType, ResizeHandleType } from '../../composer-types';
 import { getDraggableImageKey, getIntersectingItems, getItemCanvasSize } from '../../composer-utils';
@@ -28,6 +29,8 @@ export const ImageTool = (props: ImageToolProps) => {
   const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
   const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
 
+  const setSelectedCanvas = useReconstructionStore(state => state.setSelection);
+
   // Last pointer down location (OSD viewport coordinate system)
   const origin = useRef<Point | undefined>(undefined);
 
@@ -51,6 +54,7 @@ export const ImageTool = (props: ImageToolProps) => {
   }, [intersectingItems, selectedImage]);
 
   useEffect(() => {
+    console.log('clear');
     origin.current = undefined;
     initialShape.current = undefined;
 
@@ -220,6 +224,8 @@ export const ImageTool = (props: ImageToolProps) => {
           item: targetItem,
           canvas: target
         };
+
+        setSelectedCanvas([target]);
       }
     } else {
       const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
