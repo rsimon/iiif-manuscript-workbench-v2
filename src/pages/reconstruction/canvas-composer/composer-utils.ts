@@ -118,6 +118,8 @@ export const getImageAt = (
     return areaA - areaB;
   })[0];
 
+  if (!hit) return;
+
   const sourceCanvas = rc.type === 'original'
     ? rc.source
     : rc.sources.find(s => s.canvas.id === hit.sourceCanvasId);
@@ -133,7 +135,7 @@ export const getImageAt = (
   // Splitting images inside source canvases is not supported - only
   // allow changing association for this hit if it's the only image in its canvas
   const canChangeItem = hit ? sourceCanvas.canvas.images.length === 1 : false;
-  return hit ? { item, image: hit, canChangeItem } : undefined;
+  return { item, image: hit, canChangeItem };
 }
 
 export const findSourceCanvasById = (
