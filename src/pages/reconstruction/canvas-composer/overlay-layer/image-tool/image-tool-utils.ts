@@ -25,7 +25,6 @@ export interface InitialShape {
 
   }
 
-
 }
 
 export const HANDLE_TYPES: CornerHandleType[] = [
