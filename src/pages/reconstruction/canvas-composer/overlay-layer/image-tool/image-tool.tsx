@@ -25,7 +25,7 @@ export const ImageTool = (props: ImageToolProps) => {
   const selectedImage = useComposerStore(state => state.selectedImage);
 
   const updateImage = useComposerStore(state => state.updateImage);
-  // const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
+  const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
   const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
 
   // Last pointer down location (OSD viewport coordinate system)
@@ -171,69 +171,65 @@ export const ImageTool = (props: ImageToolProps) => {
     const aspect = initialImg.resource.height / initialImg.resource.width;
     const viewportHeight = initialPos.width * aspect;
 
-    updateIntersectingItems([
+    const intersecting = updateIntersectingItems([
       new Point(viewportX, viewportY),
       new Point(viewportX + initialPos.width, viewportY),
       new Point(viewportX + initialPos.width, viewportY + viewportHeight),
       new Point(viewportX, viewportY + viewportHeight)
     ]);
 
-    const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
+    const destination = intersecting.find(i => 
+      i.reconstructionCanvasId === initialItem.reconstructionCanvasId) 
+      || intersecting[0];
 
-    const updatedImage: DraggableImage = {
-      ...initialImg, 
-      x: (viewportX - initialItem.x) * canvasWidth,
-      y: (viewportY - initialItem.y) * canvasWidth
-    }
+    const hasChangedDestination = destination && 
+      destination.reconstructionCanvasId !== initialItem.reconstructionCanvasId;
 
-    updateImage(initialItem.reconstructionCanvasId, updatedImage);
+    const isValidDestination = destination && 
+      (!hasChangedDestination || selectedImage.canChangeItem);
+      
+    if (hasChangedDestination && isValidDestination) {
+      const { reconstruction} = useAppStore.getState();
 
-    /*
+      const source = reconstruction.find(r => r.id === initialItem.reconstructionCanvasId);
+      const target = reconstruction.find(r => r.id === destination.reconstructionCanvasId);
 
-    dragStartRef.current = { ...drag, x, y, image: updatedImage };
-    updateImage(drag.itemId, updatedImage);
-    */
-    /*
-    const destination = 
+      const targetItem = layout.items.find(i => i.reconstructionCanvasId === destination.reconstructionCanvasId);
 
-    if (destination && destination.reconstructionCanvasId !== drag.itemId && selectedImage.canChangeItem) {
-      const source = useAppStore.getState().reconstruction.find(r =>
-        r.id === drag.itemId);
-      const target = useAppStore.getState().reconstruction.find(r =>
-        r.id === destination.reconstructionCanvasId);
+      // Should never happen
+      if (!source || !target || !targetItem) return;
 
-      if (!source || !target) return;
-
+      // Translate image into the new canvas's local coordinate system
       const [targetWidth] = getItemCanvasSize(target);
+
       const targetImage = {
-        ...drag.image,
-        x: (layoutX - destination.x) * targetWidth,
-        y: (layoutY - destination.y) * targetWidth,
-        width: drag.layoutWidth * targetWidth
+        ...initialImg,
+        x: (viewportX - destination.x) * targetWidth,
+        y: (viewportY - destination.y) * targetWidth,
+        width: initialImg.width
       };
 
       moveImageToCanvas(
-        drag.itemId,
+        initialItem.reconstructionCanvasId,
         destination.reconstructionCanvasId,
-        targetImage
-      );
+        targetImage);
 
-      const nextDrag = {
-        ...drag,
-        x: targetImage.x,
-        y: targetImage.y,
-        width: targetImage.width,
-        canvasWidth: targetWidth,
-        itemId: destination.reconstructionCanvasId,
-        image: targetImage
+      initialShape.current = {
+        ...initialShape.current,
+        item: targetItem,
+        canvas: target
       };
-      dragStartRef.current = nextDrag;
     } else {
-      */
+      const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
 
+      const updatedImage: DraggableImage = {
+        ...initialImg, 
+        x: (viewportX - initialItem.x) * canvasWidth,
+        y: (viewportY - initialItem.y) * canvasWidth
+      }
 
-    
-      //}
+      updateImage(initialItem.reconstructionCanvasId, updatedImage);
+    }
   }
 
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
