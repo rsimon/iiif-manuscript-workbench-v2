@@ -53,8 +53,8 @@ export const CanvasComposer = () => {
       minZoomImageRatio: 0,
       animationTime: OSD_ANIMATION_TIME,
       springStiffness: OSD_SPRING_STIFFNESS,
-      clickDistThreshold: 10, // More tolerance for single clicks 
-      clickTimeThreshold: 40,
+      clickDistThreshold: 10,
+      clickTimeThreshold: 400,
       gestureSettingsMouse: {
         clickToZoom: false,
         dblClickToZoom: true
