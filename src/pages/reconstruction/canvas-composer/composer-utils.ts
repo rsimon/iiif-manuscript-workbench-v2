@@ -138,11 +138,6 @@ const getSourceCanvas = (image: DraggableImage, canvas: ReconstructionCanvas) =>
   return sourceCanvas;
 }
 
-// Finds the source canvas by ID anywhere in the reconstruction, regardless of
-// which reconstruction canvas currently "owns" it. Unlike `getSourceCanvas`,
-// this doesn't depend on knowing the (possibly stale, mid-drag) owning
-// reconstruction canvas - the source canvas resource itself is unaffected by
-// which reconstruction canvas the composer currently associates it with.
 export const findSourceCanvasById = (
   sourceCanvasId: string,
   reconstruction: ReconstructionCanvas[]
