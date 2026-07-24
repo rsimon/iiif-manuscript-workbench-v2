@@ -37,7 +37,10 @@ export const createManifest = (
 }
 
 const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
-  if (r.type === 'original') return r.source.canvas.source;
+  if (r.type === 'original') return {
+    ...r.source.canvas.source,
+    label: { en: [r.label] }
+  };
 
   const canvasId = `${baseURI}/canvas/${crypto.randomUUID()}`;
 
@@ -47,7 +50,32 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
     label: { en: [r.label] },
     width: r.width,
     height: r.height,
-    items: [{
+    ...(r.sources.length === 0 ? {
+      placeholderCanvas: {
+        id: `${canvasId}/placeholder`,
+        type: 'Canvas',
+        width: 1200,
+        height: 1650,
+        items: [{
+          id: `${canvasId}/placeholder/1`,
+          type: 'AnnotationPage',
+          items: [{
+            id: `${canvasId}/placeholder/1/image`,
+            type: 'Annotation',
+            motivation: 'painting',
+            body: {
+              id: `${baseURI}/empty_placeholder.png`,
+              type: 'Image',
+              format: 'image/png',
+              width: 1200,
+              height: 1650
+            },
+            target: `${canvasId}/placeholder`
+          }]
+        }]
+      }
+    } : {}),
+    items: r.sources.length === 0 ? [] :[{
       id: `${canvasId}/page/1`,
       type: 'AnnotationPage',
       items: r.sources.flatMap(sc => sc.canvas.images.map(image => ({

@@ -80,13 +80,27 @@ useEffect(() => {
       ? selected.source.canvas.images 
       : selected.sources.flatMap(s => s.canvas.images);
 
-    Promise.all(images.map(addImage)).then(() => {
-      if (cancelled) return;
+    if (images.length > 0) {
+      Promise.all(images.map(addImage)).then(() => {
+        if (cancelled) return;
 
-      const aspectRatio = canvasWidth / canvasHeight;
-      const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
-      viewer.viewport.fitBounds(canvasRect, true);
-    });
+        const aspectRatio = canvasWidth / canvasHeight;
+        const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
+        viewer.viewport.fitBounds(canvasRect, true);
+      });
+    } else {
+      viewer.addTiledImage({
+        tileSource: {
+          type: 'image',
+          url: './empty_placeholder.png'
+        },
+        success: () => {
+          const aspectRatio = 1200 / 1650;
+          const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
+          viewer.viewport.fitBounds(canvasRect, true);
+        }
+      });
+    }
 
     return () => {
       cancelled = true;
