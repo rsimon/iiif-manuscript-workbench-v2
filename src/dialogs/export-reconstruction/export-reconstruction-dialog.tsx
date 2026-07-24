@@ -162,7 +162,7 @@ export const ExportReconstructionDialog = (props: ExportReconstructionDialogProp
         <DialogFooter className="block">
           <div className="flex gap-2 items-center justify-end">
             <Button 
-              variant="outline" 
+              variant="ghost" 
               onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
