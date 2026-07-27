@@ -64,8 +64,8 @@ const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
 
   return (
     <img
-      src={props.image.getImageURL(props.minSize || 160)}
-      className={cn(THUMBNAIL_SIZING, 'object-contain', props.className)}
+      src={props.image.getImageURL(props.minSize || 320)}
+      className={cn(THUMBNAIL_SIZING, 'rounded ring ring-foreground/10 shadow-xs object-cover', props.className)}
       style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}
       alt={props.label} />
   )
@@ -104,7 +104,7 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
         key={idx}
         src={image.getImageURL(minSize)}
         alt={`${label}: image ${idx + 1}`}
-        className="absolute object-fill"
+        className="absolute object-fit"
         style={{
           left: `${(target.x / canvasWidth) * 100}%`,
           top: `${(target.y / canvasHeight) * 100}%`,
@@ -118,7 +118,7 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
     <div
       className={cn(
         THUMBNAIL_SIZING,
-        'relative overflow-hidden bg-white',
+        'relative overflow-hidden bg-white rounded ring ring-foreground/10 shadow-xs',
         props.className
       )}
       style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}>
