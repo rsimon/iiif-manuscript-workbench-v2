@@ -2,6 +2,8 @@ import type { CozyImageResource } from 'cozy-iiif';
 import { cn } from '@/shadcn/utils';
 import type { ReconstructionCanvas } from '@/types';
 
+const THUMBNAIL_SIZING = 'w-full h-auto @[160px]:w-auto @[160px]:max-w-[50%] @[160px]:min-w-0 @[160px]:flex-1';
+
 interface ThumbnailProps {
 
   canvas: ReconstructionCanvas;
@@ -63,7 +65,7 @@ const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
   return (
     <img
       src={props.image.getImageURL(props.minSize || 160)}
-      className={cn('object-contain', props.className)}
+      className={cn(THUMBNAIL_SIZING, 'object-contain', props.className)}
       style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}
       alt={props.label} />
   )
@@ -115,6 +117,7 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
   return (
     <div
       className={cn(
+        THUMBNAIL_SIZING,
         'relative overflow-hidden bg-white',
         props.className
       )}

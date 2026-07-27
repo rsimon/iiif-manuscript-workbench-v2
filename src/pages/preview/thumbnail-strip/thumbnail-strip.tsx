@@ -19,13 +19,21 @@ export const ThumbnailStrip = () => {
     return (
       <button
         className={cn(
-          'cursor-pointer bg-white border shadow-xs flex flex-col @[160px]:flex-row items-center justify-center gap-1 p-1.5 w-full rounded-md',
+          'cursor-pointer bg-white border shadow-xs flex flex-col @[160px]:flex-row items-center justify-center gap-px w-full rounded-md',
           idx > 0 && 'mt-2',
           isSelected ? 'ring-3 ring-primary bg-primary/5' : 'hover:bg-primary/5'
         )}
         onClick={() => setSelectedView(view)}>
-        {view.left && <Thumbnail canvas={view.left} className="h-40 w-auto" />}
-        {view.right && <Thumbnail canvas={view.right} className="h-40 w-auto" />}
+        {view.left && (
+          <Thumbnail 
+            canvas={view.left} 
+            className="rounded-l-md" />
+        )}
+        {view.right && (
+          <Thumbnail 
+            canvas={view.right}
+            className="rounded-r-md" />
+        )}
       </button>
     )
   }
@@ -37,8 +45,8 @@ export const ThumbnailStrip = () => {
           No reconstruction canvases yet.
         </div>
       ) : (
-        <ScrollArea className="grow min-h-0 p-2" viewportRef={setViewportEl}>
-          <div className="h-full p-2.5">
+        <ScrollArea className="grow min-h-0 px-2" viewportRef={setViewportEl}>
+          <div className="h-full px-2.5 py-4">
             <Virtuoso
               customScrollParent={viewportEl ?? undefined}
               totalCount={views.length}

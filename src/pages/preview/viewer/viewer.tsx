@@ -4,7 +4,7 @@ import type { Viewer as OpenSeadragonViewer } from 'openseadragon';
 import { usePreviewStore } from '../preview-store';
 import { ViewerControls } from './viewer-controls';
 import { ViewerToolbar } from './viewer-toolbar';
-import { addPage, getHeight } from './viewer-utils';
+import { addPage, getCanvasHeight, getHeight } from './viewer-utils';
 
 interface ViewerProps {
 
@@ -67,13 +67,13 @@ export const Viewer = (props: ViewerProps) => {
 
     let cancelled = false;
 
-    const addLeft = left ? addPage(viewer, left, 0) : undefined;
-    const addRight = right ? addPage(viewer, right, 1 + PAGE_GAP) : undefined;
-
-    const totalWidth = (addLeft &&  addRight) ? 2 + PAGE_GAP : 1;
     const totalHeight = getHeight([left, right]);
 
-    console.log({ totalHeight });
+    // Center each page vertically against the taller of the two.
+    const addLeft = left ? addPage(viewer, left, 0, (totalHeight - getCanvasHeight(left)) / 2) : undefined;
+    const addRight = right ? addPage(viewer, right, 1 + PAGE_GAP, (totalHeight - getCanvasHeight(right)) / 2) : undefined;
+
+    const totalWidth = (addLeft && addRight) ? 2 + PAGE_GAP : 1;
 
     Promise.all([addLeft, addRight]).then(() => {
       if (cancelled) return;
