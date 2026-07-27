@@ -9,7 +9,7 @@ export const Preview = () => {
   const [isInspectorOpen, setIsInspectorOpen] = useState(false);
 
   return (
-    <main className="bg-muted grow">
+    <main className="bg-muted grow min-h-0">
       <AnimatedPanelGroup className="flex grow h-full min-h-0">
         <Panel
           minSize={100}

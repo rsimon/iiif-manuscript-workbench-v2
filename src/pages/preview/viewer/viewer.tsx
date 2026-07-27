@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import type { Viewer as OpenSeadragonViewer } from 'openseadragon';
-import type { ReconstructionCanvas } from '@/types';
 import { usePreviewStore } from '../preview-store';
 import { ViewerControls } from './viewer-controls';
 import { ViewerToolbar } from './viewer-toolbar';
+import { addPage, getHeight } from './viewer-utils';
 
 interface ViewerProps {
 
@@ -16,52 +16,6 @@ interface ViewerProps {
 
 // Horizontal gap between pages
 const PAGE_GAP = 0;
-
-const getCanvasDimensions = (canvas: ReconstructionCanvas) =>
-  canvas.type === 'original' ? canvas.source.canvas : canvas;
-
-const getCanvasImages = (canvas: ReconstructionCanvas) =>
-  canvas.type === 'original'
-    ? canvas.source.canvas.images
-    : canvas.sources.flatMap(s => s.canvas.images);
-
-/**
- * Adds the tiled image(s) for one page to the OSD world, scaling the whole
- * page to exactly 1 world unit tall and offsetting it horizontally by
- * `xOffset` - so multiple pages can be laid out side by side at the same
- * visual height regardless of their individual pixel aspect ratios.
- */
-const addPage = (viewer: OpenSeadragonViewer, canvas: ReconstructionCanvas, xOffset: number) => {
-  const { width: canvasWidth, height: canvasHeight } = getCanvasDimensions(canvas);
-
-  // Uniform pixel-to-world scale factor: canvasHeight maps to 1 world unit.
-  const scale = 1 / canvasHeight;
-  const pageWidth = canvasWidth * scale;
-
-  const images = getCanvasImages(canvas);
-
-  const items = images.length > 0 ? images.map(image => ({
-    tileSource: image.type === 'dynamic' || image.type === 'level0'
-      ? image.serviceUrl
-      : image.url,
-    target: image.target || { x: 0, y: 0, w: canvasWidth, h: canvasHeight }
-  })) : [{
-    tileSource: { type: 'image', url: './empty_placeholder.png' },
-    target: { x: 0, y: 0, w: canvasWidth, h: canvasHeight }
-  }];
-
-  const promise = Promise.all(items.map(({ tileSource, target }) => new Promise<void>(resolve => {
-    viewer.addTiledImage({
-      tileSource,
-      x: xOffset + target.x * scale,
-      y: target.y * scale,
-      width: target.w * scale,
-      success: () => resolve()
-    });
-  }))).then(() => {});
-
-  return { promise, width: pageWidth };
-}
 
 export const Viewer = (props: ViewerProps) => {
   const selectedView = usePreviewStore(state => state.selectedView);
@@ -96,31 +50,34 @@ export const Viewer = (props: ViewerProps) => {
   }, []);
 
   useEffect(() => {
-    if (!viewer || !left) return;
+    const el = elementRef.current;
+    if (!el) return;
 
-    // Guards against a superseded fitBounds after fast next/prev navigation
+    const onPointerDownCapture = (e: PointerEvent) => {
+      if (e.defaultPrevented) 
+        e.stopPropagation();
+    }
+
+    el.addEventListener('pointerdown', onPointerDownCapture, true);
+    return () => el.removeEventListener('pointerdown', onPointerDownCapture, true);
+  }, []);
+
+  useEffect(() => {
+    if (!viewer || !(left || right)) return;
+
     let cancelled = false;
 
-    const leftPage = addPage(viewer, left, 0);
-    const rightPage = right ? addPage(viewer, right, leftPage.width + PAGE_GAP) : undefined;
+    const addLeft = left ? addPage(viewer, left, 0) : undefined;
+    const addRight = right ? addPage(viewer, right, 1 + PAGE_GAP) : undefined;
 
-    const totalWidth = rightPage ? leftPage.width + PAGE_GAP + rightPage.width : leftPage.width;
+    const totalWidth = (addLeft &&  addRight) ? 2 + PAGE_GAP : 1;
+    const totalHeight = getHeight([left, right]);
 
-    Promise.all([leftPage.promise, rightPage?.promise]).then(() => {
+    Promise.all([addLeft, addRight]).then(() => {
       if (cancelled) return;
 
-      const marginX = 0.15;
-      const marginTop = 0.12;
-      const marginBottom = 0.18;
-
-      const spreadRect = new OpenSeadragon.Rect(
-        -marginX,
-        -marginTop,
-        totalWidth + marginX * 2,
-        1 + marginTop + marginBottom
-      );
-
-      viewer.viewport.fitBounds(spreadRect, true);
+      const viewRect = new OpenSeadragon.Rect(-0.15, -0.12, totalWidth, totalHeight);
+      viewer.viewport.fitBounds(viewRect, true);
     });
 
     return () => {
