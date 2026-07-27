@@ -73,10 +73,12 @@ export const Viewer = (props: ViewerProps) => {
     const totalWidth = (addLeft &&  addRight) ? 2 + PAGE_GAP : 1;
     const totalHeight = getHeight([left, right]);
 
+    console.log({ totalHeight });
+
     Promise.all([addLeft, addRight]).then(() => {
       if (cancelled) return;
 
-      const viewRect = new OpenSeadragon.Rect(-0.15, -0.12, totalWidth, totalHeight);
+      const viewRect = new OpenSeadragon.Rect(-0.15, -0.12, totalWidth + 0.3, totalHeight + 0.4);
       viewer.viewport.fitBounds(viewRect, true);
     });
 

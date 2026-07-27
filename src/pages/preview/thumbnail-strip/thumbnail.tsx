@@ -63,7 +63,7 @@ const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
   return (
     <img
       src={props.image.getImageURL(props.minSize || 160)}
-      className={cn('w-full h-full object-contain', props.className)}
+      className={cn('object-contain', props.className)}
       style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}
       alt={props.label} />
   )
@@ -115,7 +115,7 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-white border-r w-full',
+        'relative overflow-hidden bg-white',
         props.className
       )}
       style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}>

@@ -19,13 +19,13 @@ export const ThumbnailStrip = () => {
     return (
       <button
         className={cn(
-          'cursor-pointer bg-white border shadow-xs grid grid-cols-1 gap-0.5 @[160px]:grid-cols-2 w-full rounded-md overflow-hidden',
+          'cursor-pointer bg-white border shadow-xs flex flex-col @[160px]:flex-row items-center justify-center gap-1 p-1.5 w-full rounded-md',
           idx > 0 && 'mt-2',
           isSelected ? 'ring-3 ring-primary bg-primary/5' : 'hover:bg-primary/5'
         )}
         onClick={() => setSelectedView(view)}>
-        {view.left && <Thumbnail canvas={view.left} />}
-        {view.right && <Thumbnail canvas={view.right} />}
+        {view.left && <Thumbnail canvas={view.left} className="h-40 w-auto" />}
+        {view.right && <Thumbnail canvas={view.right} className="h-40 w-auto" />}
       </button>
     )
   }
