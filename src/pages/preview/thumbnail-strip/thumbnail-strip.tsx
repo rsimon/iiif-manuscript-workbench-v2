@@ -8,21 +8,27 @@ import { usePreviewStore } from '../preview-store';
 export const ThumbnailStrip = () => {
   const reconstruction = useAppStore(state => state.reconstruction);
 
-  const setSelected = usePreviewStore(state => state.setSelected);
+  const views = usePreviewStore(state => state.views);
+  const setSelectedView = usePreviewStore(state => state.setSelectedView);
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
   const renderThumbnail = (idx: number) => {
     const canvas = reconstruction[idx];
 
+    const onClick = () => {
+      const view = views.find(({ left, right }) => left === canvas || right === canvas);
+      if (view) setSelectedView(view);
+    }
+
     return (
-      <button 
+      <button
         className={idx > 0 ? 'mt-2' : ''}
-        onClick={() => setSelected(canvas)}>
+        onClick={onClick}>
         <Thumbnail canvas={canvas} />
       </button>
     )
-  } 
+  }
 
   return (
     <div className="flex h-full flex-col bg-white">

@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import type { Viewer as OpenSeadragonViewer } from 'openseadragon';
-import type { CozyImageResource } from 'cozy-iiif';
+import type { ReconstructionCanvas } from '@/types';
 import { usePreviewStore } from '../preview-store';
 import { ViewerControls } from './viewer-controls';
 import { ViewerToolbar } from './viewer-toolbar';
@@ -14,11 +14,61 @@ interface ViewerProps {
 
 }
 
+// Horizontal gap between pages
+const PAGE_GAP = 0;
+
+const getCanvasDimensions = (canvas: ReconstructionCanvas) =>
+  canvas.type === 'original' ? canvas.source.canvas : canvas;
+
+const getCanvasImages = (canvas: ReconstructionCanvas) =>
+  canvas.type === 'original'
+    ? canvas.source.canvas.images
+    : canvas.sources.flatMap(s => s.canvas.images);
+
+/**
+ * Adds the tiled image(s) for one page to the OSD world, scaling the whole
+ * page to exactly 1 world unit tall and offsetting it horizontally by
+ * `xOffset` - so multiple pages can be laid out side by side at the same
+ * visual height regardless of their individual pixel aspect ratios.
+ */
+const addPage = (viewer: OpenSeadragonViewer, canvas: ReconstructionCanvas, xOffset: number) => {
+  const { width: canvasWidth, height: canvasHeight } = getCanvasDimensions(canvas);
+
+  // Uniform pixel-to-world scale factor: canvasHeight maps to 1 world unit.
+  const scale = 1 / canvasHeight;
+  const pageWidth = canvasWidth * scale;
+
+  const images = getCanvasImages(canvas);
+
+  const items = images.length > 0 ? images.map(image => ({
+    tileSource: image.type === 'dynamic' || image.type === 'level0'
+      ? image.serviceUrl
+      : image.url,
+    target: image.target || { x: 0, y: 0, w: canvasWidth, h: canvasHeight }
+  })) : [{
+    tileSource: { type: 'image', url: './empty_placeholder.png' },
+    target: { x: 0, y: 0, w: canvasWidth, h: canvasHeight }
+  }];
+
+  const promise = Promise.all(items.map(({ tileSource, target }) => new Promise<void>(resolve => {
+    viewer.addTiledImage({
+      tileSource,
+      x: xOffset + target.x * scale,
+      y: target.y * scale,
+      width: target.w * scale,
+      success: () => resolve()
+    });
+  }))).then(() => {});
+
+  return { promise, width: pageWidth };
+}
+
 export const Viewer = (props: ViewerProps) => {
-  const selected = usePreviewStore(state => state.selected);
+  const selectedView = usePreviewStore(state => state.selectedView);
+  const { left, right } = selectedView ?? {};
 
   const elementRef = useRef<HTMLDivElement>(null);
-  
+
   const [viewer, setViewer] = useState<OpenSeadragonViewer | null>(null);
 
   useEffect(() => {
@@ -45,75 +95,46 @@ export const Viewer = (props: ViewerProps) => {
     };
   }, []);
 
-useEffect(() => {
-    if (!viewer || !selected) return;
+  useEffect(() => {
+    if (!viewer || !left) return;
 
     // Guards against a superseded fitBounds after fast next/prev navigation
     let cancelled = false;
 
-    const { width: canvasWidth, height: canvasHeight } = 
-      selected.type === 'original' ? selected.source.canvas : selected;
+    const leftPage = addPage(viewer, left, 0);
+    const rightPage = right ? addPage(viewer, right, leftPage.width + PAGE_GAP) : undefined;
 
-    const addImage = (image: CozyImageResource) => new Promise<void>(resolve => {
-      const tileSource = image.type === 'dynamic' || image.type === 'level0'
-        ? image.serviceUrl
-        : image.url;
+    const totalWidth = rightPage ? leftPage.width + PAGE_GAP + rightPage.width : leftPage.width;
 
-      if (image.target) {
-        const x = image.target.x / canvasWidth;
-        const y = image.target.y / canvasWidth;
-        const width = image.target.w / canvasWidth;
+    Promise.all([leftPage.promise, rightPage?.promise]).then(() => {
+      if (cancelled) return;
 
-        viewer.addTiledImage({
-          tileSource,
-          x,
-          y,
-          width,
-          success: () => resolve()
-        });
-      } else {
-        viewer.addTiledImage({ tileSource, success: () => resolve() });
-      }
+      const marginX = 0.15;
+      const marginTop = 0.12;
+      const marginBottom = 0.18;
+
+      const spreadRect = new OpenSeadragon.Rect(
+        -marginX,
+        -marginTop,
+        totalWidth + marginX * 2,
+        1 + marginTop + marginBottom
+      );
+
+      viewer.viewport.fitBounds(spreadRect, true);
     });
-
-    const images = selected.type === 'original' 
-      ? selected.source.canvas.images 
-      : selected.sources.flatMap(s => s.canvas.images);
-
-    if (images.length > 0) {
-      Promise.all(images.map(addImage)).then(() => {
-        if (cancelled) return;
-
-        const aspectRatio = canvasWidth / canvasHeight;
-        const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
-        viewer.viewport.fitBounds(canvasRect, true);
-      });
-    } else {
-      viewer.addTiledImage({
-        tileSource: {
-          type: 'image',
-          url: './empty_placeholder.png'
-        },
-        success: () => {
-          const aspectRatio = 1200 / 1650;
-          const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
-          viewer.viewport.fitBounds(canvasRect, true);
-        }
-      });
-    }
 
     return () => {
       cancelled = true;
       viewer.world.removeAll();
     }
-  }, [viewer, selected]);
+  }, [viewer, left, right]);
 
   return (
     <div className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
       <div ref={elementRef} className="size-full" />
 
-      <ViewerControls 
-        viewer={viewer} 
+      <ViewerControls
+        viewer={viewer}
         isInspectorOpen={props.isInspectorOpen}
         onChangeInspectorOpen={props.onChangeInspectorOpen} />
 

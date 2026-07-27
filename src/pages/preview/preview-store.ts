@@ -2,57 +2,65 @@ import { create } from 'zustand';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 
+export interface PageView {
+
+  left?: ReconstructionCanvas;
+
+  right?: ReconstructionCanvas;
+
+}
+
+const toViews = (reconstruction: ReconstructionCanvas[]): PageView[] => {
+  const views: PageView[] = [];
+  for (let i = 0; i < reconstruction.length; i += 2)
+    views.push({ left: reconstruction[i], right: reconstruction[i + 1] });
+  return views;
+};
+
+const clampIndex = (index: number, views: PageView[]) =>
+  Math.min(Math.max(index, 0), Math.max(0, views.length - 1));
+
 interface PreviewStore {
 
-  selected?: ReconstructionCanvas;
+  views: PageView[];
+
+  selectedView?: PageView;
 
   // Actions: selection
-  setSelected: (selected?: ReconstructionCanvas) => void;
+  setSelectedView: (view: PageView) => void;
   selectNext: () => void;
   selectPrevious: () => void;
 
 }
 
-export const usePreviewStore = create<PreviewStore>()(set => ({
+export const usePreviewStore = create<PreviewStore>()(set => {
+  const initialViews = toViews(useAppStore.getState().reconstruction);
 
-  selected: undefined,
+  return {
 
-  setSelected: selected => set(() => ({ selected })),
+    views: initialViews,
 
-  selectNext: () => set(({ selected }) => {
-    if (!selected) return {};
+    selectedView: initialViews[0],
 
-    const { reconstruction } = useAppStore.getState();
-    const currentIdx = reconstruction.indexOf(selected);
-    if (currentIdx === -1 || currentIdx > reconstruction.length - 2) return {};
+    setSelectedView: view => set({ selectedView: view }),
 
-    return { selected: reconstruction[currentIdx + 1]};
-  }),
+    selectNext: () => set(({ views, selectedView }) => {
+      const index = selectedView ? views.indexOf(selectedView) : -1;
+      return { selectedView: views[clampIndex(index + 1, views)] };
+    }),
 
-  selectPrevious: () => set(({ selected }) => {
-    if (!selected) return {};
+    selectPrevious: () => set(({ views, selectedView }) => {
+      const index = selectedView ? views.indexOf(selectedView) : -1;
+      return { selectedView: views[clampIndex(index - 1, views)] };
+    })
 
-    const { reconstruction } = useAppStore.getState();
-    const currentIdx = reconstruction.indexOf(selected);
-    if (currentIdx === -1 || currentIdx < 1) return {};
+  };
+});
 
-    return { selected: reconstruction[currentIdx - 1] };
-  })
-}));
-
-// Helper: automatically selects the first available canvas
-const autoSelect = (canvases: ReconstructionCanvas[]) => {
-  const { selected, setSelected } = usePreviewStore.getState();
-  if (selected || canvases.length === 0) return;
-  
-  setSelected(canvases[0]);
-}
-
-// Autoselect once after the store hydrates
-autoSelect(useAppStore.getState().reconstruction);
-
-// Autoselect after the store changes from empty reconstruction
 useAppStore.subscribe((state, prevState) => {
-  if (prevState.reconstruction.length === 0 && state.reconstruction.length > 0)
-    autoSelect(state.reconstruction);
+  if (state.reconstruction === prevState.reconstruction) return;
+
+  // If the reconstruction changes, just re-init the selected view
+  const views = toViews(state.reconstruction);
+  usePreviewStore.setState({ views, selectedView: views[0] });
 });
