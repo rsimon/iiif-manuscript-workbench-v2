@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'wouter';
 import { IconUpload } from '@tabler/icons-react';
 import { GroupedVirtuoso } from 'react-virtuoso';
 import type { CozyCanvas } from 'cozy-iiif';
@@ -7,18 +8,17 @@ import { Button } from '@/shadcn/button';
 import { ScrollArea } from '@/shadcn/scroll-area';
 import { TooltipProvider } from '@/shadcn/tooltip';
 import { cn } from '@/shadcn/utils';
-import { ImportManifestDialog } from '@/dialogs/import-manifest';
+import { ImportSourceDialog } from '@/dialogs/import-source';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
 import { EmptySourceTree } from './empty-source-tree';
-import { CanvasTreeItem, SourceTreeItem } from './source-tree-item';
+import { CanvasTreeItem, ManifestTreeItem } from './source-tree-item';
 import { SourceTreeToolbar } from './source-tree-toolbar';
 import { useSourceNavigation } from '../use-source-navigation';
 
 export const SourceTree = () => {
   const sources = useAppStore(state => state.sources);
 
-  const reconstruction = useAppStore(state => state.reconstruction);
   const addCanvas = useAppStore(state => state.addCanvasToReconstruction);
   const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
 
@@ -28,7 +28,7 @@ export const SourceTree = () => {
   const selection = useSourcesStore(state => state.selection);
   const setSelection = useSourcesStore(state => state.setSelection);
 
-  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
@@ -66,7 +66,7 @@ export const SourceTree = () => {
   const renderManifestGroup = (idx: number) => {
     const source = sources[idx];
     return (
-      <SourceTreeItem
+      <ManifestTreeItem
         source={source}
         isCollapsed={collapsed.has(source.manifest.id)}
         isSelected={selection?.manifestId === source.manifest.id && !selection?.canvasId}
@@ -99,7 +99,7 @@ export const SourceTree = () => {
 
       {sources.length === 0 ? (
         <EmptySourceTree
-          onImport={() => setShowImportDialog(true)} />
+          onImport={() => setShowImportSourceDialog(true)} />
       ) : (
         <>
           <ScrollArea className="grow min-h-0" viewportRef={setViewportEl}>
@@ -120,31 +120,33 @@ export const SourceTree = () => {
           </ScrollArea>
 
           <div className="p-2.5 border-t">
-            <Button 
-              disabled={reconstruction.length === 0}
-              className="w-full font-normal"
-              size="lg"
-              onClick={() => setShowImportDialog(true)}>
-              Continue to Reconstruction 
+            <Link 
+              href="/reconstruction"
+              className="cursor-pointer flex items-center justify-center rounded-md border border-transparent text-sm w-full whitespace-nowrap transition-all 
+                outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px 
+                disabled:pointer-events-none disabled:opacity-30 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 
+                [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 
+                h-10 gap-1.5 px-2.5">
+              Continue to Reconstruction
               <Badge 
                 className="bg-white/25">
                 {sourceCanvasesInReconstruction}
               </Badge>
-            </Button>
+            </Link>
 
             <Button 
               className="w-full font-normal mt-1.5"
               variant="outline"
-              onClick={() => setShowImportDialog(true)}>
+              onClick={() => setShowImportSourceDialog(true)}>
               <IconUpload /> Import IIIF
             </Button>
           </div>
         </>
       )}
 
-      <ImportManifestDialog 
-        open={showImportDialog} 
-        onOpenChange={setShowImportDialog} />
+      <ImportSourceDialog 
+        open={showImportSourceDialog} 
+        onOpenChange={setShowImportSourceDialog} />
     </div>
 
   )

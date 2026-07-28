@@ -1,46 +1,34 @@
-import type { ButtonProps } from '@base-ui/react';
+import { useEffect, useState } from 'react';
+import { Toggle as TogglePrimitive } from '@base-ui/react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
+import { ViewerPaginationControl } from '@/components/viewer-pagination-control';
+import { PhysicalDimensionsDialog, useMeasurement } from '@/dialogs/physical-dimensions';
 import { Button } from '@/shadcn/button';
+import { Toggle } from '@/shadcn/toggle';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { Separator } from '@/shadcn/separator';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
-import { 
-  IconCheck, 
-  IconChevronLeft, 
-  IconChevronRight, 
-  IconDimensions, 
-  IconFilter, 
-  IconPlus, 
-  IconRulerMeasure 
-} from '@tabler/icons-react';
+import { IconCheck, IconDimensions, IconPlus, IconRulerMeasure } from '@tabler/icons-react';
 
-interface SourcePreviewToolbarButtonProps extends ButtonProps {
-
-  tooltip: string;
-
-}
-
-const SourcePreviewToolbarButton = (props: SourcePreviewToolbarButtonProps) => {
+const SourcePreviewToolbarToggle = (props: TogglePrimitive.Props & { tooltip: string }) => {
   const { children, ...rest } = props;
 
   return (
     <Tooltip>
       <TooltipTrigger
         render={
-          <Button
-            variant="ghost"
-            className="rounded-full"
+          <Toggle
+            className="rounded-full disabled:text-muted-foreground/80"
             {...rest}>
             {children}
-          </Button>
+          </Toggle>
         }/>
       <TooltipContent>
         {props.tooltip}
       </TooltipContent>
     </Tooltip>
   )
-
 }
 
 interface SourcePreviewToolbarProps {
@@ -64,64 +52,93 @@ interface SourcePreviewToolbarProps {
 export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
   const isFiltered = useSourcesStore(state => state.showInReconstructionOnly);
 
-  const hasNext = props.selectedPageIndex < props.totalPageCount - 1;
-  const hasPrev = props.selectedPageIndex > 0;
+  const size = useAppStore(state => state.sizes.get(props.selectedCanvas.id));
+  const setSize = useAppStore(state => state.setPhysicalSize);
 
   const addToReconstruction = useAppStore(state => state.addCanvasToReconstruction);
   const removeFromReconstruction = useAppStore(state => state.removeCanvasFromReconstruction);
+
+  const [showDimensionsDialog, setShowDimensionsDialog] = useState(false);
+
+  const { setEnableTapeMeasure } = useMeasurement();
+
+  const [isTapeMeasurePressed, setIsTapeMeasurePressed] = useState(false);
+
+  useEffect(() => setIsTapeMeasurePressed(false), [props.selectedCanvas])
+
+  const onShowDimensionsDialog = (open: boolean) => {
+    setIsTapeMeasurePressed(false);
+    setShowDimensionsDialog(open);
+  }
+
+  const onPressTapeMeasure = (pressed: boolean) => {
+    setIsTapeMeasurePressed(pressed);
+    setEnableTapeMeasure(pressed, { 
+      showLabel: true,
+      canvasSize: size
+    })
+  }
+
+  useEffect(() => {
+    if (!isTapeMeasurePressed) return;
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape')
+        onPressTapeMeasure(false);
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', onKeyDown);
+    }
+  }, [isTapeMeasurePressed]);
 
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
       <div className="bg-white flex items-center gap-1 min-w-20 rounded-full p-1 pointer-events-auto
         ring-1 ring-black/5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.10)]">
-
-        <div className="flex items-center gap-0.5">
-          <Button
-            disabled={!hasPrev}
-            variant="ghost"
-            className="rounded-full"
-            onClick={props.onPrevious}>
-            <IconChevronLeft />
-          </Button>
-
-          <div className="text-xs flex gap-1.5 items-center">
-            <span>{props.selectedCanvas.getLabel()}</span>
-            {isFiltered ? (
-              <div className="ml-0.5 flex items-center gap-1 bg-accent py-1 px-2 pr-2.5 rounded-full text-primary">
-                <IconFilter className="size-3.5" /> 
-                <span>{props.selectedPageIndex + 1}/{props.totalPageCount}</span>
-              </div>
-            ) : (
-              <span className="text-muted-foreground/80 space-x-1.5"> 
-                <span>·</span> 
-                <span className="tracking-wider">
-                  {props.selectedPageIndex + 1}/{props.totalPageCount}
-                </span>
-              </span>
-            )}
-          </div>
-
-          <Button
-            disabled={!hasNext}
-            variant="ghost"
-            className="rounded-full"
-            onClick={props.onNext}>
-            <IconChevronRight />
-          </Button>
-        </div>
+        <ViewerPaginationControl 
+          displayAsFiltered={isFiltered}
+          selectedPageIndex={props.selectedPageIndex}
+          selectedPageLabel={props.selectedCanvas.getLabel()}
+          totalPageCount={props.totalPageCount}
+          onNext={props.onNext}
+          onPrevious={props.onPrevious} />
 
         <Separator orientation="vertical" />
 
-        <Button
-          variant="ghost"
-          className="rounded-full font-normal text-xs text-muted-foreground">
-          <IconDimensions /> 215 x 280 mm
-        </Button>
+        <PhysicalDimensionsDialog
+          canvasLabel={props.selectedCanvas.getLabel()}
+          canvasWidth={props.selectedCanvas.width}
+          canvasHeight={props.selectedCanvas.height}
+          physicalSize={size}
+          open={showDimensionsDialog}
+          onOpenChange={onShowDimensionsDialog}
+          onSizeChanged={size => setSize(props.selectedCanvas.id, size)}>
+          {size ? (
+            <Button
+              variant="ghost"
+              className="rounded-full font-normal text-xs text-muted-foreground">
+              <IconDimensions /> 
+              <span>{size.width} x {size.height} {size.unit}</span>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="rounded-full border-primary/50 border-dashed font-normal text-primary hover:text-primary aria-expanded:text-primary">
+              <IconPlus /> Set dimensions
+            </Button>
+          )}
+        </PhysicalDimensionsDialog>
 
-        <SourcePreviewToolbarButton
-          tooltip="Measure">
+        <SourcePreviewToolbarToggle
+          disabled={!size || showDimensionsDialog}
+          tooltip="Measure"
+          pressed={isTapeMeasurePressed}
+          onPressedChange={onPressTapeMeasure}>
           <IconRulerMeasure className="size-4.5" />
-        </SourcePreviewToolbarButton>
+        </SourcePreviewToolbarToggle>
 
         <Separator orientation="vertical" />
 

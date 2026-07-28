@@ -1,1 +1,1 @@
-export * from './canvas-composer';
+export * from './composer';

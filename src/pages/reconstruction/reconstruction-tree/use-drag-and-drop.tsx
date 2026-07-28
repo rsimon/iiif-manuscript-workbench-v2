@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { flushSync } from 'react-dom';
 import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/tree-item';
@@ -93,34 +92,26 @@ export const useDragAndDrop = () => {
       if (c.id !== targetId) return c;
   
       return c.type === 'composite'
-        ? { ...c, sources: [...c.sources, dragged] }
+        ? { 
+            ...c, 
+            sources: [...c.sources, dragged] 
+          }
         : {
             type: 'composite' as const,
             id: `${baseURI}/${crypto.randomUUID()}`,
-            label: `Leaf ${idx + 1}`,
-            sources: [c.source, dragged]
+            label: `Canvas ${idx + 1}`,
+            sources: [c.source, dragged],
+            width: c.source.canvas.width,
+            height: c.source.canvas.height
           };
     });
   }, [take]);
-
 
   return {
     extractChild,
     mergeInto,
     reorderRoot
   }
-
-}
-
-export const withViewTransition = (update: () => void) => {
-  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  if (!('startViewTransition' in document) || reducedMotion) {
-    update();
-    return;
-  }
-
-  document.startViewTransition(() => flushSync(update));
 }
 
 export const viewTransitionName = (id: string) =>

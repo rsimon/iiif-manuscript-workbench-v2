@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import { IconLoader2, IconPhotoPlus, IconStack2 } from '@tabler/icons-react';
 import { IconAlertCircle } from '@tabler/icons-react';
 import pThrottle from 'p-throttle';
+import { useLocation } from 'wouter';
 import { Cozy, type CozyCollectionManifestItem } from 'cozy-iiif';
 import { Alert, AlertDescription } from '@/shadcn/alert';
 import { Button } from '@/shadcn/button';
@@ -22,7 +23,7 @@ const throttledParseURL = pThrottle({ limit: 2, interval: 1000 })(
   (url: string) => Cozy.parseURL(url)
 );
 
-interface ImportManifestDialogProps {
+interface ImportSourceDialogProps {
 
   open: boolean;
 
@@ -36,7 +37,9 @@ type DialogStep =
   | { phase: 'confirm'; manifests: CozyCollectionManifestItem[] }
   | { phase: 'bulk-import'; progress: number; total: number; current?: string };
 
-export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
+export const ImportSourceDialog = (props: ImportSourceDialogProps) => {
+  const [location, navigate] = useLocation();
+
   const addSource = useAppStore(state => state.addSource);
 
   const [url, setUrl] = useState('');
@@ -44,6 +47,11 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
   const [error, setError] = useState<string | null>(null);
 
   const abortRef = useRef<AbortController | null>(null);
+
+  const goToSourcesTab = () => {
+    if (location !== '/sources')
+      navigate("/sources");
+  }
 
   const resetDialog = () => {
     abortRef.current?.abort();
@@ -81,6 +89,9 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
       if (result.type === 'manifest') {
         addSource(url, result.resource);
         resetDialog();
+
+        goToSourcesTab();
+
         props.onOpenChange(false);
         return;
       } 
@@ -108,6 +119,8 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
   const onConfirmCollectionImport = () => {
     if (step.phase !== 'confirm') return;
 
+    const signal = abortRef.current?.signal;
+
     const total = step.manifests.length;
 
     let progress = 1;
@@ -116,22 +129,32 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
     setStep({ phase: 'bulk-import', progress, total, current });
 
     step.manifests.reduce<Promise<void>>((p, manifest) => p.then(() => {
+      if (signal?.aborted) return;
+
       current = manifest.getLabel();
 
       setStep({ phase: 'bulk-import', progress, total, current });
       return throttledParseURL(manifest.id).then(result => {
+        if (signal?.aborted) return;
+
         if (result.type === 'manifest') {
           addSource(manifest.id, result.resource);
         } else {
-          throw new Error('Not a valid IIIF presentation manifest'); 
+          throw new Error('Not a valid IIIF presentation manifest');
         }
 
         progress += 1;
       });
     }), Promise.resolve()).then(() => {
+      if (signal?.aborted) return;
+
+      goToSourcesTab();
+      
       resetDialog();
       props.onOpenChange(false);
     }).catch(error => {
+      if (signal?.aborted) return;
+
       setError(error.message || 'Failed to import collection');
     });
   }
@@ -235,16 +258,19 @@ export const ImportManifestDialog = (props: ImportManifestDialogProps) => {
           {step.phase === 'input' ? (
             <>
               <Button
-                variant="outline"
+                variant="ghost"
+                className="tracking-wide"
                 onClick={() => props.onOpenChange(false)}>
                 Cancel
               </Button>
               
-              <Button onClick={onImport}>
+              <Button 
+                className="tracking-wide"
+                onClick={onImport}>
                 Import
               </Button>
             </>
-          ) : step.phase === 'crawling' ? (
+          ) : step.phase === 'crawling' || step.phase === 'bulk-import' ? (
             <Button
               variant="outline"
               onClick={onBack}>

@@ -1,7 +1,11 @@
-import { IconDownload, IconFolderOpen, IconRestore, IconUpload } from '@tabler/icons-react';
+import { useState } from 'react';
+import { Construction } from 'lucide-react';
+import { IconDownload, IconRestore, IconUpload } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 import { useAppStore } from '@/store/app-store';
 import { useConfirm } from '@/dialogs/confirm';
+import { ExportReconstructionDialog } from '@/dialogs/export-reconstruction';
+import { ImportSourceDialog } from '@/dialogs/import-source';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +16,9 @@ import {
 
 export const Project = () => {
   const reset  = useAppStore(state => state.resetAll);
+
+  const [showExportReconstructionDialog, setShowExportReconstructionDialog] = useState(false);
+  const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
 
   const confirm = useConfirm();
 
@@ -27,40 +34,57 @@ export const Project = () => {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={
-        <Button
-          variant="ghost"
-          className="font-normal">
-          Project
-        </Button>
-      } />
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger render={
+          <Button
+            variant="ghost"
+            className="font-normal">
+            Project
+          </Button>
+        } />
 
-      <DropdownMenuContent className="min-w-58">
-        <DropdownMenuItem className="gap-2.5">
-          <IconFolderOpen /> Open reconstruction...
-        </DropdownMenuItem>
+        <DropdownMenuContent className="min-w-58">
+          <DropdownMenuItem 
+            disabled
+            className="gap-2.5">
+            <Construction />
+            {/* <IconFolderOpen /> */} Open reconstruction...
+          </DropdownMenuItem>
 
-        <DropdownMenuItem className="gap-2.5">
-          <IconDownload /> Export reconstruction...
-        </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="gap-2.5"
+            onClick={() => setShowExportReconstructionDialog(true)}>
+            <IconDownload /> Export reconstruction...
+          </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
+          <DropdownMenuSeparator />
 
-        <DropdownMenuItem className="gap-2.5">
-          <IconUpload /> Import IIIF source...
-        </DropdownMenuItem>
+          <DropdownMenuItem 
+            className="gap-2.5"
+            onClick={() => setShowImportSourceDialog(true)}>
+            <IconUpload /> Import IIIF source...
+          </DropdownMenuItem>
 
-        <DropdownMenuSeparator />
+          <DropdownMenuSeparator />
 
-        <DropdownMenuItem
-          className="gap-2.5"
-          variant="destructive"
-          onClick={onReset}>
-          <IconRestore /> Reset project
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem
+            className="gap-2.5"
+            variant="destructive"
+            onClick={onReset}>
+            <IconRestore /> Reset project
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <ExportReconstructionDialog
+        open={showExportReconstructionDialog}
+        onOpenChange={setShowExportReconstructionDialog} />
+
+      <ImportSourceDialog
+        open={showImportSourceDialog}
+        onOpenChange={setShowImportSourceDialog} />
+    </>
   )
 
 }

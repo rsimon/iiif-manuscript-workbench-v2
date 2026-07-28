@@ -1,10 +1,13 @@
-import { cn, withStopPropagation } from '@/shadcn/utils';
+import { cn, withStopPropagation, withViewTransition } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
+import type { ReconstructionCanvas } from '@/types';
 import {
   IconArrowBarToDown,
   IconArrowBarToUp,
+  IconArrowDown,
+  IconArrowUp,
   IconCircleMinus,
   IconDots,
-  IconEye,
   IconPencil
 } from '@tabler/icons-react';
 import {
@@ -19,9 +22,25 @@ interface ReconstructionTreeItemProps {
 
   className?: string;
 
+  item: ReconstructionCanvas;
+
+  onRenameCanvas(): void;
+
 }
 
 export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps) => {
+
+  const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
+  const moveCanvas = useAppStore(state => state.moveCanvas);
+
+  const index = useAppStore(state => state.reconstruction.findIndex(r => r.id === props.item.id));
+  const total = useAppStore(state => state.reconstruction.length);
+
+  const isFirst = index <= 0;
+  const isLast = index === total - 1;
+
+  const onMove = (direction: 'up' | 'down' | 'top' | 'bottom') =>
+    withViewTransition(() => moveCanvas(props.item.id, direction));
 
   return (
     <DropdownMenu>
@@ -34,28 +53,44 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
         <IconDots className="size-4" />
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent>
-        <DropdownMenuItem>
-          <IconEye /> Open in composer
-        </DropdownMenuItem>
-
-        <DropdownMenuItem>
-          <IconPencil /> Rename leaf
+      <DropdownMenuContent
+        onClick={withStopPropagation()}>
+        <DropdownMenuItem
+          onClick={props.onRenameCanvas}>
+          <IconPencil /> Rename canvas
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={isFirst}
+          onClick={() => onMove('top')}>
           <IconArrowBarToUp /> Move to top
         </DropdownMenuItem>
 
-        <DropdownMenuItem>
+        <DropdownMenuItem
+          disabled={isFirst}
+          onClick={() => onMove('up')}>
+          <IconArrowUp /> Move up
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={isLast}
+          onClick={() => onMove('down')}>
+          <IconArrowDown /> Move down
+        </DropdownMenuItem>
+
+        <DropdownMenuItem
+          disabled={isLast}
+          onClick={() => onMove('bottom')}>
           <IconArrowBarToDown /> Move to bottom
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem variant="destructive">
+        <DropdownMenuItem
+          variant="destructive"
+          onClick={() => removeCanvas(props.item.id)}>
           <IconCircleMinus /> Remove
         </DropdownMenuItem>
       </DropdownMenuContent>

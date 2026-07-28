@@ -1,9 +1,11 @@
 import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
-import { SourcePreviewControls } from './source-preview-controls';
 import type { CozyImageResource } from 'cozy-iiif';
-import { SourcePreviewToolbar } from './source-preview-toolbar';
+import { MeasurementTool } from '@/dialogs/physical-dimensions';
 import { useSourceNavigation } from '../use-source-navigation';
+import { SourcePreviewControls } from './source-preview-controls';
+import { SourcePreviewToolbar } from './source-preview-toolbar';
+import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 
 const ViewerContext = createContext<OpenSeadragon.Viewer | null>(null);
 
@@ -63,12 +65,6 @@ export const SourcePreview = (props: SourcePreviewProps) => {
       gestureSettingsMouse: {
         clickToZoom: false,
         dblClickToZoom: true
-      },
-      viewportMargins: {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20
       }
     });
 
@@ -83,8 +79,11 @@ export const SourcePreview = (props: SourcePreviewProps) => {
   useEffect(() => {
     if (!viewer || !selectedCanvas) return;
 
+    // Guards against a superseded fitBounds after fast next/prev navigation
+    let cancelled = false;
+
     const addImage = (image: CozyImageResource) => new Promise<void>(resolve => {
-      const tileSource = image.type === 'dynamic' || image.type === 'level0' 
+      const tileSource = image.type === 'dynamic' || image.type === 'level0'
         ? image.serviceUrl
         : image.url;
 
@@ -93,7 +92,7 @@ export const SourcePreview = (props: SourcePreviewProps) => {
         const y = image.target.y / selectedCanvas!.width;
         const width = image.target.w / selectedCanvas!.width;
 
-        viewer.addTiledImage({ 
+        viewer.addTiledImage({
           tileSource,
           x,
           y,
@@ -106,12 +105,15 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     });
 
     Promise.all(selectedCanvas.images.map(addImage)).then(() => {
+      if (cancelled) return;
+
       const aspectRatio = selectedCanvas!.width / selectedCanvas!.height;
       const canvasRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3, 1.3 / aspectRatio);
       viewer.viewport.fitBounds(canvasRect, true);
     });
 
     return () => {
+      cancelled = true;
       viewer.world.removeAll();
     }
   }, [viewer, selectedCanvas]);
@@ -120,11 +122,17 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     <ViewerContext.Provider value={viewer}>
       <div 
         className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-        <div ref={elementRef} className="size-full" />
+        <div ref={elementRef} className="size-full">
+          <ViewerSvgOverlay
+            viewer={viewer}
+            topLayer={(
+              <MeasurementTool viewer={viewer} />
+            )} />
+        </div>
 
         <SourcePreviewControls 
           isInspectorOpen={props.isInspectorOpen} 
-          setInspectorOpen={props.setInspectorOpen} />
+          onChangeInspectorOpen={props.setInspectorOpen} />
 
         {(selectedManifest && selectedCanvas) && (
           <SourcePreviewToolbar 

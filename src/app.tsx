@@ -23,9 +23,9 @@ export const App = () => {
             <Route path="/reconstruction" component={Reconstruction} />
             <Route path="/preview" component={Preview} />
           </div>
-        </Router>
 
-        <Splash />
+          <Splash />
+        </Router>
       </ConfirmDialogProvider>
     </TooltipProvider>
   )

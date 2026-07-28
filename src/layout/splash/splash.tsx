@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { IconUpload } from '@tabler/icons-react';
+import { useConfirm } from '@/dialogs/confirm';
+import { ImportSourceDialog } from '@/dialogs/import-source';
 import { Button } from '@/shadcn/button';
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '@/shadcn/dialog';
 import { Checkbox } from '@/shadcn/checkbox';
@@ -13,7 +15,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from '@/shadcn/carousel';
-import { ImportManifestDialog } from '@/dialogs/import-manifest';
 
 const SPLASH_CONTENT = [{
   title: '1. Select Sources',
@@ -33,12 +34,27 @@ export const Splash = () => {
   const [open, setOpen] = useState(!dismissed);
 
   const hasSources = useAppStore(state => state.sources.length > 0);
+  const reset = useAppStore(state => state.resetAll);
 
-  const [showImportDialog, setShowImportDialog] = useState(false);
+  const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
+
+  const confirm = useConfirm();
 
   const onImportFirstSource = () => {
-    setShowImportDialog(true);
+    setShowImportSourceDialog(true);
     setOpen(false);
+  }
+
+  const onStartNewReconstruction = () => {
+    confirm({
+      title: 'Start from scratch?',
+      description: 'This will remove all currently imported sources and delete the current reconstruction. This action cannot be undone.',
+      confirmLabel: 'Start new project',
+      variant: 'destructive',
+    }).then(confirmed => {
+      if (confirmed) reset();
+      setOpen(false);
+    });
   }
 
   return (
@@ -93,7 +109,8 @@ export const Splash = () => {
               <Button
                 size="lg"
                 variant="link"
-                className="h-11 grow">
+                className="h-11 grow"
+                onClick={onStartNewReconstruction}>
                 Start a new reconstruction
               </Button>
             </div>
@@ -117,9 +134,9 @@ export const Splash = () => {
         </DialogContent>
       </Dialog>
 
-      <ImportManifestDialog 
-        open={showImportDialog} 
-        onOpenChange={setShowImportDialog} />
+      <ImportSourceDialog 
+        open={showImportSourceDialog} 
+        onOpenChange={setShowImportSourceDialog} />
     </>
   )
 
