@@ -16,7 +16,7 @@ interface ViewerControlsProps {
 export const ViewerControls = (props: ViewerControlsProps) => {
 
   return (
-    <div className="absolute top-3 right-3 flex gap-1.5">
+    <div className="absolute top-3 right-3 flex gap-1.5 z-50">
       <ViewerZoomControls viewer={props.viewer} />
 
       <Button

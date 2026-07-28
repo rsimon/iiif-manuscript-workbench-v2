@@ -1,21 +1,72 @@
-import { MetadataInspector } from '@/components/metadata-inspector';
+import { ScrollArea } from '@/shadcn/scroll-area';
+import type { ReconstructionCanvas } from '@/types';
 import { usePreviewStore } from '../preview-store';
+import { MetadataSection } from '@/components/metadata-inspector';
+import { IconAlignBoxRightTop, IconSquare } from '@tabler/icons-react';
+
+const getSources = (canvas?: ReconstructionCanvas) => {
+  if (!canvas) return [];
+  return canvas.type === 'original' ? [canvas.source] : canvas.sources;
+}
 
 export const PreviewMetadata = () => {
-  const selectedView = usePreviewStore(state => state.selectedView);
+  const view = usePreviewStore(state => state.selectedView);
 
-  // TODO show both pages
-  const selected = selectedView?.left;
+  const leftSources = getSources(view?.left);
+  const rightSources = getSources(view?.right);
 
-  const sources = selected ? selected.type === 'original' ? [selected.source] : selected.sources : [];
-  const flattenedCanvasMetadata = sources.flatMap(s => s.canvas.getMetadata());
+  return view ? (
+    <div className="h-full flex flex-col">
+      <ScrollArea className="grow min-h-0">
+        <div>
+          {view.left && (
+            <div className="border-b p-3.5">
+              <div className="pb-2">
+                <h2 className="text-xs uppercase text-muted-foreground flex gap-1 items-center">
+                  <div className="flex gap-0 items-center">
+                    <IconAlignBoxRightTop className="size-4.5" /> 
+                    <IconSquare className="size-4.5 text-muted-foreground/40" /> 
+                  </div>
+                  Left
+                </h2>
+              </div>
 
-  return selected ? (
-    <MetadataInspector 
-      canvasLabel={selected.label} 
-      canvasMetadata={flattenedCanvasMetadata} 
-      manifestLabel="Reconstruction" 
-      manifestMetadata={[]} />
+              {leftSources.map(source => (
+                <div key={source.canvas.id}>
+                  <MetadataSection
+                    label={source.canvas.getLabel()}
+                    metadata={source.canvas.getMetadata()} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div>
+          {view.right && (
+            <div className="border-b p-3.5">
+              <div className="pb-2">
+                <h2 className="text-xs uppercase text-muted-foreground flex gap-1 items-center">
+                  <div className="flex gap-0 items-center">
+                    <IconSquare className="size-4.5 text-muted-foreground/40"  /> 
+                    <IconAlignBoxRightTop className="size-4.5" />
+                  </div>
+                  Right
+                </h2>
+              </div>
+
+              {rightSources.map(source => (
+                <div key={source.canvas.id}>
+                  <MetadataSection
+                    label={source.canvas.getLabel()}
+                    metadata={source.canvas.getMetadata()} />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </ScrollArea>
+    </div>
   ) : null;
 
 }
