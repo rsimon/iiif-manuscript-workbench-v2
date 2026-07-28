@@ -2,6 +2,8 @@ import type { CozyImageResource } from 'cozy-iiif';
 import { cn } from '@/shadcn/utils';
 import type { ReconstructionCanvas } from '@/types';
 
+const THUMBNAIL_SIZING = 'w-full h-auto @[160px]:w-auto @[160px]:max-w-[50%] @[160px]:min-w-0 @[160px]:flex-1';
+
 interface ThumbnailProps {
 
   canvas: ReconstructionCanvas;
@@ -23,10 +25,12 @@ export const Thumbnail = (props: ThumbnailProps) => {
   const isPrimitive = images.length === 1 && !images[0].target;
 
   return isPrimitive ? (
-    <PrimitiveImageThumbnail 
+    <PrimitiveImageThumbnail
       image={images[0]}
-      label={canvas.label} 
-      className={props.className} 
+      label={canvas.label}
+      canvasWidth={canvasWidth}
+      canvasHeight={canvasHeight}
+      className={props.className}
       minSize={props.minSize} />
   ) : (
     <CompositeImageThumbnail 
@@ -42,6 +46,10 @@ export const Thumbnail = (props: ThumbnailProps) => {
 
 interface PrimitiveImageThumbnailProps {
 
+  canvasHeight: number;
+
+  canvasWidth: number;
+
   className?: string;
 
   image: CozyImageResource;
@@ -56,10 +64,10 @@ const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
 
   return (
     <img
-      src={props.image.getImageURL(props.minSize || 80)}
-      className={cn('w-9 h-11 object-contain', props.className)} 
-      alt={props.label}
-      loading="lazy" />
+      src={props.image.getImageURL(props.minSize || 320)}
+      className={cn(THUMBNAIL_SIZING, 'rounded ring ring-foreground/10 shadow-xs object-cover', props.className)}
+      style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}
+      alt={props.label} />
   )
 
 }
@@ -81,7 +89,7 @@ interface CompositeImageThumbnailProps {
 }
 
 const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
-  const { canvasWidth, canvasHeight, label, minSize = 80 } = props;
+  const { canvasWidth, canvasHeight, label, minSize = 160 } = props;
 
   const renderImage = (image: CozyImageResource, idx: number) => {
     const target = image.target || {
@@ -96,8 +104,7 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
         key={idx}
         src={image.getImageURL(minSize)}
         alt={`${label}: image ${idx + 1}`}
-        loading="lazy"
-        className="absolute object-fill"
+        className="absolute object-fit"
         style={{
           left: `${(target.x / canvasWidth) * 100}%`,
           top: `${(target.y / canvasHeight) * 100}%`,
@@ -110,7 +117,8 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-neutral-100 w-9 h-11', 
+        THUMBNAIL_SIZING,
+        'relative overflow-hidden bg-white rounded ring ring-foreground/10 shadow-xs',
         props.className
       )}
       style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}>
