@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { IconDownload, IconFolderOpen, IconRestore, IconUpload } from '@tabler/icons-react';
+import { Construction } from 'lucide-react';
+import { IconDownload, IconRestore, IconUpload } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 import { useAppStore } from '@/store/app-store';
 import { useConfirm } from '@/dialogs/confirm';
@@ -44,8 +45,11 @@ export const Project = () => {
         } />
 
         <DropdownMenuContent className="min-w-58">
-          <DropdownMenuItem className="gap-2.5">
-            <IconFolderOpen /> Open reconstruction...
+          <DropdownMenuItem 
+            disabled
+            className="gap-2.5">
+            <Construction />
+            {/* <IconFolderOpen /> */} Open reconstruction...
           </DropdownMenuItem>
 
           <DropdownMenuItem 
