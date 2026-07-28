@@ -10,5 +10,25 @@ export default defineConfig({
     alias: {
       '@': path.resolve(__dirname, './src')
     }
+  },
+  build: {
+    rolldownOptions: {
+      output: {
+        codeSplitting: {
+          groups: [
+            {
+              name: 'openseadragon',
+              test: /node_modules[\\/]openseadragon/,
+              priority: 20
+            },
+            {
+              name: 'ui-vendor',
+              test: /node_modules[\\/](react(-dom)?|scheduler|@base-ui)[\\/]?/,
+              priority: 20
+            }
+          ]
+        }
+      }
+    }
   }
 });
