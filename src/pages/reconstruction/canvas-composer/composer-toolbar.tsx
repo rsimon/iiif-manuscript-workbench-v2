@@ -1,10 +1,11 @@
-import { Button } from '@/shadcn/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import type { ButtonProps } from '@base-ui/react';
-import { IconMaximize, IconStackPop, IconStackPush } from '@tabler/icons-react';
+import { IconArrowBackUp, IconArrowForwardUp, IconMaximize, IconStackPop, IconStackPush } from '@tabler/icons-react';
+import { Button } from '@/shadcn/button';
+import { Separator } from '@/shadcn/separator';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { useAppStore } from '@/store/app-store';
 import { useComposerStore } from './composer-store';
-import { getCanvasSize } from './composer-utils';
+import { getFillSize, isSelectionFullSize } from './composer-utils';
 
 const ComposerToolbarButton = (props: ButtonProps & { tooltip: string }) => {
   const { children, ...rest } = props;
@@ -29,28 +30,28 @@ const ComposerToolbarButton = (props: ButtonProps & { tooltip: string }) => {
 
 export const ComposerToolbar = () => {
   const selectedImage = useComposerStore(state => state.selectedImage);
+
   const updateImage = useComposerStore(state => state.updateImage);
+  const setIsDragging = useComposerStore(state => state.setIsDraggingImage);
+
+  const reconstruction = useAppStore(state => state.reconstruction);
+
+  const isFullSize = selectedImage ? isSelectionFullSize(selectedImage, reconstruction) : false;
 
   const onFillCanvas = () => {
     if (!selectedImage) return;
 
-    const canvas = useAppStore.getState().reconstruction
-      .find(r => r.id === selectedImage?.item.reconstructionCanvasId);
-
+    const canvas = reconstruction.find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return;
 
-    const [canvasWidth, canvasHeight] = getCanvasSize(canvas);
-
-    const aspect = selectedImage.image.resource.height / selectedImage.image.resource.width;
-    const width = Math.min(canvasWidth, canvasHeight / aspect);
-    const height = width * aspect;
+    setIsDragging(true);
 
     updateImage(selectedImage.item.reconstructionCanvasId, {
       ...selectedImage.image,
-      x: (canvasWidth - width) / 2,
-      y: (canvasHeight - height) / 2,
-      width
+      ...getFillSize(selectedImage.image, canvas)
     });
+
+    requestAnimationFrame(() => setIsDragging(false));
   }
 
   return (
@@ -70,10 +71,24 @@ export const ComposerToolbar = () => {
         </ComposerToolbarButton>
 
         <ComposerToolbarButton
-          disabled={!selectedImage}
+          disabled={!selectedImage || isFullSize}
           tooltip="Adjust image size to fill canvas"
           onClick={onFillCanvas}>
           <IconMaximize className="size-4.5" />
+        </ComposerToolbarButton>
+
+        <Separator orientation="vertical" />
+
+        <ComposerToolbarButton
+          disabled
+          tooltip="Undo">
+          <IconArrowBackUp className="size-4.5" />
+        </ComposerToolbarButton>
+
+        <ComposerToolbarButton
+          disabled
+          tooltip="Redo">
+          <IconArrowForwardUp className="size-4.5" />
         </ComposerToolbarButton>
       </div>
     </div>

@@ -55,6 +55,40 @@ export const getCanvasSize = (canvas: ReconstructionCanvas): [number, number] =>
     ? [canvas.source.canvas.width, canvas.source.canvas.height]
     : [canvas.width, canvas.height];
 
+// x/y/width an image must have to fully fit the canvas
+export const getFillSize = (
+  image: DraggableImage,
+  canvas: ReconstructionCanvas
+): { x: number; y: number; width: number } => {
+  const [canvasWidth, canvasHeight] = getCanvasSize(canvas);
+
+  const aspect = image.resource.height / image.resource.width;
+  const width = Math.min(canvasWidth, canvasHeight / aspect);
+  const height = width * aspect;
+
+  return {
+    x: (canvasWidth - width) / 2,
+    y: (canvasHeight - height) / 2,
+    width
+  };
+}
+
+export const isSelectionFullSize = (
+  selection: DraggableImageSelection,
+  reconstruction: ReconstructionCanvas[]
+): boolean => {
+  const FILL_SIZE_EPSILON = 1e-6;
+
+  const canvas = reconstruction.find(r => r.id === selection.item.reconstructionCanvasId);
+  if (!canvas) return false;
+
+  const fill = getFillSize(selection.image, canvas);
+
+  return Math.abs(selection.image.x - fill.x) < FILL_SIZE_EPSILON &&
+    Math.abs(selection.image.y - fill.y) < FILL_SIZE_EPSILON &&
+    Math.abs(selection.image.width - fill.width) < FILL_SIZE_EPSILON;
+}
+
 export const getIntersectingItems = (
   rect: { x1: number; y1: number; x2: number; y2: number },
   layout: ComposerLayout
