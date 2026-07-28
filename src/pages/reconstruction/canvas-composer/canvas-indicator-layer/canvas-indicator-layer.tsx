@@ -3,7 +3,7 @@ import { useReconstructionStore } from '../../reconstruction-store';
 import type { ComposerLayout } from '../composer-types';
 import { AnimatedRect } from './animated-rect';
 
-interface CanvasIndicatorProps {
+interface CanvasIndicatorLayerProps {
 
   layout: ComposerLayout;
 
@@ -11,7 +11,7 @@ interface CanvasIndicatorProps {
 
 }
 
-export const CanvasIndicatorBackground = (props: CanvasIndicatorProps) => {
+export const CanvasIndicatorBackgroundLayer = (props: CanvasIndicatorLayerProps) => {
 
   return (
     <g>
@@ -30,7 +30,7 @@ export const CanvasIndicatorBackground = (props: CanvasIndicatorProps) => {
 
 }
 
-export const CanvasIndicatorForeground = (props: CanvasIndicatorProps) => {
+export const CanvasIndicatorForegroundLayer = (props: CanvasIndicatorLayerProps) => {
 
   const selected = useReconstructionStore(state => state.selection);
 

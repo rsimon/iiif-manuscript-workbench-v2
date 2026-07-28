@@ -5,7 +5,7 @@ import { useReconstructionStore } from '../../reconstruction-store';
 import { useComposerStore } from '../composer-store';
 import type { ComposerLayoutItem,  DraggableImage,  HandleType, ResizeHandleType } from '../composer-types';
 import { getDraggableImageKey, getIntersectingItems, getItemCanvasSize } from '../composer-utils';
-import { ToolCornerHandle } from './tool-corner-handle';
+import { CornerHandle } from './corner-handle';
 import { 
   cornersToSvgPoints, 
   getImageCorners, 
@@ -13,15 +13,15 @@ import {
   HANDLE_TYPES, 
   RESIZE_SIGNS, 
   type InitialShape 
-} from './image-tool-utils';
+} from './image-bounds-editor-utils';
 
-interface ImageToolProps {
+interface ImageBoundsEditorProps {
 
   viewer: Viewer;
 
 }
 
-export const ImageTool = (props: ImageToolProps) => {
+export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const layout = useComposerStore(state => state.layout);
   const selectedImage = useComposerStore(state => state.selectedImage);
 
@@ -303,10 +303,7 @@ export const ImageTool = (props: ImageToolProps) => {
     });
 
     /*
-    
-
-
-
+    // TODO we should handle re-association after resize, too!
     const hasChangedItem = intersecting.length > 0 && selectedImage.canChangeItem &&
       intersecting.every(r => r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
 
@@ -358,7 +355,7 @@ export const ImageTool = (props: ImageToolProps) => {
         )}
         
         {corners.map((corner, i) => (
-          <ToolCornerHandle
+          <CornerHandle
             key={i}
             invalid={!isValidDestination}
             direction={

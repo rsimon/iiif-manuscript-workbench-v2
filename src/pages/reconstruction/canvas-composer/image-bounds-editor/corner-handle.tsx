@@ -6,7 +6,7 @@ const HANDLE_SIZE_PX = 8;
 
 export type HandleDirection = 'NW' | 'NE' | 'SE' | 'SW';
 
-interface ToolCornerHandleProps {
+interface CornerHandleProps {
 
   corner: Point;
 
@@ -28,7 +28,7 @@ interface ToolCornerHandleProps {
 
 }
 
-export const ToolCornerHandle = (props: ToolCornerHandleProps) => {
+export const CornerHandle = (props: CornerHandleProps) => {
   const { corner, viewer } = props;
 
   const handleRef = useRef<SVGRectElement>(null);

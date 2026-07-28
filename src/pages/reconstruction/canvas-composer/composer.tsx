@@ -6,8 +6,11 @@ import { cn } from '@/shadcn/utils';
 import { useComposerStore } from './composer-store';
 import { getDraggableImageKey } from './composer-utils';
 import { useComposerSelection } from './use-composer-selection';
-import { CanvasIndicatorBackground, CanvasIndicatorForeground } from './canvas-indicator';
-import { ImageTool } from './image-tool';
+import { ImageBoundsEditor } from './image-bounds-editor';
+import { 
+  CanvasIndicatorBackgroundLayer, 
+  CanvasIndicatorForegroundLayer 
+} from './canvas-indicator-layer';
 
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
@@ -146,12 +149,18 @@ export const CanvasComposer = () => {
          <ViewerSvgOverlay 
             viewer={viewer}
             bottomLayer={(
-              <CanvasIndicatorBackground layout={layout} viewer={viewer} />
+              <CanvasIndicatorBackgroundLayer 
+                layout={layout} 
+                viewer={viewer} />
             )} 
             topLayer={(
               <>
-                <CanvasIndicatorForeground layout={layout} viewer={viewer} />
-                <ImageTool viewer={viewer}/>
+                <CanvasIndicatorForegroundLayer 
+                  layout={layout} 
+                  viewer={viewer} />
+
+                <ImageBoundsEditor 
+                  viewer={viewer}/>
               </>
             )}/>
         )}
