@@ -25,7 +25,7 @@ export const PreviewMetadata = () => {
                 <h2 className="text-xs uppercase text-muted-foreground flex gap-1 items-center">
                   <div className="flex gap-0 items-center">
                     <IconAlignBoxRightTop className="size-4.5" /> 
-                    <IconSquare className="size-4.5 text-muted-foreground/40" /> 
+                    <IconSquare className="size-4.5 text-muted-foreground/40 -ml-0.5" /> 
                   </div>
                   Left
                 </h2>
@@ -49,7 +49,7 @@ export const PreviewMetadata = () => {
                 <h2 className="text-xs uppercase text-muted-foreground flex gap-1 items-center">
                   <div className="flex gap-0 items-center">
                     <IconSquare className="size-4.5 text-muted-foreground/40"  /> 
-                    <IconAlignBoxRightTop className="size-4.5" />
+                    <IconAlignBoxRightTop className="size-4.5 -ml-0.5" />
                   </div>
                   Right
                 </h2>
