@@ -7,6 +7,7 @@ import type {
   DraggableImage, 
   DraggableImageSelection 
 } from './composer-types';
+import type { CozyCanvas } from 'cozy-iiif';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -264,8 +265,11 @@ export const applyEdits = (
     });
 }
 
-const toFragmentTarget = (canvasId: string, bounds?: { x: number; y: number; w: number; h: number }) =>
-  bounds ? `${canvasId}#xywh=${bounds.x},${bounds.y},${bounds.w},${bounds.h}` : canvasId;
+const toFragmentTarget = (canvas: CozyCanvas, bounds?: { x: number; y: number; w: number; h: number }) => {
+  if (!bounds) return canvas.id;
+  const isFullSize = bounds.x === 0 && bounds.y === 0 && bounds.w === canvas.width && bounds.h === canvas.height;
+  return isFullSize ? canvas.id : `${canvas.id}#xywh=${bounds.x},${bounds.y},${bounds.w},${bounds.h}`;
+}
 
 // Applies composer edits onto one source canvas
 const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage[], currentImages: DraggableImage[]): SourceCanvas => {
@@ -310,7 +314,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
 
     return [{
       ...canvasSourcePaintAnnotations[index],
-      target: toFragmentTarget(canvasId, { x: draggable.x, y: draggable.y, w: draggable.width, h })
+      target: toFragmentTarget(source.canvas, { x: draggable.x, y: draggable.y, w: draggable.width, h })
     }];
   });
 
@@ -327,7 +331,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
         type: 'Annotation',
         motivation: 'painting',
         body: draggable.resource.source,
-        target: toFragmentTarget(canvasId, { x: draggable.x, y: draggable.y, w: draggable.width, h })
+        target: toFragmentTarget(source.canvas, { x: draggable.x, y: draggable.y, w: draggable.width, h })
       };
     });
 
