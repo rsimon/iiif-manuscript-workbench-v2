@@ -1,1 +1,1 @@
-export * from './image-tool';
+export * from './image-bounds-editor';
