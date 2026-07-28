@@ -4,6 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
 import { useComposerStore } from './composer-store';
+import { ComposerToolbar } from './composer-toolbar';
 import { getDraggableImageKey } from './composer-utils';
 import { useComposerSelection } from './use-composer-selection';
 import { ImageBoundsEditor } from './image-bounds-editor';
@@ -165,6 +166,8 @@ export const CanvasComposer = () => {
             )}/>
         )}
       </div>
+
+      <ComposerToolbar />
     </div>
   )
 

@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../../reconstruction-store';
 import { useComposerStore } from '../composer-store';
 import type { ComposerLayoutItem,  DraggableImage,  HandleType, ResizeHandleType } from '../composer-types';
-import { getDraggableImageKey, getIntersectingItems, getItemCanvasSize } from '../composer-utils';
+import { getDraggableImageKey, getIntersectingItems, getCanvasSize } from '../composer-utils';
 import { CornerHandle } from './corner-handle';
 import { 
   cornersToSvgPoints, 
@@ -117,7 +117,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return;
 
-    const [canvasWidth] = getItemCanvasSize(canvas);
+    const [canvasWidth] = getCanvasSize(canvas);
 
     origin.current = getPoint(evt, props.viewer);
 
@@ -232,7 +232,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       if (!source || !target || !targetItem) return;
 
       // Translate image into the new canvas's local coordinate system
-      const [targetWidth] = getItemCanvasSize(target);
+      const [targetWidth] = getCanvasSize(target);
 
       const targetImage = {
         ...initialImg,
@@ -256,7 +256,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         setSelectedCanvas([target]);
       }
     } else {
-      const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
+      const [canvasWidth] = getCanvasSize(initialShape.current.canvas);
 
       const updatedImage: DraggableImage = {
         ...initialImg, 
@@ -271,7 +271,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
     if (!selectedImage || !initialShape.current) return;
 
-    const [canvasWidth] = getItemCanvasSize(initialShape.current.canvas);
+    const [canvasWidth] = getCanvasSize(initialShape.current.canvas);
 
     const dx = delta[0] * canvasWidth;
     const dy = delta[1] * canvasWidth;

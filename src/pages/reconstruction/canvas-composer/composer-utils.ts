@@ -50,7 +50,7 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
 export const getDraggableImageKey = (image: DraggableImage): string =>
   `${image.sourceCanvasId}:${image.index}`;
 
-export const getItemCanvasSize = (canvas: ReconstructionCanvas): [number, number] =>
+export const getCanvasSize = (canvas: ReconstructionCanvas): [number, number] =>
   canvas.type === 'original'
     ? [canvas.source.canvas.width, canvas.source.canvas.height]
     : [canvas.width, canvas.height];
@@ -97,7 +97,7 @@ export const getImageAt = (
   const rc = reconstruction.find(r => r.id === item.reconstructionCanvasId);
   if (!rc) return;
 
-  const [canvasWidth] = getItemCanvasSize(rc);
+  const [canvasWidth] = getCanvasSize(rc);
   const images = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
   const hit = images.filter(image => {
