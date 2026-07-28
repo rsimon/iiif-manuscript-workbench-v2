@@ -9,27 +9,15 @@ const getCanvasImages = (canvas: ReconstructionCanvas) =>
     ? canvas.source.canvas.images
     : canvas.sources.flatMap(s => s.canvas.images);
 
-// ./empty_placeholder.png is a fixed 1200x1650px file. OSD derives a
-// TiledImage's height from its tile source's own native pixel aspect ratio
-// (it only accepts an explicit width, not height), so a canvas with no
-// images actually renders at this height once its width is scaled to 1 OSD
-// unit - regardless of the canvas's own declared dimensions.
 const PLACEHOLDER_HEIGHT = 1650 / 1200;
 
 // Canvas height in OSD world units
-export const getCanvasHeight = (canvas: ReconstructionCanvas) => {
+export const getCanvasHeight = (canvas?: ReconstructionCanvas) => {
+  if (!canvas) return undefined;
   if (getCanvasImages(canvas).length === 0) return PLACEHOLDER_HEIGHT;
 
   const { width, height } = getCanvasDimensions(canvas);
   return height / width;
-}
-
-export const getHeight = (canvases: (ReconstructionCanvas | undefined)[]) => {
-  const heights = canvases
-    .filter(c => c !== undefined)
-    .map(getCanvasHeight);
-
-  return heights.length > 0 ? Math.max(...heights) : 1;
 }
 
 export const addPage = (viewer: Viewer, canvas: ReconstructionCanvas, xOffset: number, yOffset: number) => {

@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from 'react';
 import OpenSeadragon from 'openseadragon';
 import type { Viewer as OpenSeadragonViewer } from 'openseadragon';
 import { usePreviewStore } from '../preview-store';
+import { CanvasIndicator } from './canvas-indicator';
 import { ViewerControls } from './viewer-controls';
 import { ViewerToolbar } from './viewer-toolbar';
-import { addPage, getCanvasHeight, getHeight } from './viewer-utils';
+import { addPage, getCanvasHeight } from './viewer-utils';
 
 interface ViewerProps {
 
@@ -13,6 +14,8 @@ interface ViewerProps {
   onChangeInspectorOpen(open: boolean): void;
 
 }
+
+export type CanvasBounds = { x: number, y: number, width: number, height: number };
 
 // Horizontal gap between pages
 const PAGE_GAP = 0;
@@ -24,6 +27,8 @@ export const Viewer = (props: ViewerProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const [viewer, setViewer] = useState<OpenSeadragonViewer | null>(null);
+
+  const [canvasBounds, setCanvasBounds] = useState<CanvasBounds[]>([]);
 
   useEffect(() => {
     if (!elementRef.current) return;
@@ -67,30 +72,57 @@ export const Viewer = (props: ViewerProps) => {
 
     let cancelled = false;
 
-    const totalHeight = getHeight([left, right]);
+    const leftHeight = getCanvasHeight(left);
+    const rightHeight = getCanvasHeight(right);
+
+    const heights = [leftHeight, rightHeight].filter(c => c !== undefined);
+    const totalHeight = heights.length > 0 ? Math.max(...heights) : 1;
+
+    const totalWidth = (leftHeight && rightHeight) ? 2 + PAGE_GAP : 1;
+
+    const leftBounds = leftHeight ? { 
+      x: 0, 
+      y: (totalHeight - leftHeight) / 2,
+      width: 1,
+      height: leftHeight
+    } : undefined;
+
+    const rightBounds = rightHeight ? {
+      x: 1 + PAGE_GAP, 
+      y: (totalHeight - rightHeight) / 2,
+      width: 1,
+      height: rightHeight
+    } : undefined;
 
     // Center each page vertically against the taller of the two.
-    const addLeft = left ? addPage(viewer, left, 0, (totalHeight - getCanvasHeight(left)) / 2) : undefined;
-    const addRight = right ? addPage(viewer, right, 1 + PAGE_GAP, (totalHeight - getCanvasHeight(right)) / 2) : undefined;
-
-    const totalWidth = (addLeft && addRight) ? 2 + PAGE_GAP : 1;
+    const addLeft = (left && leftBounds) ? addPage(viewer, left, leftBounds.x, leftBounds.y) : undefined;
+    const addRight = (right && rightBounds) ? addPage(viewer, right, rightBounds.x, rightBounds.y) : undefined;
 
     Promise.all([addLeft, addRight]).then(() => {
       if (cancelled) return;
 
       const viewRect = new OpenSeadragon.Rect(-0.15, -0.12, totalWidth + 0.3, totalHeight + 0.4);
       viewer.viewport.fitBounds(viewRect, true);
+    }).then(() => {
+      setCanvasBounds([leftBounds, rightBounds].filter(b => b !== undefined));
     });
 
     return () => {
       cancelled = true;
       viewer.world.removeAll();
+      setCanvasBounds([]);
     }
   }, [viewer, left, right]);
 
   return (
-    <div className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-      <div ref={elementRef} className="size-full" />
+    <div className="size-full relative bg-neutral-100 [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
+      <div ref={elementRef} className="size-full">
+        {viewer && (
+          <CanvasIndicator 
+            viewer={viewer} 
+            bounds={canvasBounds} />
+        )}
+      </div>
 
       <ViewerControls
         viewer={viewer}
