@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import OpenSeadragon, { TiledImage } from 'openseadragon';
 import { useShallow } from 'zustand/react/shallow';
+import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
 import { useComposerStore } from './composer-store';
 import { getDraggableImageKey } from './composer-utils';
 import { useComposerSelection } from './use-composer-selection';
-import { OverlayLayer } from './overlay-layer';
+import { CanvasIndicatorBackground, CanvasIndicatorForeground } from './canvas-indicator';
+import { ImageTool } from './image-tool';
 
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
@@ -140,7 +142,19 @@ export const CanvasComposer = () => {
       [&_.navigator]:border-b-0! [&_.navigator]:border-t! [&_.navigator]:border-l! [&_.navigator]:border-neutral-400/70! 
       [&_.navigator]:shadow-md shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
       <div ref={elementRef} className={cn('size-full leading-0', !isReady && 'invisible')}>
-        <OverlayLayer />
+        {viewer && (
+         <ViewerSvgOverlay 
+            viewer={viewer}
+            bottomLayer={(
+              <CanvasIndicatorBackground layout={layout} viewer={viewer} />
+            )} 
+            topLayer={(
+              <>
+                <CanvasIndicatorForeground layout={layout} viewer={viewer} />
+                <ImageTool viewer={viewer}/>
+              </>
+            )}/>
+        )}
       </div>
     </div>
   )

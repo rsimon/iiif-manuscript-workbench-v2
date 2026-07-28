@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import type { Point, Viewer } from 'openseadragon';
-import type { CornerHandleType } from '../../composer-types';
+import type { CornerHandleType } from '../composer-types';
 
 const HANDLE_SIZE_PX = 8;
 

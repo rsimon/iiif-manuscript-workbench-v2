@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Spring, type Viewer } from 'openseadragon';
-import { OSD_ANIMATION_TIME, OSD_SPRING_STIFFNESS } from '../../composer';
-import type { ComposerLayoutItem } from '../../composer-types';
+import { OSD_ANIMATION_TIME, OSD_SPRING_STIFFNESS } from '../composer';
+import type { ComposerLayoutItem } from '../composer-types';
 
 interface AnimatedRectProps extends Omit<React.SVGProps<SVGRectElement>, 'x' | 'y' | 'width' | 'height' | 'ref'> {
 

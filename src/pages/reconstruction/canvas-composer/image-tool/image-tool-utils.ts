@@ -7,7 +7,7 @@ import type {
   DraggableImage, 
   DraggableImageSelection, 
   ResizeHandleType 
-} from '../../composer-types';
+} from '../composer-types';
 
 /* Initial image state at drag start */
 export interface InitialShape {

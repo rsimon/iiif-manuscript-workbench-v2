@@ -1,6 +1,6 @@
 import type { Viewer } from 'openseadragon';
-import { useReconstructionStore } from '../../../reconstruction-store';
-import type { ComposerLayout } from '../../composer-types';
+import { useReconstructionStore } from '../../reconstruction-store';
+import type { ComposerLayout } from '../composer-types';
 import { AnimatedRect } from './animated-rect';
 
 interface CanvasIndicatorProps {
