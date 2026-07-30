@@ -1,3 +1,4 @@
+import { getCanvasSize } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceManifest } from '@/types';
 
 export const createManifest = (
@@ -37,18 +38,22 @@ export const createManifest = (
 }
 
 const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
+  const [width, height] = getCanvasSize(r);
+
   // https://iiif.io/api/annex/services/#physical-dimensions
   const physdim = r.physicalSize ? {
     service: {
       '@context': 'http://iiif.io/api/annex/services/physdim/1/context.json',
       profile: 'http://iiif.io/api/annex/services/physdim',
-      physicalScale: r.physicalSize.width / (r.type === 'original' ? r.source.canvas.width : r.width),
+      physicalScale: r.physicalSize.width / width,
       physicalUnits: r.physicalSize.unit
     }
   } : {};
 
   if (r.type === 'original') return {
     ...r.source.canvas.source,
+    width,
+    height,
     label: { en: [r.label] },
     ...physdim
   };
@@ -59,8 +64,8 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
     id: canvasId,
     type: 'Canvas',
     label: { en: [ r.label ] },
-    width: r.width,
-    height: r.height,
+    width,
+    height,
     ...physdim,
     items: r.sources.length === 0 ? [] :[{
       id: `${canvasId}/page/1`,

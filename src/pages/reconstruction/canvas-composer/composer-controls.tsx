@@ -12,7 +12,7 @@ interface ComposerControlsProps {
 export const ComposerControls = (props: ComposerControlsProps) => {
   
   return (
-    <div className="absolute top-3 right-3 flex gap-1.5 z-20">
+    <div className="absolute top-3 right-3 flex gap-1.5 z-50">
       <Button
         variant="ghost"
         size="icon"

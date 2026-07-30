@@ -58,8 +58,13 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     initialShape.current = undefined;
 
     if (selectedImage) {
+      const canvas = useAppStore.getState().reconstruction
+        .find(r => r.id === selectedImage.item.reconstructionCanvasId);
+      if (!canvas) return;
+
+      const [canvasWidth] = getCanvasSize(canvas);
       const { x, y, width } = selectedImage.image;
-      const liveCorners = getImageCorners(selectedImage, x, y, width);
+      const liveCorners = getImageCorners(selectedImage, canvasWidth, x, y, width);
       updateIntersectingItems(liveCorners);
     }
   }, [selectionKey]);
@@ -85,7 +90,13 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
 
   const corners = useMemo(() => {
     if (!selectedImage) return [];
-    return getImageCorners(selectedImage);
+
+    const canvas = useAppStore.getState().reconstruction
+      .find(r => r.id === selectedImage.item.reconstructionCanvasId);
+    if (!canvas) return [];
+
+    const [canvasWidth] = getCanvasSize(canvas);
+    return getImageCorners(selectedImage, canvasWidth);
   }, [selectedImage]);
 
   const updateIntersectingItems = (corners: Point[]) => {
@@ -173,7 +184,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         x, y, width
       });
 
-      const revertedCorners = getImageCorners(selectedImage, x, y, width);
+      const [canvasWidth] = getCanvasSize(shape.canvas);
+      const revertedCorners = getImageCorners(selectedImage, canvasWidth, x, y, width);
       updateIntersectingItems(revertedCorners);
     }
 

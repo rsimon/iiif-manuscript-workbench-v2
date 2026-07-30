@@ -1,5 +1,5 @@
 import type { Point } from 'openseadragon';
-import { parseCanvas } from '@/store/app-store-utils';
+import { getCanvasSize, parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { 
   ComposerLayout, 
@@ -50,11 +50,6 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
 
 export const getDraggableImageKey = (image: DraggableImage): string =>
   `${image.sourceCanvasId}:${image.index}`;
-
-export const getCanvasSize = (canvas: ReconstructionCanvas): [number, number] =>
-  canvas.type === 'original'
-    ? [canvas.source.canvas.width, canvas.source.canvas.height]
-    : [canvas.width, canvas.height];
 
 // x/y/width an image must have to fully fit the canvas
 export const getFillSize = (
@@ -233,27 +228,42 @@ export const applyEdits = (
           return nextSource === r.source ? r : { ...r, source: nextSource };
         }
 
+        // Gaining a second source -- becomes a composite. Carry forward this
+        // canvas's own effective size (its override, if any, else its
+        // source's native size) and physical size rather than dropping them:
+        // the surviving image's placement is about to be re-expressed in
+        // this same coordinate space, so the composite must keep it.
+        const [width, height] = getCanvasSize(r);
+
         return {
           type: 'composite',
           id: `${baseURI}/${crypto.randomUUID()}`,
           label: r.label,
           sources: sources.map(applySourceEdits),
-          width: r.source.canvas.width,
-          height: r.source.canvas.height
+          width,
+          height,
+          physicalSize: r.physicalSize
         };
       } else {
         const nextSources = sources.map(applySourceEdits);
 
-        // Just one source - revert to OriginalCanvas
+        // Just one source left -- revert to OriginalCanvas. Same reasoning
+        // as above, mirrored: carry forward the composite's own size (only
+        // recorded as an explicit override if it actually differs from the
+        // remaining source's native size) and physical size, rather than
+        // silently snapping back to the source's native values -- the
+        // remaining image's x/y/width are still expressed in the
+        // composite's coordinate space at this point.
         if (nextSources.length === 1) {
           const source = nextSources[0];
-          
           return {
             type: 'original',
             id: source.canvas.id,
             label: r.label,
             source,
-            physicalSize: source.physicalSize
+            width: r.width,
+            height: r.height,
+            physicalSize: r.physicalSize ?? source.physicalSize
           };
         }
 

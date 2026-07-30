@@ -55,18 +55,25 @@ export const RESIZE_SIGNS: Record<ResizeHandleType, { h: number; v: number }> = 
 };
 
 /**
- * Returns list of corner points, OSD viewport coordinates. Optionally 
- * supports "overrides" for image position, in case image corners should 
+ * Returns list of corner points, OSD viewport coordinates. Optionally
+ * supports "overrides" for image position, in case image corners should
  * be computed from live data, before Zustand state has updated.
+ *
+ * `canvasWidth` is the OWNING CANVAS's own pixel width (getCanvasSize), not
+ * the painted image's own resource width -- image x/y/width are stored in
+ * canvas-local pixels, so that's what they need to be normalized against
+ * (matches composer.tsx's placement math and onPointerDown/onMoveImage/
+ * onResizeImage below). The two can diverge once a canvas's own pixel size
+ * is edited independently of its images' native resolution.
  */
-export const getImageCorners = (selected: DraggableImageSelection, ox?: number, oy?: number, ow?: number): Point[] => {
+export const getImageCorners = (selected: DraggableImageSelection, canvasWidth: number, ox?: number, oy?: number, ow?: number): Point[] => {
   const { image, item } = selected;
 
   const aspect = image.resource.width / image.resource.height;
 
-  const x = item.x + (ox ?? image.x) / image.resource.width;
-  const y = item.y + (oy ?? image.y) / image.resource.width;
-  const w = (ow ?? image.width) / image.resource.width;
+  const x = item.x + (ox ?? image.x) / canvasWidth;
+  const y = item.y + (oy ?? image.y) / canvasWidth;
+  const w = (ow ?? image.width) / canvasWidth;
   const h = w / aspect;
 
   return [

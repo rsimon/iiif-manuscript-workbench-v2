@@ -6,7 +6,7 @@ import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
-import { applyEdits, findSourceCanvasById, getDraggableImageKey, toDraggableImages } from './composer-utils';
+import { applyEdits, findSourceCanvasById, getCanvasSize, getDraggableImageKey, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
 
 export interface ComposerState {
@@ -155,15 +155,13 @@ const scheduleAppStoreSync = pDebounce(() => {
 
 // Downwards sync from app store to local state
 useAppStore.subscribe((state, prevState) => {
-  // Layout only needs recomputing if structural props changed by value
-  const stripIrrelevant = (r: ReconstructionCanvas) => r.type === 'composite' ? {
-    id: r.id,
-    height: r.height,
-    width: r.width
-  } : {
-    id: r.id,
-    height: r.source.canvas.height,
-    width: r.source.canvas.width
+  // Layout only needs recomputing if structural props changed by value.
+  // getCanvasSize (rather than reading source.canvas.width/height directly)
+  // is what makes an original canvas's own size override actually trigger
+  // a layout recompute.
+  const stripIrrelevant = (r: ReconstructionCanvas) => {
+    const [width, height] = getCanvasSize(r);
+    return { id: r.id, width, height };
   };
 
   const before = prevState.reconstruction.map(stripIrrelevant);

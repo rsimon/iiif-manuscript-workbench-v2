@@ -4,6 +4,7 @@ import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-dro
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/tree-item';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
+import { getCanvasSize } from '@/store/app-store-utils';
 import type { OriginalCanvas, ReconstructionCanvas, SourceCanvas } from '@/types';
 
 export type DragPayload =
@@ -67,7 +68,13 @@ export const useDragAndDrop = () => {
       type: 'original',
       id: source.canvas.id,
       label: source.canvas.getLabel(),
-      source
+      source,
+      // Initialize the reconstruction-level measurement from the source's
+      // own, same convention as when a canvas is first added from the
+      // source tree (see addCanvasToReconstruction) -- otherwise this
+      // newly-extracted canvas would silently export with no
+      // physical-dimensions service even though the source has one.
+      physicalSize: source.physicalSize
     };
   
     const result = [...next];
@@ -90,20 +97,25 @@ export const useDragAndDrop = () => {
   
     return without.map((c, idx) => {
       if (c.id !== targetId) return c;
-  
-      return c.type === 'composite'
-        ? { 
-            ...c, 
-            sources: [...c.sources, dragged] 
-          }
-        : {
-            type: 'composite' as const,
-            id: `${baseURI}/${crypto.randomUUID()}`,
-            label: `Canvas ${idx + 1}`,
-            sources: [c.source, dragged],
-            width: c.source.canvas.width,
-            height: c.source.canvas.height
-          };
+
+      if (c.type === 'composite') {
+        return { ...c, sources: [...c.sources, dragged] };
+      }
+
+      // Becoming a composite -- carry forward this canvas's own effective
+      // size (its override, if any, else its source's native size) and
+      // physical size, same reasoning as applyEdits's type transitions.
+      const [width, height] = getCanvasSize(c);
+
+      return {
+        type: 'composite' as const,
+        id: `${baseURI}/${crypto.randomUUID()}`,
+        label: `Canvas ${idx + 1}`,
+        sources: [c.source, dragged],
+        width,
+        height,
+        physicalSize: c.physicalSize
+      };
     });
   }, [take]);
 

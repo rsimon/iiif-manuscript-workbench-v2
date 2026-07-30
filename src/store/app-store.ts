@@ -36,10 +36,17 @@ interface AppStore {
   removeCanvasFromReconstruction: (canvasId: string) => void;
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
   renameCanvas: (canvasId: string, label: string) => void;
+  resizeCanvas: (canvasId: string, width: number, height: number) => void;
   updateReconstruction: (updated: ReconstructionCanvas[]) => void;
 
   // Actions: combined
+  // Keyed by *source* canvas ID -- may target a nested source within a
+  // composite. See setCanvasPhysicalSize for the reconstruction canvas's own.
   setPhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
+  // Sets the physical size on the reconstruction canvas itself (as opposed
+  // to one of its underlying sources) -- this is the value that gets
+  // exported into the manifest's physdim service, see create-manifest.ts.
+  setCanvasPhysicalSize: (canvasId: string, size?: PhysicalSize) => void;
   resetAll: () => void;
 
 }
@@ -140,6 +147,17 @@ export const useAppStore = create<AppStore>()(
         } : r)
       })),
 
+      // Sets the reconstruction canvas's own pixel size, as an override on
+      // top of (rather than a mutation of) its source(s)' own declared
+      // size -- see OriginalCanvas.width/height and getCanvasSize. Note
+      // this does NOT rescale any images already placed on the canvas --
+      // callers that want that (e.g. the composer sidebar) handle it
+      // separately via useComposerStore's updateImage, since image
+      // placement is derived/owned by the composer store, not this one.
+      resizeCanvas: (canvasId, width, height) => set(({ reconstruction }) => ({
+        reconstruction: reconstruction.map(r => r.id === canvasId ? { ...r, width, height } : r)
+      })),
+
       updateReconstruction: reconstruction => set({ reconstruction }),
 
       setPhysicalSize: (sourceCanvasId, size) => set(({ reconstruction, sizes }) => {
@@ -171,6 +189,10 @@ export const useAppStore = create<AppStore>()(
 
         return { sizes: updatedSizes, reconstruction: updatedReconstruction };
       }),
+
+      setCanvasPhysicalSize: (canvasId, size) => set(({ reconstruction }) => ({
+        reconstruction: reconstruction.map(r => r.id === canvasId ? { ...r, physicalSize: size } : r)
+      })),
 
       resetAll: () => set(() => ({
         reconstruction: [],

@@ -3,10 +3,11 @@ import OpenSeadragon, { TiledImage } from 'openseadragon';
 import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
 import { ComposerControls } from './composer-controls';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
-import { getDraggableImageKey } from './composer-utils';
+import { getCanvasSize, getDraggableImageKey } from './composer-utils';
 import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
 import { 
@@ -92,16 +93,27 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     if (!viewer) return;
 
     const { tiledImages, isDraggingImage } = useComposerStore.getState();
+    const { reconstruction } = useAppStore.getState();
 
-    // All layout items
-    const placements = layout.items.flatMap((item, i) =>
-      images[i].map(image => ({
+    // All layout items -- image x/y/width are canvas-local pixels, so they're
+    // normalized by the owning canvas's own pixel size (matching how
+    // image-bounds-editor.tsx and composer-utils.ts do this conversion
+    // elsewhere), NOT by the painted image's own native resource size, which
+    // may legitimately differ from the canvas's declared size.
+    const placements = layout.items.flatMap((item, i) => {
+      const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
+      if (!canvas) return [];
+
+      const [canvasWidth] = getCanvasSize(canvas);
+
+      return images[i].map(image => ({
         key: getDraggableImageKey(image),
         tileSource: image.tileSource,
-        x: item.x + image.x / image.resource.width,
-        y: item.y + image.y / image.resource.width,
-        width: image.width / image.resource.width
-      })));
+        x: item.x + image.x / canvasWidth,
+        y: item.y + image.y / canvasWidth,
+        width: image.width / canvasWidth
+      }));
+    });
 
     const toKeep = new Set(placements.map(p => p.key));
 
