@@ -47,9 +47,10 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
   return {
     id: canvasId,
     type: 'Canvas',
-    label: { en: [r.label] },
+    label: { en: [ r.label ] },
     width: r.width,
     height: r.height,
+    /*
     ...(r.sources.length === 0 ? {
       placeholderCanvas: {
         id: `${canvasId}/placeholder`,
@@ -75,6 +76,7 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
         }]
       }
     } : {}),
+    */
     items: r.sources.length === 0 ? [] :[{
       id: `${canvasId}/page/1`,
       type: 'AnnotationPage',
