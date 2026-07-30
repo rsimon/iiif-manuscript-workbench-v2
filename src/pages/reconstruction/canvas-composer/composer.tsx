@@ -7,7 +7,7 @@ import { useAppStore } from '@/store/app-store';
 import { ComposerControls } from './composer-controls';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
-import { getCanvasSize, getDraggableImageKey } from './composer-utils';
+import { getDraggableImageKey } from './composer-utils';
 import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
 import { 
@@ -104,14 +104,12 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
       if (!canvas) return [];
 
-      const [canvasWidth] = getCanvasSize(canvas);
-
       return images[i].map(image => ({
         key: getDraggableImageKey(image),
         tileSource: image.tileSource,
-        x: item.x + image.x / canvasWidth,
-        y: item.y + image.y / canvasWidth,
-        width: image.width / canvasWidth
+        x: item.x + image.x / canvas.width,
+        y: item.y + image.y / canvas.width,
+        width: image.width / canvas.width
       }));
     });
 
