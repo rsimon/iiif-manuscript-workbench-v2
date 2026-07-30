@@ -3,11 +3,12 @@ import OpenSeadragon, { TiledImage } from 'openseadragon';
 import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
+import { ComposerControls } from './composer-controls';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
 import { getDraggableImageKey } from './composer-utils';
-import { useComposerSelection } from './use-composer-selection';
 import { ImageBoundsEditor } from './image-bounds-editor';
+import { useComposerSelection } from './use-composer-selection';
 import { 
   CanvasIndicatorBackgroundLayer, 
   CanvasIndicatorForegroundLayer 
@@ -16,7 +17,15 @@ import {
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
 
-export const CanvasComposer = () => {
+interface CanvasComposerProps {
+
+  isSidebarOpen: boolean;
+
+  onChangeSidebarOpen(open: boolean): void;
+
+}
+
+export const CanvasComposer = (props: CanvasComposerProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const layout = useComposerStore(state => state.layout);
@@ -166,6 +175,10 @@ export const CanvasComposer = () => {
             )}/>
         )}
       </div>
+
+      <ComposerControls
+        isSidebarOpen={props.isSidebarOpen}
+        onChangeSidebarOpen={props.onChangeSidebarOpen} />
 
       <ComposerToolbar />
     </div>

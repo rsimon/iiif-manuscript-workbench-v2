@@ -10,6 +10,7 @@ interface SourcePreviewControlsProps {
   onChangeInspectorOpen(open: boolean): void;
 
 }
+
 export const SourcePreviewControls = (props: SourcePreviewControlsProps) => {
   const viewer = useViewer();
 
