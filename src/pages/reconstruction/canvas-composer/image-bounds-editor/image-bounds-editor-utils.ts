@@ -9,7 +9,7 @@ import type {
   ResizeHandleType 
 } from '../composer-types';
 
-/* Initial image state at drag start */
+// Initial image state at drag start
 export interface InitialShape {
 
   image: DraggableImage;
@@ -58,13 +58,6 @@ export const RESIZE_SIGNS: Record<ResizeHandleType, { h: number; v: number }> = 
  * Returns list of corner points, OSD viewport coordinates. Optionally
  * supports "overrides" for image position, in case image corners should
  * be computed from live data, before Zustand state has updated.
- *
- * `canvasWidth` is the OWNING CANVAS's own pixel width (getCanvasSize), not
- * the painted image's own resource width -- image x/y/width are stored in
- * canvas-local pixels, so that's what they need to be normalized against
- * (matches composer.tsx's placement math and onPointerDown/onMoveImage/
- * onResizeImage below). The two can diverge once a canvas's own pixel size
- * is edited independently of its images' native resolution.
  */
 export const getImageCorners = (selected: DraggableImageSelection, canvasWidth: number, ox?: number, oy?: number, ow?: number): Point[] => {
   const { image, item } = selected;
