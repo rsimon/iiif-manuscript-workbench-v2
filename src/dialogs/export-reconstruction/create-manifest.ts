@@ -1,4 +1,3 @@
-import { getCanvasSize } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceManifest } from '@/types';
 
 export const createManifest = (
@@ -38,7 +37,7 @@ export const createManifest = (
 }
 
 const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
-  const [width, height] = getCanvasSize(r);
+  const { width, height } = r;
 
   // https://iiif.io/api/annex/services/#physical-dimensions
   const physdim = r.physicalSize ? {
