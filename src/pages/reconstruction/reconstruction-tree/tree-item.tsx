@@ -293,11 +293,11 @@ const EmptyCanvasHint = () => (
 
     <TooltipContent>
       <div className="leading-relaxed text-[13px] tracking-wide">
-        For intentionally empty canvases, the <a 
+        If this canvas is intentionally empty, add a descriptive label 
+        such as "fol. 12v (missing)", as recommended by the <a 
           target="_blank" 
           href="https://iiif.io/api/cookbook/recipe/0283-missing-image/"
-          className="underline">IIIF cookbook</a> recommends a descriptive label 
-          such as "fol. 12v (missing)".
+          className="underline">IIIF cookbook</a>.
       </div>
     </TooltipContent>
   </Tooltip>
