@@ -1,8 +1,8 @@
 import type { ReconstructionCanvas } from '@/types';
-import type { DraggableImage } from '../reconstruction-types';
+import type { DraggableImage } from '../../reconstruction-types';
 import { IconStack2 } from '@tabler/icons-react';
 
-interface StateMultiSelectionProps {
+interface MultiSelectionProps {
 
   selection: ReconstructionCanvas[];
 
@@ -12,7 +12,7 @@ interface StateMultiSelectionProps {
 
 }
 
-export const StateMultiSelection = (props: StateMultiSelectionProps) => {
+export const MultiSelection = (props: MultiSelectionProps) => {
   const { selection, reconstruction, imagesByCanvasId } = props;
 
   const totalImages = selection.reduce(
