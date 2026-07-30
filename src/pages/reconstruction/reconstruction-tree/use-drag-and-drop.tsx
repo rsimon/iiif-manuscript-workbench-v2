@@ -94,10 +94,9 @@ export const useDragAndDrop = () => {
     return without.map((c, idx) => {
       if (c.id !== targetId) return c;
 
-      if (c.type === 'composite') {
+      if (c.type === 'composite')
         return { ...c, sources: [...c.sources, dragged] };
-      }
-      
+
       return {
         type: 'composite' as const,
         id: `${baseURI}/${crypto.randomUUID()}`,
