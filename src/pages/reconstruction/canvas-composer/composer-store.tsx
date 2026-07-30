@@ -6,7 +6,7 @@ import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
-import { applyEdits, findSourceCanvasById, getCanvasSize, getDraggableImageKey, toDraggableImages } from './composer-utils';
+import { applyEdits, findSourceCanvasById, getDraggableImageKey, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
 
 export interface ComposerState {
@@ -160,8 +160,8 @@ useAppStore.subscribe((state, prevState) => {
   // is what makes an original canvas's own size override actually trigger
   // a layout recompute.
   const stripIrrelevant = (r: ReconstructionCanvas) => {
-    const [width, height] = getCanvasSize(r);
-    return { id: r.id, width, height };
+    const { id, width, height } = r;
+    return { id, width, height };
   };
 
   const before = prevState.reconstruction.map(stripIrrelevant);
