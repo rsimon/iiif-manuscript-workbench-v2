@@ -1,5 +1,6 @@
 import type { Point } from 'openseadragon';
-import { getCanvasSize, parseCanvas } from '@/store/app-store-utils';
+import type { CozyCanvas } from 'cozy-iiif';
+import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { 
   ComposerLayout, 
@@ -7,7 +8,6 @@ import type {
   DraggableImage, 
   DraggableImageSelection 
 } from './composer-types';
-import type { CozyCanvas } from 'cozy-iiif';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -56,7 +56,7 @@ export const getFillSize = (
   image: DraggableImage,
   canvas: ReconstructionCanvas
 ): { x: number; y: number; width: number } => {
-  const [canvasWidth, canvasHeight] = getCanvasSize(canvas);
+  const { width: canvasWidth, height: canvasHeight } = canvas;
 
   const aspect = image.resource.height / image.resource.width;
   const width = Math.min(canvasWidth, canvasHeight / aspect);
@@ -127,16 +127,15 @@ export const getImageAt = (
   const rc = reconstruction.find(r => r.id === item.reconstructionCanvasId);
   if (!rc) return;
 
-  const [canvasWidth] = getCanvasSize(rc);
   const images = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
   const hit = images.filter(image => {
     // Image size is in pixel!
     const aspect = image.resource.height / image.resource.width;
 
-    const viewportX = item.x + image.x / canvasWidth;
-    const viewportY = item.y + image.y / canvasWidth;
-    const viewportW = image.width / canvasWidth;
+    const viewportX = item.x + image.x / rc.width;
+    const viewportY = item.y + image.y / rc.width;
+    const viewportW = image.width / rc.width;
 
     const viewportR = viewportX + viewportW;
     const viewportB = viewportY + viewportW * aspect;
@@ -228,32 +227,19 @@ export const applyEdits = (
           return nextSource === r.source ? r : { ...r, source: nextSource };
         }
 
-        // Gaining a second source -- becomes a composite. Carry forward this
-        // canvas's own effective size (its override, if any, else its
-        // source's native size) and physical size rather than dropping them:
-        // the surviving image's placement is about to be re-expressed in
-        // this same coordinate space, so the composite must keep it.
-        const [width, height] = getCanvasSize(r);
-
         return {
           type: 'composite',
           id: `${baseURI}/${crypto.randomUUID()}`,
           label: r.label,
           sources: sources.map(applySourceEdits),
-          width,
-          height,
+          width: r.width,
+          height: r.height,
           physicalSize: r.physicalSize
         };
       } else {
         const nextSources = sources.map(applySourceEdits);
 
-        // Just one source left -- revert to OriginalCanvas. Same reasoning
-        // as above, mirrored: carry forward the composite's own size (only
-        // recorded as an explicit override if it actually differs from the
-        // remaining source's native size) and physical size, rather than
-        // silently snapping back to the source's native values -- the
-        // remaining image's x/y/width are still expressed in the
-        // composite's coordinate space at this point.
+        // Just one source left - revert to OriginalCanvas
         if (nextSources.length === 1) {
           const source = nextSources[0];
           return {
