@@ -64,9 +64,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         .find(r => r.id === selectedImage.item.reconstructionCanvasId);
       if (!canvas) return;
 
-      const { width: canvasWidth } = canvas;
       const { x, y, width } = selectedImage.image;
-      const liveCorners = getImageCorners(selectedImage, canvasWidth, x, y, width);
+      const liveCorners = getImageCorners(selectedImage, canvas.width, x, y, width);
       updateIntersectingItems(liveCorners);
     }
   }, [selectionKey, reconstruction]);
