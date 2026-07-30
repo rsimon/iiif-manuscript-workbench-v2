@@ -7,7 +7,7 @@ import { parseNumber } from '@/dialogs/physical-dimensions/measurement-utils';
 import type { PhysicalSize, ReconstructionCanvas, SourceCanvas } from '@/types';
 import { useReconstructionStore } from '../reconstruction-store';
 import { useComposerStore } from '../canvas-composer/composer-store';
-import { getCanvasSize, getDraggableImageKey } from '../canvas-composer/composer-utils';
+import { getDraggableImageKey } from '../canvas-composer/composer-utils';
 import type { DraggableImage, DraggableImageSelection } from '../canvas-composer/composer-types';
 
 const round = (n: number) => Math.round(n);
@@ -129,10 +129,10 @@ interface SingleCanvasInspectorProps {
 const SingleCanvasInspector = (props: SingleCanvasInspectorProps) => {
   const { canvas, index, images } = props;
 
-  const [width, height] = getCanvasSize(canvas);
+  const { width, height } = canvas;
 
   const resizeCanvas = useAppStore(state => state.resizeCanvas);
-  const setCanvasPhysicalSize = useAppStore(state => state.setCanvasPhysicalSize);
+  const setCanvasPhysicalSize = useAppStore(state => state.setReconstructionPhysicalSize);
 
   const activeImage = props.selectedImage?.item.reconstructionCanvasId === canvas.id
     ? props.selectedImage
