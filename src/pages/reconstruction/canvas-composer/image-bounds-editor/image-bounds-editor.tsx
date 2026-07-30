@@ -22,6 +22,8 @@ interface ImageBoundsEditorProps {
 }
 
 export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
+  const reconstruction = useAppStore(state => state.reconstruction);
+
   const layout = useComposerStore(state => state.layout);
   const selectedImage = useComposerStore(state => state.selectedImage);
 
@@ -58,7 +60,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     initialShape.current = undefined;
 
     if (selectedImage) {
-      const canvas = useAppStore.getState().reconstruction
+      const canvas = reconstruction
         .find(r => r.id === selectedImage.item.reconstructionCanvasId);
       if (!canvas) return;
 
@@ -67,7 +69,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       const liveCorners = getImageCorners(selectedImage, canvasWidth, x, y, width);
       updateIntersectingItems(liveCorners);
     }
-  }, [selectionKey]);
+  }, [selectionKey, reconstruction]);
 
   useEffect(() => {
     if (!selectedImage || !initialShape.current) return;
@@ -76,7 +78,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     // Selected (= dragged) image and initialShape no longer point to the
     // same reconstruction canvas ID - this means the canvas was modified,
     // usually changed from 'original' to 'composite' -> follow!
-    const canvas = useAppStore.getState().reconstruction
+    const canvas = reconstruction
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
 
     if (!canvas) return;
@@ -86,17 +88,17 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       item: selectedImage.item,
       canvas
     };
-  }, [selectedImage]);
+  }, [selectedImage, reconstruction]);
 
   const corners = useMemo(() => {
     if (!selectedImage) return [];
 
-    const canvas = useAppStore.getState().reconstruction
+    const canvas = reconstruction
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return [];
 
     return getImageCorners(selectedImage, canvas.width);
-  }, [selectedImage]);
+  }, [selectedImage, reconstruction]);
 
   const updateIntersectingItems = (corners: Point[]) => {
     const intersectingItems = getIntersectingItems({
@@ -123,7 +125,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const { image, item } = selectedImage;
 
     // Get current selection reference canvas
-    const canvas = useAppStore.getState().reconstruction
+    const canvas = reconstruction
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return;
 
@@ -231,8 +233,6 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       (!hasChangedDestination || selectedImage.canChangeItem);
       
     if (hasChangedDestination && isValidDestination) {
-      const { reconstruction} = useAppStore.getState();
-
       const source = reconstruction.find(r => r.id === initialItem.reconstructionCanvasId);
       const target = reconstruction.find(r => r.id === destination.reconstructionCanvasId);
 
