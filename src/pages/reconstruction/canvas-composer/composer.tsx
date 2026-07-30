@@ -92,14 +92,9 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   useEffect(() => {
     if (!viewer) return;
 
-    const { tiledImages, isDraggingImage } = useComposerStore.getState();
     const { reconstruction } = useAppStore.getState();
+    const { tiledImages, isDraggingImage } = useComposerStore.getState();
 
-    // All layout items -- image x/y/width are canvas-local pixels, so they're
-    // normalized by the owning canvas's own pixel size (matching how
-    // image-bounds-editor.tsx and composer-utils.ts do this conversion
-    // elsewhere), NOT by the painted image's own native resource size, which
-    // may legitimately differ from the canvas's declared size.
     const placements = layout.items.flatMap((item, i) => {
       const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
       if (!canvas) return [];
