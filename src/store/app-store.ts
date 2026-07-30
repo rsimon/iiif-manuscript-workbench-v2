@@ -145,14 +145,7 @@ export const useAppStore = create<AppStore>()(
           ...r, label
         } : r)
       })),
-
-      // Sets the reconstruction canvas's own pixel size, as an override on
-      // top of (rather than a mutation of) its source(s)' own declared
-      // size -- see OriginalCanvas.width/height and getCanvasSize. Note
-      // this does NOT rescale any images already placed on the canvas --
-      // callers that want that (e.g. the composer sidebar) handle it
-      // separately via useComposerStore's updateImage, since image
-      // placement is derived/owned by the composer store, not this one.
+      
       resizeCanvas: (canvasId, width, height) => set(({ reconstruction }) => ({
         reconstruction: reconstruction.map(r => r.id === canvasId ? { ...r, width, height } : r)
       })),
