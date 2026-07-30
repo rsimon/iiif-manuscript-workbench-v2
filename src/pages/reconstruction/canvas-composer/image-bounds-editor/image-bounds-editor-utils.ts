@@ -1,13 +1,8 @@
 import type { PointerEvent } from 'react';
 import { Point, Viewer } from 'openseadragon';
 import type { ReconstructionCanvas } from '@/types';
-import type { 
-  ComposerLayoutItem, 
-  CornerHandleType, 
-  DraggableImage, 
-  DraggableImageSelection, 
-  ResizeHandleType 
-} from '../composer-types';
+import type {  ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../../reconstruction-types';
+import type { CornerHandleType, ResizeHandleType } from './corner-handle';
 
 // Initial image state at drag start
 export interface InitialShape {

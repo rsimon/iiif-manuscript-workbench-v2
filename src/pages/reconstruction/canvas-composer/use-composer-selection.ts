@@ -1,7 +1,7 @@
 import type { CanvasClickEvent, Viewer } from 'openseadragon';
 import { useReconstructionStore } from '../reconstruction-store';
 import { useEffect } from 'react';
-import type { ComposerLayout } from './composer-types';
+import type { ComposerLayout } from '../reconstruction-types';
 import { getImageAt, getItemAt } from './composer-utils';
 import { useComposerStore } from './composer-store';
 import { useAppStore } from '@/store/app-store';

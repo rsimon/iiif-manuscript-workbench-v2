@@ -55,23 +55,3 @@ export interface DraggableImageSelection {
   canChangeItem: boolean;
 
 }
-
-export type CornerHandleType = 
-  | 'TOP_LEFT'
-  | 'TOP_RIGHT'
-  | 'BOTTOM_RIGHT'
-  | 'BOTTOM_LEFT';
-
-export type EdgeHandleType = 
-  | 'TOP'
-  | 'RIGHT'
-  | 'BOTTOM'
-  | 'LEFT';
-
-export type ResizeHandleType =
-  | CornerHandleType
-  | EdgeHandleType;
-
-export type HandleType = 
-  | 'SHAPE'
-  | ResizeHandleType;

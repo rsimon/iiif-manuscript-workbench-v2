@@ -2,12 +2,8 @@ import type { Point } from 'openseadragon';
 import type { CozyCanvas } from 'cozy-iiif';
 import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
-import type { 
-  ComposerLayout, 
-  ComposerLayoutItem, 
-  DraggableImage, 
-  DraggableImageSelection 
-} from './composer-types';
+import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
+import { getDraggableImageKey } from '../reconstruction-utils';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -47,9 +43,6 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
     ]
   }, []);
 }
-
-export const getDraggableImageKey = (image: DraggableImage): string =>
-  `${image.sourceCanvasId}:${image.index}`;
 
 // x/y/width an image must have to fully fit the canvas
 export const getFillSize = (

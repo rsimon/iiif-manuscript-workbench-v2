@@ -4,10 +4,10 @@ import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
+import { getDraggableImageKey } from '../reconstruction-utils';
 import { ComposerControls } from './composer-controls';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
-import { getDraggableImageKey } from './composer-utils';
 import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
 import { 

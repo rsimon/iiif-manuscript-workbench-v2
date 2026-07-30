@@ -4,7 +4,6 @@ import { Input } from '@/shadcn/input';
 import { Button } from '@/shadcn/button';
 import type { PhysicalSize } from '@/types';
 import { useMeasurement } from './measurement-context';
-import { parseNumber } from './measurement-utils';
 import { 
   FloatingPanel, 
   FloatingPanelContent, 
@@ -19,6 +18,7 @@ import {
   FieldLegend, 
   FieldSet 
 } from '@/shadcn/field';
+import { parseNumber } from '@/store/app-store-utils';
 
 interface PhysicalDimensionsDialogProps {
   

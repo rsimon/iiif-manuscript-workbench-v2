@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Point, Viewer } from 'openseadragon';
 import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../../reconstruction-store';
+import type { ComposerLayoutItem, DraggableImage } from '../../reconstruction-types';
+import { getDraggableImageKey } from '../../reconstruction-utils';
 import { useComposerStore } from '../composer-store';
-import type { ComposerLayoutItem,  DraggableImage,  HandleType, ResizeHandleType } from '../composer-types';
-import { getDraggableImageKey, getIntersectingItems } from '../composer-utils';
-import { CornerHandle } from './corner-handle';
+import { getIntersectingItems } from '../composer-utils';
+import { CornerHandle, type HandleType, type ResizeHandleType } from './corner-handle';
 import { 
   cornersToSvgPoints, 
   getImageCorners, 

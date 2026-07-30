@@ -1,5 +1,5 @@
 import type { ReconstructionCanvas } from '@/types';
-import type { ComposerLayout, ComposerLayoutItem } from './composer-types';
+import type { ComposerLayout, ComposerLayoutItem } from '../reconstruction-types';
 
 export const ROW_GAP = 0.25;
 

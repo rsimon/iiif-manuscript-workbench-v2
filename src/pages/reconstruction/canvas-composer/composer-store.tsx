@@ -5,8 +5,9 @@ import pDebounce from 'p-debounce';
 import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
-import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
-import { applyEdits, findSourceCanvasById, getDraggableImageKey, toDraggableImages } from './composer-utils';
+import { getDraggableImageKey } from '../reconstruction-utils';
+import type { ComposerLayout, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
+import { applyEdits, findSourceCanvasById, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
 
 export interface ComposerState {

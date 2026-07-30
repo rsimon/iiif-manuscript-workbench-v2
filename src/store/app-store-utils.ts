@@ -25,6 +25,11 @@ export const parseManifest = (source: unknown): CozyManifest => {
   return parsed.resource;
 }
 
+export const parseNumber = (s: string): number | undefined => {
+  const n = Number.parseFloat(s.replace(',', '.'));
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
 export const getEmptyCanvasLabel = (reconstruction: ReconstructionCanvas[]) => {
   const regex = /^New Composite( \((\d+)\))?$/;
 
