@@ -145,7 +145,7 @@ export const CanvasComposer = () => {
       [&_.openseadragon-container]:z-10 [&_.navigator]:rounded-tl-md [&_.navigator]:bg-neutral-50! [&_.navigator]:border-r-0! 
       [&_.navigator]:border-b-0! [&_.navigator]:border-t! [&_.navigator]:border-l! [&_.navigator]:border-neutral-400/70! 
       [&_.navigator]:shadow-md shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
-      <div ref={elementRef} className={cn('size-full leading-0', !isReady && 'invisible')}>
+      <div ref={elementRef} className={cn('size-full', !isReady && 'invisible')}>
         {viewer && (
          <ViewerSvgOverlay 
             viewer={viewer}
