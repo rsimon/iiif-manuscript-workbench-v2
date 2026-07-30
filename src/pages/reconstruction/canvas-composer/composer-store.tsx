@@ -156,9 +156,6 @@ const scheduleAppStoreSync = pDebounce(() => {
 // Downwards sync from app store to local state
 useAppStore.subscribe((state, prevState) => {
   // Layout only needs recomputing if structural props changed by value.
-  // getCanvasSize (rather than reading source.canvas.width/height directly)
-  // is what makes an original canvas's own size override actually trigger
-  // a layout recompute.
   const stripIrrelevant = (r: ReconstructionCanvas) => {
     const { id, width, height } = r;
     return { id, width, height };
