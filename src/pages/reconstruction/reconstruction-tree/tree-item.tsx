@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { IconGripVertical, IconStack2 } from '@tabler/icons-react';
+import { IconAlertTriangle, IconGripVertical, IconStack2 } from '@tabler/icons-react';
 import { combine } from '@atlaskit/pragmatic-drag-and-drop/combine';
 import { draggable, dropTargetForElements } from '@atlaskit/pragmatic-drag-and-drop/element/adapter';
 import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box';
@@ -12,6 +12,7 @@ import { EditableCanvasLabel } from './editable-canvas-label';
 import { ITEM_GAP, TreeDropIndicator, viewTransitionName } from './use-drag-and-drop';
 import type { DragPayload } from './use-drag-and-drop';
 import { ReconstructionTreeItemActions } from './tree-item-actions';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 
 interface ReconstructionTreeItemProps {
 
@@ -132,7 +133,12 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
                     onIsEditingChange={setIsEditingLabel}
                     onCommit={label => renameCanvas(item.id, label)} />
 
-                  <span className="text-xs text-muted-foreground ml-0.5">{item.sources.length} canvases</span>
+                  <span className="text-xs text-muted-foreground ml-0.5 flex gap-1.5 items-center">
+                    {item.sources.length} canvases
+                    {item.sources.length === 0 && (
+                      <EmptyCanvasHint />
+                    )}
+                  </span>
                 </div>
 
                 <ReconstructionTreeItemActions 
@@ -278,3 +284,21 @@ const TreeItemContent = (props: TreeItemContentProps) => {
   )
 
 }
+
+const EmptyCanvasHint = () => (
+  <Tooltip>
+    <TooltipTrigger>
+      <IconAlertTriangle className="size-4" />
+    </TooltipTrigger>
+
+    <TooltipContent>
+      <div className="leading-relaxed text-[13px] tracking-wide">
+        For intentionally empty canvases, the <a 
+          target="_blank" 
+          href="https://iiif.io/api/cookbook/recipe/0283-missing-image/"
+          className="underline">IIIF cookbook</a> recommends a descriptive label 
+          such as "fol. 12v (missing)".
+      </div>
+    </TooltipContent>
+  </Tooltip>
+)
