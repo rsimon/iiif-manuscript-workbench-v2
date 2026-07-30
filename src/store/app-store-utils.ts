@@ -3,17 +3,6 @@ import { reorder } from '@atlaskit/pragmatic-drag-and-drop/reorder';
 import type { SourceCanvas, ReconstructionCanvas } from '@/types';
 import type { MoveDirection } from './app-store';
 
-// Canonical home for this (composer-utils.ts re-exports it) -- living here
-// rather than in composer-utils.ts avoids a circular import, since this
-// file already needs to be importable from composer-utils.ts (for
-// parseCanvas) and is itself used from a couple of non-composer call sites
-// (create-manifest.ts, use-drag-and-drop.tsx) that shouldn't have to
-// depend on the composer's own internals just for this.
-export const getCanvasSize = (canvas: ReconstructionCanvas): [number, number] =>
-  canvas.type === 'original'
-    ? [canvas.width ?? canvas.source.canvas.width, canvas.height ?? canvas.source.canvas.height]
-    : [canvas.width, canvas.height];
-
 export const parseCanvas = (source: unknown): CozyCanvas => {
   const parsed = Cozy.parse(source);
 
@@ -74,9 +63,9 @@ export const appendEmptyCanvas = (
   fallbackWidth = 1000, 
   fallbackHeight = 1000
 ): ReconstructionCanvas[] => {
-  const [width, height] = reconstruction.length > 0
-    ? getCanvasSize(reconstruction[reconstruction.length - 1])
-    : [fallbackWidth, fallbackHeight];
+  const { width, height } = reconstruction.length > 0
+    ? reconstruction[reconstruction.length - 1]
+    : { width: fallbackWidth, height: fallbackHeight };
 
   return [
     ...reconstruction,
@@ -134,20 +123,14 @@ export const mergeInto = (
             sources: sourcesToMerge
           };
         } else {
-          // Destination is an original -- becomes a composite. Carry
-          // forward its effective size (its own override, if any, else its
-          // source's native size) and physical size, same reasoning as the
-          // composer's own applyEdits type-transition handling.
-          const [width, height] = getCanvasSize(r);
-
           return {
             type: 'composite',
             id: `${baseURI}/${crypto.randomUUID()}`,
             sources: sourcesToMerge,
             // Keep destination label and size
             label: r.label,
-            width,
-            height,
+            width: r.width,
+            height: r.height,
             physicalSize: r.physicalSize
           }
         }

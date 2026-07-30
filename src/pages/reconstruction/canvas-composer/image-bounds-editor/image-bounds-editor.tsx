@@ -4,7 +4,7 @@ import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../../reconstruction-store';
 import { useComposerStore } from '../composer-store';
 import type { ComposerLayoutItem,  DraggableImage,  HandleType, ResizeHandleType } from '../composer-types';
-import { getDraggableImageKey, getIntersectingItems, getCanvasSize } from '../composer-utils';
+import { getDraggableImageKey, getIntersectingItems } from '../composer-utils';
 import { CornerHandle } from './corner-handle';
 import { 
   cornersToSvgPoints, 
@@ -62,7 +62,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         .find(r => r.id === selectedImage.item.reconstructionCanvasId);
       if (!canvas) return;
 
-      const [canvasWidth] = getCanvasSize(canvas);
+      const { width: canvasWidth } = canvas;
       const { x, y, width } = selectedImage.image;
       const liveCorners = getImageCorners(selectedImage, canvasWidth, x, y, width);
       updateIntersectingItems(liveCorners);
@@ -95,8 +95,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return [];
 
-    const [canvasWidth] = getCanvasSize(canvas);
-    return getImageCorners(selectedImage, canvasWidth);
+    return getImageCorners(selectedImage, canvas.width);
   }, [selectedImage]);
 
   const updateIntersectingItems = (corners: Point[]) => {
@@ -128,7 +127,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return;
 
-    const [canvasWidth] = getCanvasSize(canvas);
+    const { width: canvasWidth } = canvas;
 
     origin.current = getPoint(evt, props.viewer);
 
@@ -184,8 +183,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         x, y, width
       });
 
-      const [canvasWidth] = getCanvasSize(shape.canvas);
-      const revertedCorners = getImageCorners(selectedImage, canvasWidth, x, y, width);
+      const revertedCorners = getImageCorners(selectedImage, shape.canvas.width, x, y, width);
       updateIntersectingItems(revertedCorners);
     }
 
@@ -244,7 +242,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       if (!source || !target || !targetItem) return;
 
       // Translate image into the new canvas's local coordinate system
-      const [targetWidth] = getCanvasSize(target);
+      const { width: targetWidth } = target;
 
       const targetImage = {
         ...initialImg,
@@ -268,7 +266,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         setSelectedCanvas([target]);
       }
     } else {
-      const [canvasWidth] = getCanvasSize(initialShape.current.canvas);
+      const { width: canvasWidth } = initialShape.current.canvas;
 
       const updatedImage: DraggableImage = {
         ...initialImg, 
@@ -283,7 +281,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
     if (!selectedImage || !initialShape.current) return;
 
-    const [canvasWidth] = getCanvasSize(initialShape.current.canvas);
+    const { width: canvasWidth } = initialShape.current.canvas;
 
     const dx = delta[0] * canvasWidth;
     const dy = delta[1] * canvasWidth;
