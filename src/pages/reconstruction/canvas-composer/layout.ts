@@ -1,6 +1,5 @@
 import type { ReconstructionCanvas } from '@/types';
 import type { ComposerLayout, ComposerLayoutItem } from './composer-types';
-import { getCanvasSize } from './composer-utils';
 
 export const ROW_GAP = 0.25;
 
@@ -24,11 +23,8 @@ export const TwoColumnLayout = (reconstruction: ReconstructionCanvas[]): Compose
     const left = reconstruction[i];
     const right = reconstruction[i + 1]
 
-    const [leftWidth, leftHeight] = getCanvasSize(left);
-    const leftAspect = leftHeight / leftWidth;
-
-    const [rightWidth, rightHeight] = right ? getCanvasSize(right) : [0, 0];
-    const rightAspect = right ? rightHeight / rightWidth : 0;
+    const leftAspect = left.height / left.width;
+    const rightAspect = right ? right.height / right.width : 0;
 
     const rowHeight = Math.max(leftAspect, rightAspect);
 
