@@ -40,13 +40,8 @@ interface AppStore {
   updateReconstruction: (updated: ReconstructionCanvas[]) => void;
 
   // Actions: combined
-  // Keyed by *source* canvas ID -- may target a nested source within a
-  // composite. See setCanvasPhysicalSize for the reconstruction canvas's own.
-  setPhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
-  // Sets the physical size on the reconstruction canvas itself (as opposed
-  // to one of its underlying sources) -- this is the value that gets
-  // exported into the manifest's physdim service, see create-manifest.ts.
-  setCanvasPhysicalSize: (canvasId: string, size?: PhysicalSize) => void;
+  setSourcePhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
+  setReconstructionPhysicalSize: (canvasId: string, size?: PhysicalSize) => void;
   resetAll: () => void;
 
 }
@@ -90,6 +85,8 @@ export const useAppStore = create<AppStore>()(
               type: 'original',
               id: canvas.id,
               label: canvas.getLabel(),
+              width: canvas.width,
+              height: canvas.height,
               source: {
                 sourceManifestId: sourceId,
                 canvas,
@@ -111,6 +108,8 @@ export const useAppStore = create<AppStore>()(
               type: 'original' as const,
               id: s.canvas.id,
               label: s.canvas.getLabel(),
+              width: s.canvas.width,
+              height: s.canvas.height,
               source: {
                 sourceManifestId: s.sourceId,
                 canvas: s.canvas,
@@ -160,7 +159,7 @@ export const useAppStore = create<AppStore>()(
 
       updateReconstruction: reconstruction => set({ reconstruction }),
 
-      setPhysicalSize: (sourceCanvasId, size) => set(({ reconstruction, sizes }) => {
+      setSourcePhysicalSize: (sourceCanvasId, size) => set(({ reconstruction, sizes }) => {
         // Update 'sizes' map
         const updatedSizes = new Map(sizes);
         if (size)
@@ -190,7 +189,7 @@ export const useAppStore = create<AppStore>()(
         return { sizes: updatedSizes, reconstruction: updatedReconstruction };
       }),
 
-      setCanvasPhysicalSize: (canvasId, size) => set(({ reconstruction }) => ({
+      setReconstructionPhysicalSize: (canvasId, size) => set(({ reconstruction }) => ({
         reconstruction: reconstruction.map(r => r.id === canvasId ? { ...r, physicalSize: size } : r)
       })),
 
