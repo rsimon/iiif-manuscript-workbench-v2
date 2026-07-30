@@ -1,13 +1,13 @@
-import { useAppStore } from '@/store/app-store';
-import type { ReconstructionCanvas } from '@/types';
+import type { ReconstructionCanvas, SourceManifest } from '@/types';
 
 export const createManifest = (
   label: string,
   summary: string,
-  attribution: string
+  attribution: string,
+  sources: SourceManifest[],
+  reconstruction: ReconstructionCanvas[],
+  baseURI: string
 ) => {
-  const { baseURI, reconstruction, sources } = useAppStore.getState();
-
   return {
     '@context': 'http://iiif.io/api/presentation/3/context.json',
     type: 'Manifest',
@@ -37,9 +37,20 @@ export const createManifest = (
 }
 
 const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
+  // https://iiif.io/api/annex/services/#physical-dimensions
+  const physdim = r.physicalSize ? {
+    service: {
+      '@context': 'http://iiif.io/api/annex/services/physdim/1/context.json',
+      profile: 'http://iiif.io/api/annex/services/physdim',
+      physicalScale: r.physicalSize.width / (r.type === 'original' ? r.source.canvas.width : r.width),
+      physicalUnits: r.physicalSize.unit
+    }
+  } : {};
+
   if (r.type === 'original') return {
     ...r.source.canvas.source,
-    label: { en: [r.label] }
+    label: { en: [r.label] },
+    ...physdim
   };
 
   const canvasId = `${baseURI}/canvas/${crypto.randomUUID()}`;
@@ -50,33 +61,7 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
     label: { en: [ r.label ] },
     width: r.width,
     height: r.height,
-    /*
-    ...(r.sources.length === 0 ? {
-      placeholderCanvas: {
-        id: `${canvasId}/placeholder`,
-        type: 'Canvas',
-        width: 1200,
-        height: 1650,
-        items: [{
-          id: `${canvasId}/placeholder/1`,
-          type: 'AnnotationPage',
-          items: [{
-            id: `${canvasId}/placeholder/1/image`,
-            type: 'Annotation',
-            motivation: 'painting',
-            body: {
-              id: `${baseURI}/empty_placeholder.png`,
-              type: 'Image',
-              format: 'image/png',
-              width: 1200,
-              height: 1650
-            },
-            target: `${canvasId}/placeholder`
-          }]
-        }]
-      }
-    } : {}),
-    */
+    ...physdim,
     items: r.sources.length === 0 ? [] :[{
       id: `${canvasId}/page/1`,
       type: 'AnnotationPage',

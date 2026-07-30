@@ -34,17 +34,23 @@ export const ExportReconstructionDialog = (props: ExportReconstructionDialogProp
 
   const { open, onOpenChange } = props;
 
-  const sources = useAppStore(state => state.sources.length);
-  const reconstruction = useAppStore(state => state.reconstruction.length);
+  const sources = useAppStore(state => state.sources);
+  const reconstruction = useAppStore(state => state.reconstruction);
+  const baseURI = useAppStore(state => state.baseURI);
 
   const [label, setLabel] = useState('Reconstructed Manuscript');
   const [description, setDescription] = useState('');
   const [attribution, setAttribution] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const generatedManifest = useMemo(() => 
-    createManifest(label, description, attribution)
-  , [label, description, attribution]);
+  const generatedManifest = useMemo(() => createManifest(
+    label, 
+    description, 
+    attribution,
+    sources,
+    reconstruction,
+    baseURI
+  ), [label, description, attribution, sources, reconstruction, baseURI]);
 
   const manifestJson = 
     JSON.stringify(generatedManifest, null, 2);
@@ -127,7 +133,8 @@ export const ExportReconstructionDialog = (props: ExportReconstructionDialogProp
             <div className="rounded border border-sky-200 bg-sky-50 p-3">
               <p className="text-sm text-sky-700/70">
                 This manifest contains{' '}
-                <strong>{reconstruction} canvases</strong> assembled from <strong>{sources} source manifests</strong>.
+                <strong>{reconstruction.length} canvases</strong> assembled 
+                from <strong>{sources.length} source manifests</strong>.
               </p>
             </div>
           </TabsContent>
