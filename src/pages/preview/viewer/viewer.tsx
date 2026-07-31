@@ -120,8 +120,7 @@ export const Viewer = (props: ViewerProps) => {
 
   return (
     <div className="size-full relative bg-neutral-100 [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-      <div ref={elementRef} className="size-full">
-      <div ref={elementRef} className={cn('size-full', !isReady && 'invisible')}></div>
+      <div ref={elementRef} className={cn('size-full', !isReady && 'invisible')}>
         {viewer && (
           <CanvasIndicator 
             viewer={viewer} 
