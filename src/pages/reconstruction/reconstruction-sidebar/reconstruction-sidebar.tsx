@@ -7,7 +7,6 @@ import { SingleSelection } from './single-selection';
 
 export const ReconstructionSidebar = () => {
   const selection = useReconstructionStore(state => state.selection);
-
   const selectedImage = useComposerStore(state => state.selectedImage);
 
   return (
