@@ -1,19 +1,9 @@
 import { useAppStore } from '@/store/app-store';
-import type { PhysicalSize, ReconstructionCanvas, SourceCanvas } from '@/types';
+import type { PhysicalSize, ReconstructionCanvas } from '@/types';
 import type { DraggableImage, DraggableImageSelection } from '../../reconstruction-types';
 import { getDraggableImageKey } from '../../reconstruction-utils';
 import { useComposerStore } from '../../canvas-composer/composer-store';
 import { cn } from '@/shadcn/utils';
-
-// Shorthand
-const getSourceCanvases = (canvas: ReconstructionCanvas): SourceCanvas[] =>
-  canvas.type === 'original' ? [canvas.source] : canvas.sources;
-
-// Label of the SourceCanvas this image is associated with
-const getSourceLabel = (canvas: ReconstructionCanvas, image: DraggableImage): string => {
-  const source = getSourceCanvases(canvas).find(s => s.canvas.id === image.sourceCanvasId);
-  return source?.canvas.getLabel() ?? image.sourceCanvasId;
-}
 
 
 interface StateSingleSelectionProps {
@@ -69,33 +59,6 @@ export const StateSingleSelection = (props: StateSingleSelectionProps) => {
 
   return (
     <div className="space-y-3">
-      <div className="border rounded-md shadow-xs bg-neutral-50 p-2.5 space-y-1">
-
-
-        <div className="text-xs text-muted-foreground tabular-nums">
-          <EditablePhysicalSize
-            size={canvas.physicalSize}
-            onCommit={size => setCanvasPhysicalSize(canvas.id, size)} />
-        </div>
-
-        {canvas.type === 'composite' && (
-          <div className="text-xs text-muted-foreground">
-            Composite of {canvas.sources.length} canvas{canvas.sources.length === 1 ? '' : 'es'}
-          </div>
-        )}
-
-        {sourceMeasurements.length > 0 && (
-          <div className="text-xs text-muted-foreground tabular-nums space-y-0.5 pt-0.5">
-            {sourceMeasurements.map(source => (
-              <div key={source.id} className="truncate">
-                {canvas.type === 'composite' ? `${source.label}: ` : 'Source scan: '}
-                {formatPhysicalSize(source.physicalSize)}
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-
       {activeImage && (
         <SelectedImageDetail canvas={canvas} selection={activeImage} />
       )}
@@ -126,47 +89,7 @@ export const StateSingleSelection = (props: StateSingleSelectionProps) => {
 
 }
 
-interface SelectedImageDetailProps {
 
-  canvas: ReconstructionCanvas;
-
-  selection: DraggableImageSelection;
-
-}
-
-const SelectedImageDetail = (props: SelectedImageDetailProps) => {
-  const { canvas, selection } = props;
-  const { image } = selection;
-
-  const height = image.width * image.resource.height / image.resource.width;
-
-  const cells: [string, number][] = [
-    ['x', image.x],
-    ['y', image.y],
-    ['w', image.width],
-    ['h', height]
-  ];
-
-  return (
-    <div className="border border-orange-500/50 bg-orange-50/60 rounded-md p-2.5 space-y-2">
-      <div className="text-orange-600 text-[11px] font-medium tracking-wide uppercase">
-        Selected image
-      </div>
-
-      <div className="text-xs truncate">{getSourceLabel(canvas, image)}</div>
-
-      <div className="grid grid-cols-2 gap-1.5">
-        {cells.map(([key, value]) => (
-          <div key={key} className="bg-white rounded-sm px-2 py-1 text-xs tabular-nums">
-            <div className="text-muted-foreground text-[10px] uppercase">{key}</div>
-            {Math.round(value)}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
-
-}
 
 interface ImageRowProps {
 

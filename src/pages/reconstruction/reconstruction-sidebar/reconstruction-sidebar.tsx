@@ -11,7 +11,7 @@ export const ReconstructionSidebar = () => {
 
   const selection = useReconstructionStore(state => state.selection);
 
-  // const selectedImage = useComposerStore(state => state.selectedImage);
+  const selectedImage = useComposerStore(state => state.selectedImage);
   const imagesByCanvasId = useComposerStore(state => state.imagesByCanvasId);
 
   return (
@@ -26,10 +26,7 @@ export const ReconstructionSidebar = () => {
       ) : (
         <SingleSelection
           canvas={selection[0]}
-          // index={reconstruction.findIndex(r => r.id === selection[0].id)}
-          // images={imagesByCanvasId.get(selection[0].id) ?? []}
-          // selectedImage={selectedImage} 
-          />
+          imageSelection={selectedImage} />
       )}
     </ScrollArea>
   )

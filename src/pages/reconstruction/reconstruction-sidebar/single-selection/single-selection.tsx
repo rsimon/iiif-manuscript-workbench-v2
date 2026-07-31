@@ -2,12 +2,16 @@ import { IconStack2 } from '@tabler/icons-react';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
 import { FieldGroup, FieldLegend, FieldSet } from '@/shadcn/field';
+import type { DraggableImageSelection } from '../../reconstruction-types';
 import { EditablePixelSize } from './editable-pixel-size';
 import { EditablePhysicalSize } from './editable-physical-size';
+import { SelectedImageDetails } from './selected-image-details';
 
 interface SingleSelectionProps {
 
   canvas: ReconstructionCanvas;
+
+  imageSelection?: DraggableImageSelection;
 
 }
 
@@ -18,6 +22,10 @@ export const SingleSelection = (props: SingleSelectionProps) => {
 
   const resizeCanvas = useAppStore(state => state.resizeCanvas);
   const setPhysicalSize = useAppStore(state => state.setReconstructionPhysicalSize);
+
+  const selectedImage = props.imageSelection?.item.reconstructionCanvasId === canvas.id
+    ? props.imageSelection.image
+    : undefined; // Just being defensive - should never happen
 
   const onResizePx = (newWidth: number, newHeight: number) => {
     if (newWidth === Math.round(width) && newHeight === Math.round(height)) return;
@@ -53,6 +61,10 @@ export const SingleSelection = (props: SingleSelectionProps) => {
             onCommit={size => setPhysicalSize(canvas.id, size)} />
         </FieldSet>
       </FieldGroup>
+
+      {selectedImage && (
+        <SelectedImageDetails image={selectedImage} />
+      )}
     </div>
   )
 
