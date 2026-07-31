@@ -32,7 +32,7 @@ export const Reconstruction = () => {
           open={isSidebarOpen}
           onOpenChange={setSidebarOpen}
           minSize={40}
-          openSize={240}
+          openSize={220}
           className="bg-white border-l">
           <ReconstructionSidebar />
         </AnimatedPanel>

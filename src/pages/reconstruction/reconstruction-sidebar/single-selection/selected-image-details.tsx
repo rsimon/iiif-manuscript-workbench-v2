@@ -21,7 +21,7 @@ const parseCoord = (s: string): number | undefined => {
 }
 
 const INPUT_CLASS = 'tabular-nums h-7 p-1 shrink-0 field-sizing-content min-w-[4ch] max-w-[8ch]';
-const TRIGGER_CLASS = 'text-right tabular-nums hover:text-foreground hover:underline underline-offset-3 decoration-dotted cursor-text text-sm bg-muted py-0.5 px-1.5 rounded';
+const TRIGGER_CLASS = 'w-full text-right tabular-nums hover:text-foreground hover:underline underline-offset-3 decoration-dotted cursor-text text-sm bg-muted py-0.5 px-1.5 rounded';
 const FIELD_CLASS = 'col-span-2 grid grid-cols-subgrid w-auto gap-1.5 items-baseline';
 const LABEL_CLASS = 'text-muted-foreground font-normal text-[10px] uppercase';
 
@@ -107,7 +107,7 @@ export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
         ref={groupRef}
         onBlur={onGroupBlur}
         className="gap-1 p-0.5">
-        <div className="grid w-fit grid-cols-[auto_auto_auto_auto] gap-x-4 gap-y-1.5 items-baseline">
+        <div className="grid w-full grid-cols-[auto_1fr_auto_1fr] gap-x-4 gap-y-1.5 items-baseline">
           <Field orientation="horizontal" className={FIELD_CLASS}>
             <FieldLabel htmlFor="image-x" className={LABEL_CLASS}>
               x

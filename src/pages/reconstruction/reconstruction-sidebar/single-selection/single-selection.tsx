@@ -47,7 +47,7 @@ export const SingleSelection = (props: SingleSelectionProps) => {
   }
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-2">
       <h2 className="flex items-center gap-1.5 border-b p-4">
         {canvas.type === 'composite' && (
           <IconStack2 className="size-5 text-muted-foreground shrink-0" stroke={1.75} />
