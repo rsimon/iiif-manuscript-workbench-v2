@@ -93,7 +93,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     if (!viewer) return;
 
     const { reconstruction } = useAppStore.getState();
-    const { tiledImages, isDraggingImage } = useComposerStore.getState();
+    const { tiledImages, isUserEdit } = useComposerStore.getState();
 
     const placements = layout.items.flatMap((item, i) => {
       const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
@@ -122,8 +122,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       // 2. move/resize images that already exist
       const existing = tiledImages.get(key);
       if (existing) {
-        existing.setPosition(new OpenSeadragon.Point(x, y), isDraggingImage);
-        existing.setWidth(width, isDraggingImage);
+        existing.setPosition(new OpenSeadragon.Point(x, y), isUserEdit);
+        existing.setWidth(width, isUserEdit);
         return Promise.resolve();
       }
 

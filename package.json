@@ -3,6 +3,7 @@
   "version": "0.2.0",
   "author": "Rainer Simon",
   "main": "src/index.tsx",
+  "type": "module",
   "scripts": {
     "start": "vite",
     "build": "tsc --noEmit && vite build",
