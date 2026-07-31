@@ -138,7 +138,7 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
     <button
       type="button"
       onClick={() => setIsEditing(true)}
-      className="text-primary flex gap-0.5 items-center text-sm hover:underline cursor-pointer underline-offset-2 decoration-dotted">
+      className="text-primary mt-px flex text-xs gap-0.5 items-center hover:underline cursor-pointer underline-offset-2 decoration-dotted">
       <IconPlus className="size-3.5" /> Set dimensions
     </button>
   )
