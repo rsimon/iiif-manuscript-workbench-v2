@@ -72,7 +72,7 @@ export const FloatingPanelContent = (props: FloatingPanelContentProps) => {
 
           <div
             ref={headerRef}
-            className="pointer-events-auto flex cursor-move items-center justify-between border-b bg-muted/40 px-1 py-1 select-none">
+            className="pointer-events-auto flex cursor-move items-center justify-between border-b rounded-t-md px-1 py-1 select-none">
             <div className="flex gap-1.5 items-center text-xs">
               <IconGripVertical 
                 className="size-3.5 text-muted-foreground" />

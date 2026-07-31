@@ -105,7 +105,7 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
       type="button"
       onClick={() => setIsEditing(true)}
       className={EDITABLE_TRIGGER_CLASS}>
-      Physical size: {formatPhysicalSize(props.size)}
+      {formatPhysicalSize(props.size)}
     </button>
   ) : (
     <button

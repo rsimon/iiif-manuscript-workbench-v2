@@ -24,22 +24,29 @@ export const SingleSelection = (props: SingleSelectionProps) => {
   }
 
   return (
-    <div className="p-4 space-y-1">
-      <div className="flex items-center gap-1.5">
+    <div className="space-y-1">
+      <h2 className="flex items-center gap-1.5 border-b p-4">
         {canvas.type === 'composite' && (
           <IconStack2 className="size-5 text-muted-foreground shrink-0" stroke={1.75} />
         )}
         <span className="text-base truncate">{canvas.label}</span>
-      </div>
+      </h2>
 
-      <div className="text-xs text-muted-foreground flex items-center gap-1 flex-wrap p-0.5">
-        <EditablePixelSize width={width} height={height} onCommit={onResizePx} />
-      </div>
+      <div className="p-4 space-y-4">
+        <div>
+          <h3 className="text-xs text-muted-foreground uppercase">Image size</h3>
+          <EditablePixelSize 
+            width={width} 
+            height={height} 
+            onCommit={onResizePx} />
+        </div>
 
-      <div className="text-xs text-muted-foreground tabular-nums">
-        <EditablePhysicalSize
-          size={canvas.physicalSize}
-          onCommit={size => setPhysicalSize(canvas.id, size)} />
+        <div>
+          <h3 className="text-xs text-muted-foreground uppercase">Physical size</h3>
+          <EditablePhysicalSize
+            size={canvas.physicalSize}
+            onCommit={size => setPhysicalSize(canvas.id, size)} />
+        </div>
       </div>
     </div>
   )
