@@ -98,7 +98,7 @@ export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
   }
 
   return (
-    <FieldSet className="gap-1 items-start space-y-2 px-4 pb-4">
+    <FieldSet className="gap-1 items-start space-y-1.5 px-4 pb-4">
       <FieldLegend variant="label" className="data-[variant=label]:text-xs uppercase font-normal text-muted-foreground">
         Selected image
       </FieldLegend>
