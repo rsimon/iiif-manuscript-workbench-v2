@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react';
 import type { PhysicalSize } from '@/types';
 import { parseNumber } from '@/store/app-store-utils';
-import { EDITABLE_INPUT_CLASS, EDITABLE_TRIGGER_CLASS, isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
+import { Input } from '@/shadcn/input';
+import { Field, FieldGroup, FieldLabel } from '@/shadcn/field';
+import { EDITABLE_TRIGGER_CLASS, isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
 
 interface EditablePhysicalSizeProps {
 
@@ -21,7 +23,7 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
   const [heightStr, setHeightStr] = useState('');
   const [unitStr, setUnitStr] = useState('');
 
-  const groupRef = useRef<HTMLSpanElement>(null);
+  const groupRef = useRef<HTMLDivElement>(null);
   const widthRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -78,28 +80,52 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
   }
 
   return isEditing ? (
-    <span ref={groupRef} onBlur={onGroupBlur} className="inline-flex items-center gap-1 flex-wrap">
-      <input
-        ref={widthRef}
-        placeholder="–"
-        value={widthStr}
-        onChange={e => setWidthStr(e.target.value)}
-        onKeyDown={onKeyDown}
-        className={EDITABLE_INPUT_CLASS} />
-      <span>×</span>
-      <input
-        placeholder="–"
-        value={heightStr}
-        onChange={e => setHeightStr(e.target.value)}
-        onKeyDown={onKeyDown}
-        className={EDITABLE_INPUT_CLASS} />
-      <input
-        placeholder="unit"
-        value={unitStr}
-        onChange={e => setUnitStr(e.target.value)}
-        onKeyDown={onKeyDown}
-        className={EDITABLE_INPUT_CLASS} />
-    </span>
+    <FieldGroup
+      ref={groupRef}
+      onBlur={onGroupBlur}
+      className="flex-row items-center gap-2">
+      <Field>
+        <FieldLabel htmlFor="physical-width" className="sr-only">
+          Width
+        </FieldLabel>
+        <Input
+          id="physical-width"
+          ref={widthRef}
+          placeholder="–"
+          value={widthStr}
+          onChange={e => setWidthStr(e.target.value)}
+          onKeyDown={onKeyDown}
+          className="tabular-nums grow h-8" />
+      </Field>
+
+      <span className="text-muted-foreground">×</span>
+
+      <Field>
+        <FieldLabel htmlFor="physical-height" className="sr-only">
+          Height
+        </FieldLabel>
+        <Input
+          id="physical-height"
+          placeholder="–"
+          value={heightStr}
+          onChange={e => setHeightStr(e.target.value)}
+          onKeyDown={onKeyDown}
+          className="tabular-nums grow h-8" />
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor="physical-unit" className="sr-only">
+          Unit
+        </FieldLabel>
+        <Input
+          id="physical-unit"
+          placeholder="unit"
+          value={unitStr}
+          onChange={e => setUnitStr(e.target.value)}
+          onKeyDown={onKeyDown}
+          className="tabular-nums shrink-0 w-16 h-8" />
+      </Field>
+    </FieldGroup>
   ) : props.size ? (
     <button
       type="button"

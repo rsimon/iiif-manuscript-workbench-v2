@@ -1,6 +1,8 @@
 import { parseNumber } from '@/store/app-store-utils';
 import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react';
-import { EDITABLE_INPUT_CLASS, EDITABLE_TRIGGER_CLASS, isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
+import { Input } from '@/shadcn/input';
+import { Field, FieldGroup, FieldLabel } from '@/shadcn/field';
+import { EDITABLE_TRIGGER_CLASS, isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
 
 interface EditablePixelSizeProps {
 
@@ -18,14 +20,13 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
   const [widthStr, setWidthStr] = useState('');
   const [heightStr, setHeightStr] = useState('');
 
-  const groupRef = useRef<HTMLSpanElement>(null);
+  const groupRef = useRef<HTMLDivElement>(null);
   const widthRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!isEditing) return;
 
     setWidthStr(String(props.width));
-    setHeightStr(String(props.height));
     setHeightStr(String(props.height));
 
     const frameId = requestAnimationFrame(() => {
@@ -68,26 +69,39 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
   }
 
   return isEditing ? (
-    <span 
-      ref={groupRef} 
-      onBlur={onGroupBlur} 
-      className="inline-flex items-center gap-1">
-      <input
-        ref={widthRef}
-        value={widthStr}
-        onChange={e => setWidthStr(e.target.value)}
-        onKeyDown={onKeyDown}
-        className={EDITABLE_INPUT_CLASS} />
+    <FieldGroup
+      ref={groupRef}
+      onBlur={onGroupBlur}
+      className="flex-row items-center gap-2">
+      <Field>
+        <FieldLabel htmlFor="pixel-width" className="sr-only">
+          Width
+        </FieldLabel>
+        <Input
+          id="pixel-width"
+          ref={widthRef}
+          value={widthStr}
+          onChange={e => setWidthStr(e.target.value)}
+          onKeyDown={onKeyDown}
+          className="tabular-nums h-7 p-0.5" />
+      </Field>
 
-      <span>×</span>
+      <span className="text-muted-foreground">×</span>
 
-      <input
-        value={heightStr}
-        onChange={e => setHeightStr(e.target.value)}
-        onKeyDown={onKeyDown}
-        className={EDITABLE_INPUT_CLASS} />
-      <span>px</span>
-    </span>
+      <Field>
+        <FieldLabel htmlFor="pixel-height" className="sr-only">
+          Height
+        </FieldLabel>
+        <Input
+          id="pixel-height"
+          value={heightStr}
+          onChange={e => setHeightStr(e.target.value)}
+          onKeyDown={onKeyDown}
+          className="tabular-nums h-7 p-0.5" />
+      </Field>
+
+      <span className="text-muted-foreground text-sm shrink-0">px</span>
+    </FieldGroup>
   ) : (
     <button
       type="button"

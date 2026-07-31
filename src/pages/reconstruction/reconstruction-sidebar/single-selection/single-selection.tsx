@@ -1,6 +1,7 @@
 import { IconStack2 } from '@tabler/icons-react';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
+import { FieldGroup, FieldLegend, FieldSet } from '@/shadcn/field';
 import { EditablePixelSize } from './editable-pixel-size';
 import { EditablePhysicalSize } from './editable-physical-size';
 
@@ -32,22 +33,26 @@ export const SingleSelection = (props: SingleSelectionProps) => {
         <span className="text-base truncate">{canvas.label}</span>
       </h2>
 
-      <div className="p-4 space-y-4">
-        <div>
-          <h3 className="text-xs text-muted-foreground uppercase">Image size</h3>
-          <EditablePixelSize 
-            width={width} 
-            height={height} 
+      <FieldGroup className="p-4 gap-4">
+        <FieldSet className="gap-1 items-start space-y-0.5">
+          <FieldLegend variant="label" className="text-xs uppercase font-normal text-muted-foreground">
+            Image size
+          </FieldLegend>
+          <EditablePixelSize
+            width={width}
+            height={height}
             onCommit={onResizePx} />
-        </div>
+        </FieldSet>
 
-        <div>
-          <h3 className="text-xs text-muted-foreground uppercase">Physical size</h3>
+        <FieldSet className="gap-1 items-start space-y-0.5">
+          <FieldLegend variant="label" className="text-xs uppercase font-normal text-muted-foreground">
+            Physical size
+          </FieldLegend>
           <EditablePhysicalSize
             size={canvas.physicalSize}
             onCommit={size => setPhysicalSize(canvas.id, size)} />
-        </div>
-      </div>
+        </FieldSet>
+      </FieldGroup>
     </div>
   )
 
