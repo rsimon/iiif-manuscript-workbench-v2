@@ -29,7 +29,7 @@ export const Viewer = (props: ViewerProps) => {
 
   const [viewer, setViewer] = useState<OpenSeadragonViewer | null>(null);
   const [canvasBounds, setCanvasBounds] = useState<CanvasBounds[]>([]);
-  // const [isReady, setIsReady] = useState(false);
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     if (!elementRef.current) return;
@@ -71,7 +71,7 @@ export const Viewer = (props: ViewerProps) => {
   useEffect(() => {
     if (!viewer || !(left || right)) return;
 
-    // setIsReady(false);
+    setIsReady(false);
 
     let cancelled = false;
 
@@ -106,7 +106,7 @@ export const Viewer = (props: ViewerProps) => {
 
       const viewRect = new OpenSeadragon.Rect(-0.15, -0.12, totalWidth + 0.3, totalHeight + 0.4);
       viewer.viewport.fitBounds(viewRect, true);
-      // setIsReady(true);
+      setIsReady(true);
     }).then(() => {
       setCanvasBounds([leftBounds, rightBounds].filter(b => b !== undefined));
     });
@@ -121,7 +121,7 @@ export const Viewer = (props: ViewerProps) => {
   return (
     <div className="size-full relative bg-neutral-100 [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
       <div ref={elementRef} className="size-full">
-      <div ref={elementRef} className={cn('size-full') /*, !isReady && 'invisible')*/}></div>
+      <div ref={elementRef} className={cn('size-full', !isReady && 'invisible')}></div>
         {viewer && (
           <CanvasIndicator 
             viewer={viewer} 
