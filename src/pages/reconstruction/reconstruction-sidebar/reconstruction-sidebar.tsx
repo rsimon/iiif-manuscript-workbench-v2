@@ -1,5 +1,4 @@
 import { ScrollArea } from '@/shadcn/scroll-area';
-import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../reconstruction-store';
 import { useComposerStore } from '../canvas-composer/composer-store';
 import { EmptySidebar } from './empty-sidebar/empty-sidebar';
@@ -7,12 +6,9 @@ import { MultiSelection } from './multi-selection';
 import { SingleSelection } from './single-selection';
 
 export const ReconstructionSidebar = () => {
-  const reconstruction = useAppStore(state => state.reconstruction);
-
   const selection = useReconstructionStore(state => state.selection);
 
   const selectedImage = useComposerStore(state => state.selectedImage);
-  const imagesByCanvasId = useComposerStore(state => state.imagesByCanvasId);
 
   return (
     <ScrollArea className="h-full">
@@ -20,9 +16,7 @@ export const ReconstructionSidebar = () => {
         <EmptySidebar />
       ) : selection.length > 1 ? (
         <MultiSelection
-          selection={selection}
-          reconstruction={reconstruction}
-          imagesByCanvasId={imagesByCanvasId} />
+          selection={selection} />
       ) : (
         <SingleSelection
           canvas={selection[0]}
