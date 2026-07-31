@@ -23,7 +23,9 @@ export const SingleSelection = (props: SingleSelectionProps) => {
 
   const resizeCanvas = useAppStore(state => state.resizeCanvas);
   const setPhysicalSize = useAppStore(state => state.setReconstructionPhysicalSize);
+
   const updateImage = useComposerStore(state => state.updateImage);
+  const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
 
   const selectedImage = props.imageSelection?.item.reconstructionCanvasId === canvas.id
     ? props.imageSelection.image
@@ -39,7 +41,9 @@ export const SingleSelection = (props: SingleSelectionProps) => {
 
   const onChangeImagePosition = (x: number, y: number, width: number) => {
     if (!selectedImage) return;
-    updateImage(canvas.id, { ...selectedImage, x, y, width })
+    setIsDraggingImage(true);
+    updateImage(canvas.id, { ...selectedImage, x, y, width });
+    requestAnimationFrame(() => setIsDraggingImage(false));
   }
 
   return (

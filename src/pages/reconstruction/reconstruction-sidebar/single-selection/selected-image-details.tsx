@@ -21,8 +21,9 @@ const parseCoord = (s: string): number | undefined => {
 }
 
 const INPUT_CLASS = 'tabular-nums h-7 p-1 shrink-0 field-sizing-content min-w-[4ch] max-w-[8ch]';
-
-const TRIGGER_CLASS = 'tabular-nums hover:text-foreground hover:underline underline-offset-2 decoration-dotted cursor-text text-sm';
+const TRIGGER_CLASS = 'text-right tabular-nums hover:text-foreground hover:underline underline-offset-3 decoration-dotted cursor-text text-sm bg-muted py-0.5 px-1.5 rounded';
+const FIELD_CLASS = 'col-span-2 grid grid-cols-subgrid w-auto gap-1.5 items-baseline';
+const LABEL_CLASS = 'text-muted-foreground font-normal text-[10px] uppercase';
 
 export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
   const { image } = props;
@@ -97,18 +98,18 @@ export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
   }
 
   return (
-    <FieldSet className="gap-1 items-start space-y-0.5 px-4 pb-4">
+    <FieldSet className="gap-1 items-start space-y-2 px-4 pb-4">
       <FieldLegend variant="label" className="data-[variant=label]:text-xs uppercase font-normal text-muted-foreground">
         Selected image
       </FieldLegend>
-
+ 
       <FieldGroup
         ref={groupRef}
         onBlur={onGroupBlur}
-        className="gap-1">
-        <div className="flex items-center gap-3">
-          <Field orientation="horizontal" className="w-fit gap-1 items-baseline">
-            <FieldLabel htmlFor="image-x" className="text-muted-foreground text-[10px] uppercase">
+        className="gap-1 p-0.5">
+        <div className="grid w-fit grid-cols-[auto_auto_auto_auto] gap-x-4 gap-y-1.5 items-baseline">
+          <Field orientation="horizontal" className={FIELD_CLASS}>
+            <FieldLabel htmlFor="image-x" className={LABEL_CLASS}>
               x
             </FieldLabel>
             {isEditing ? (
@@ -128,9 +129,9 @@ export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
               </button>
             )}
           </Field>
-
-          <Field orientation="horizontal" className="w-fit gap-1 items-baseline">
-            <FieldLabel htmlFor="image-y" className="text-muted-foreground text-[10px] uppercase">
+ 
+          <Field orientation="horizontal" className={FIELD_CLASS}>
+            <FieldLabel htmlFor="image-y" className={LABEL_CLASS}>
               y
             </FieldLabel>
             {isEditing ? (
@@ -149,11 +150,9 @@ export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
               </button>
             )}
           </Field>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <Field orientation="horizontal" className="w-fit gap-1 items-baseline">
-            <FieldLabel htmlFor="image-w" className="text-muted-foreground text-[10px] uppercase">
+ 
+          <Field orientation="horizontal" className={FIELD_CLASS}>
+            <FieldLabel htmlFor="image-w" className={LABEL_CLASS}>
               w
             </FieldLabel>
             {isEditing ? (
@@ -175,9 +174,9 @@ export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
               </button>
             )}
           </Field>
-
-          <Field orientation="horizontal" className="w-fit gap-1 items-baseline">
-            <FieldLabel htmlFor="image-h" className="text-muted-foreground text-[10px] uppercase">
+ 
+          <Field orientation="horizontal" className={FIELD_CLASS}>
+            <FieldLabel htmlFor="image-h" className={LABEL_CLASS}>
               h
             </FieldLabel>
             {isEditing ? (
