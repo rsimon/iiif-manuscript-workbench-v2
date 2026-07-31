@@ -5,7 +5,7 @@ import { Field, FieldGroup, FieldLabel, FieldLegend, FieldSet } from '@/shadcn/f
 import type { DraggableImage } from '../../reconstruction-types';
 import { isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
 
-interface SelectedImageDetailsProps {
+interface EditableImagePositionProps {
 
   image: DraggableImage;
 
@@ -25,7 +25,7 @@ const TRIGGER_CLASS = 'w-full text-right tabular-nums hover:text-foreground hove
 const FIELD_CLASS = 'col-span-2 grid grid-cols-subgrid w-auto gap-1.5 items-baseline';
 const LABEL_CLASS = 'text-muted-foreground font-normal text-[10px] uppercase';
 
-export const SelectedImageDetails = (props: SelectedImageDetailsProps) => {
+export const EditableImagePosition = (props: EditableImagePositionProps) => {
   const { image } = props;
 
   const aspectRatio = image.resource.width / image.resource.height;

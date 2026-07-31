@@ -6,7 +6,7 @@ import type { DraggableImageSelection } from '../../reconstruction-types';
 import { useComposerStore } from '../../canvas-composer/composer-store';
 import { EditablePixelSize } from './editable-pixel-size';
 import { EditablePhysicalSize } from './editable-physical-size';
-import { SelectedImageDetails } from './selected-image-details';
+import { EditableImagePosition } from './editable-image-position';
 
 interface SingleSelectionProps {
 
@@ -77,7 +77,7 @@ export const SingleSelection = (props: SingleSelectionProps) => {
       </FieldGroup>
 
       {selectedImage && (
-        <SelectedImageDetails
+        <EditableImagePosition
           image={selectedImage}
           onCommit={onChangeImagePosition} />
       )}
