@@ -73,7 +73,7 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
       ref={groupRef}
       onBlur={onGroupBlur}
       className="flex-row items-center gap-2">
-      <Field>
+      <Field orientation="horizontal" className="w-fit">
         <FieldLabel htmlFor="pixel-width" className="sr-only">
           Width
         </FieldLabel>
@@ -83,12 +83,12 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
           value={widthStr}
           onChange={e => setWidthStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums h-7 p-0.5" />
+          className="tabular-nums h-7 p-0.5 shrink-0 field-sizing-content min-w-[2ch] max-w-[8ch]" />
       </Field>
 
       <span className="text-muted-foreground">×</span>
 
-      <Field>
+      <Field orientation="horizontal" className="w-fit">
         <FieldLabel htmlFor="pixel-height" className="sr-only">
           Height
         </FieldLabel>
@@ -97,7 +97,7 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
           value={heightStr}
           onChange={e => setHeightStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums h-7 p-0.5" />
+          className="tabular-nums h-7 p-0.5 shrink-0 field-sizing-content min-w-[2ch] max-w-[8ch]" />
       </Field>
 
       <span className="text-muted-foreground text-sm shrink-0">px</span>

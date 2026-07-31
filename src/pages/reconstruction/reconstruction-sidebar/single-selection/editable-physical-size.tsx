@@ -84,7 +84,7 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
       ref={groupRef}
       onBlur={onGroupBlur}
       className="flex-row items-center gap-2">
-      <Field>
+      <Field orientation="horizontal" className="w-fit">
         <FieldLabel htmlFor="physical-width" className="sr-only">
           Width
         </FieldLabel>
@@ -95,12 +95,12 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
           value={widthStr}
           onChange={e => setWidthStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums grow h-8" />
+          className="tabular-nums shrink-0 h-8 field-sizing-content min-w-[2ch] max-w-[8ch]" />
       </Field>
 
       <span className="text-muted-foreground">×</span>
 
-      <Field>
+      <Field orientation="horizontal" className="w-fit">
         <FieldLabel htmlFor="physical-height" className="sr-only">
           Height
         </FieldLabel>
@@ -110,10 +110,10 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
           value={heightStr}
           onChange={e => setHeightStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums grow h-8" />
+          className="tabular-nums shrink-0 h-8 field-sizing-content min-w-[2ch] max-w-[8ch]" />
       </Field>
 
-      <Field>
+      <Field orientation="horizontal" className="w-fit">
         <FieldLabel htmlFor="physical-unit" className="sr-only">
           Unit
         </FieldLabel>
@@ -123,7 +123,7 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
           value={unitStr}
           onChange={e => setUnitStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums shrink-0 w-16 h-8" />
+          className="tabular-nums shrink-0 h-8 field-sizing-content min-w-[3ch] max-w-[6ch]" />
       </Field>
     </FieldGroup>
   ) : props.size ? (
