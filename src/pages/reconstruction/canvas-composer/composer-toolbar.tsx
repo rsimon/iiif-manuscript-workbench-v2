@@ -32,7 +32,7 @@ export const ComposerToolbar = () => {
   const selectedImage = useComposerStore(state => state.selectedImage);
 
   const updateImage = useComposerStore(state => state.updateImage);
-  const setIsDragging = useComposerStore(state => state.setIsDraggingImage);
+  const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
 
   const reconstruction = useAppStore(state => state.reconstruction);
 
@@ -44,14 +44,14 @@ export const ComposerToolbar = () => {
     const canvas = reconstruction.find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return;
 
-    setIsDragging(true);
+    setIsUserEdit(true);
 
     updateImage(selectedImage.item.reconstructionCanvasId, {
       ...selectedImage.image,
       ...getFillSize(selectedImage.image, canvas)
     });
 
-    requestAnimationFrame(() => setIsDragging(false));
+    requestAnimationFrame(() => setIsUserEdit(false));
   }
 
   return (

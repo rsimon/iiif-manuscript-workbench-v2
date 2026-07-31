@@ -30,7 +30,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
 
   const updateImage = useComposerStore(state => state.updateImage);
   const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
-  const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
+  const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
 
   const setSelectedCanvas = useReconstructionStore(state => state.setSelection);
 
@@ -144,7 +144,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       }
     };
 
-    setIsDraggingImage(true);    
+    setIsUserEdit(true);    
   }
 
   const onPointerMove = (handle: HandleType) => (evt: React.PointerEvent) => {
@@ -191,7 +191,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       }
     }
 
-    requestAnimationFrame(() => setIsDraggingImage(false));
+    requestAnimationFrame(() => setIsUserEdit(false));
   }
 
   const onPointerCancel = (evt: React.PointerEvent) => {
@@ -200,7 +200,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     // Capture is auto-released by the browser on cancel
     origin.current = undefined;
     initialShape.current = undefined;
-    setIsDraggingImage(false);
+    setIsUserEdit(false);
   }
 
   const onMoveImage = (delta: number[]) => {
