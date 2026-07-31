@@ -1,8 +1,9 @@
 import { IconStack2 } from '@tabler/icons-react';
 import { useAppStore } from '@/store/app-store';
-import type { ReconstructionCanvas } from '@/types';
+import type { PhysicalSize, ReconstructionCanvas } from '@/types';
 import { FieldGroup, FieldLegend, FieldSet } from '@/shadcn/field';
 import type { DraggableImageSelection } from '../../reconstruction-types';
+import { useComposerStore } from '../../canvas-composer/composer-store';
 import { EditablePixelSize } from './editable-pixel-size';
 import { EditablePhysicalSize } from './editable-physical-size';
 import { SelectedImageDetails } from './selected-image-details';
@@ -22,14 +23,23 @@ export const SingleSelection = (props: SingleSelectionProps) => {
 
   const resizeCanvas = useAppStore(state => state.resizeCanvas);
   const setPhysicalSize = useAppStore(state => state.setReconstructionPhysicalSize);
+  const updateImage = useComposerStore(state => state.updateImage);
 
   const selectedImage = props.imageSelection?.item.reconstructionCanvasId === canvas.id
     ? props.imageSelection.image
     : undefined; // Just being defensive - should never happen
 
-  const onResizePx = (newWidth: number, newHeight: number) => {
+  const onResizeCanvasPx = (newWidth: number, newHeight: number) => {
     if (newWidth === Math.round(width) && newHeight === Math.round(height)) return;
     resizeCanvas(canvas.id, newWidth, newHeight);
+  }
+
+  const onResizeCanvasPhys = (size: PhysicalSize) =>
+    setPhysicalSize(canvas.id, size);
+
+  const onChangeImagePosition = (x: number, y: number, width: number) => {
+    if (!selectedImage) return;
+    updateImage(canvas.id, { ...selectedImage, x, y, width })
   }
 
   return (
@@ -49,7 +59,7 @@ export const SingleSelection = (props: SingleSelectionProps) => {
           <EditablePixelSize
             width={width}
             height={height}
-            onCommit={onResizePx} />
+            onCommit={onResizeCanvasPx} />
         </FieldSet>
 
         <FieldSet className="gap-1 items-start space-y-0.5">
@@ -58,12 +68,14 @@ export const SingleSelection = (props: SingleSelectionProps) => {
           </FieldLegend>
           <EditablePhysicalSize
             size={canvas.physicalSize}
-            onCommit={size => setPhysicalSize(canvas.id, size)} />
+            onCommit={onResizeCanvasPhys} />
         </FieldSet>
       </FieldGroup>
 
       {selectedImage && (
-        <SelectedImageDetails image={selectedImage} />
+        <SelectedImageDetails
+          image={selectedImage}
+          onCommit={onChangeImagePosition} />
       )}
     </div>
   )
