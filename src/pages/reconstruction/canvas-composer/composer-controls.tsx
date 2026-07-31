@@ -3,6 +3,7 @@ import { IconChevronRight, IconLayoutSidebarRight, IconLibraryPhoto, IconSquare 
 import { useReconstructionStore } from '../reconstruction-store';
 import { useComposerStore } from './composer-store';
 import type { ReconstructionCanvas } from '@/types';
+import { cn } from '@/shadcn/utils';
 
 interface ComposerControlsProps {
 
@@ -17,7 +18,10 @@ export const ComposerControls = (props: ComposerControlsProps) => {
   const selectedImage = useComposerStore(state => state.selectedImage);
   
   return (
-    <div className="absolute bg-white rounded-md top-3 right-3 z-50 shadow-md">
+    <div className={cn(
+      'absolute bg-white rounded-md top-3 right-3 z-50 shadow-md transition-opacity',
+      props.isSidebarOpen ? 'opacity-0' : undefined
+      )}>
       {selection.length === 0 ? (
         <Button
           variant="ghost"

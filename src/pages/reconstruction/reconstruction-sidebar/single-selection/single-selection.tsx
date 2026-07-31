@@ -1,7 +1,8 @@
-import { IconStack2 } from '@tabler/icons-react';
+import { IconLayoutSidebarRight, IconStack2 } from '@tabler/icons-react';
+import { Button } from '@/shadcn/button';
+import { FieldGroup, FieldLegend, FieldSet } from '@/shadcn/field';
 import { useAppStore } from '@/store/app-store';
 import type { PhysicalSize, ReconstructionCanvas } from '@/types';
-import { FieldGroup, FieldLegend, FieldSet } from '@/shadcn/field';
 import type { DraggableImageSelection } from '../../reconstruction-types';
 import { useComposerStore } from '../../canvas-composer/composer-store';
 import { EditablePixelSize } from './editable-pixel-size';
@@ -13,6 +14,8 @@ interface SingleSelectionProps {
   canvas: ReconstructionCanvas;
 
   imageSelection?: DraggableImageSelection;
+
+  onClose(): void;
 
 }
 
@@ -48,12 +51,21 @@ export const SingleSelection = (props: SingleSelectionProps) => {
 
   return (
     <div className="space-y-2">
-      <h2 className="flex items-center gap-1.5 border-b p-4">
-        {canvas.type === 'composite' && (
-          <IconStack2 className="size-5 text-muted-foreground shrink-0" stroke={1.75} />
-        )}
-        <span className="text-base truncate">{canvas.label}</span>
-      </h2>
+      <div className="flex justify-between border-b py-1 pl-4 pr-1 items-center">
+        <h2 className="flex items-center gap-1.5">
+          {canvas.type === 'composite' && (
+            <IconStack2 className="size-5 text-muted-foreground shrink-0" stroke={1.75} />
+          )}
+          <span className="text-base truncate">{canvas.label}</span>
+        </h2>
+
+        <Button
+          variant="ghost"
+          className="shrink-0 text-muted-foreground/80"
+          onClick={props.onClose}>
+          <IconLayoutSidebarRight className="size-4.5" />
+        </Button>
+      </div>
 
       <FieldGroup className="p-4 gap-4">
         <FieldSet className="gap-1 items-start space-y-0.5">

@@ -34,7 +34,8 @@ export const Reconstruction = () => {
           minSize={40}
           openSize={220}
           className="bg-white border-l">
-          <ReconstructionSidebar />
+          <ReconstructionSidebar 
+            onClose={() => setSidebarOpen(false)} />
         </AnimatedPanel>
       </AnimatedPanelGroup>
     </main>
