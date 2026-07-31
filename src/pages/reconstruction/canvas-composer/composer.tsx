@@ -5,7 +5,7 @@ import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import { getDraggableImageKey } from '../reconstruction-utils';
-import { ComposerControls } from './composer-controls';
+import { ComposerSelectionControl } from './composer-selection-control';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
 import { ImageBoundsEditor } from './image-bounds-editor';
@@ -182,7 +182,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
         )}
       </div>
 
-      <ComposerControls
+      <ComposerSelectionControl
         isSidebarOpen={props.isSidebarOpen}
         onChangeSidebarOpen={props.onChangeSidebarOpen} />
 
