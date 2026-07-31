@@ -59,16 +59,18 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   useEffect(() => {
     origin.current = undefined;
     initialShape.current = undefined;
+  }, [selectionKey]);
 
-    if (selectedImage) {
-      const canvas = reconstruction
-        .find(r => r.id === selectedImage.item.reconstructionCanvasId);
-      if (!canvas) return;
+  useEffect(() => {
+    if (!selectedImage) return;
 
-      const { x, y, width } = selectedImage.image;
-      const liveCorners = getImageCorners(selectedImage, canvas.width, x, y, width);
-      updateIntersectingItems(liveCorners);
-    }
+    const canvas = reconstruction
+      .find(r => r.id === selectedImage.item.reconstructionCanvasId);
+    if (!canvas) return;
+
+    const { x, y, width } = selectedImage.image;
+    const liveCorners = getImageCorners(selectedImage, canvas.width, x, y, width);
+    updateIntersectingItems(liveCorners);
   }, [selectionKey, reconstruction]);
 
   useEffect(() => {
@@ -174,19 +176,19 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     origin.current = undefined;
     initialShape.current = undefined;
 
-    if (!selectedImage || !shape) return; // Should never happen
+    if (selectedImage && shape) {
+      const { x, y, width } = shape.image;
 
-    const { x, y, width } = shape.image;
+      // Revert position if dropped outside a canvas
+      if (intersectingItems.length === 0) {
+        updateImage(shape.item.reconstructionCanvasId, {
+          ...selectedImage.image,
+          x, y, width
+        });
 
-    // Revert position if dropped outside a canvas
-    if (intersectingItems.length === 0) {
-      updateImage(shape.item.reconstructionCanvasId, {
-        ...selectedImage.image,
-        x, y, width
-      });
-
-      const revertedCorners = getImageCorners(selectedImage, shape.canvas.width, x, y, width);
-      updateIntersectingItems(revertedCorners);
+        const revertedCorners = getImageCorners(selectedImage, shape.canvas.width, x, y, width);
+        updateIntersectingItems(revertedCorners);
+      }
     }
 
     requestAnimationFrame(() => setIsDraggingImage(false));
