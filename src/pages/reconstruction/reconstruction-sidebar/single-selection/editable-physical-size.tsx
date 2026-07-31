@@ -3,7 +3,8 @@ import type { PhysicalSize } from '@/types';
 import { parseNumber } from '@/store/app-store-utils';
 import { Input } from '@/shadcn/input';
 import { Field, FieldGroup, FieldLabel } from '@/shadcn/field';
-import { EDITABLE_TRIGGER_CLASS, isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
+import { isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
+import { IconPlus } from '@tabler/icons-react';
 
 interface EditablePhysicalSizeProps {
 
@@ -95,7 +96,7 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
           value={widthStr}
           onChange={e => setWidthStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums shrink-0 h-8 field-sizing-content min-w-[2ch] max-w-[8ch]" />
+          className="tabular-nums shrink-0 h-7 p-1 field-sizing-content min-w-[4ch] max-w-[8ch]" />
       </Field>
 
       <span className="text-muted-foreground">×</span>
@@ -110,7 +111,7 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
           value={heightStr}
           onChange={e => setHeightStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums shrink-0 h-8 field-sizing-content min-w-[2ch] max-w-[8ch]" />
+          className="tabular-nums shrink-0 h-7 p-1 field-sizing-content min-w-[4ch] max-w-[8ch]" />
       </Field>
 
       <Field orientation="horizontal" className="w-fit">
@@ -123,22 +124,22 @@ export const EditablePhysicalSize = (props: EditablePhysicalSizeProps) => {
           value={unitStr}
           onChange={e => setUnitStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums shrink-0 h-8 field-sizing-content min-w-[3ch] max-w-[6ch]" />
+          className="tabular-nums shrink-0 h-7 p-1 field-sizing-content min-w-[4ch] max-w-[6ch]" />
       </Field>
     </FieldGroup>
   ) : props.size ? (
     <button
       type="button"
       onClick={() => setIsEditing(true)}
-      className={EDITABLE_TRIGGER_CLASS}>
+      className="tabular-nums hover:text-foreground hover:underline underline-offset-2 decoration-dotted cursor-text text-sm">
       {formatPhysicalSize(props.size)}
     </button>
   ) : (
     <button
       type="button"
       onClick={() => setIsEditing(true)}
-      className="text-muted-foreground/70 hover:text-foreground hover:underline underline-offset-2 decoration-dotted cursor-text">
-      + Add physical size
+      className="text-primary flex gap-0.5 items-center text-sm hover:underline cursor-pointer underline-offset-2 decoration-dotted">
+      <IconPlus className="size-3.5" /> Set dimensions
     </button>
   )
 

@@ -2,7 +2,7 @@ import { parseNumber } from '@/store/app-store-utils';
 import { useEffect, useRef, useState, type FocusEvent, type KeyboardEvent } from 'react';
 import { Input } from '@/shadcn/input';
 import { Field, FieldGroup, FieldLabel } from '@/shadcn/field';
-import { EDITABLE_TRIGGER_CLASS, isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
+import { isBlurLeavingGroup } from '../reconstruction-sidebar-utils';
 
 interface EditablePixelSizeProps {
 
@@ -83,7 +83,7 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
           value={widthStr}
           onChange={e => setWidthStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums h-7 p-0.5 shrink-0 field-sizing-content min-w-[2ch] max-w-[8ch]" />
+          className="tabular-nums h-7 p-1 shrink-0 field-sizing-content min-w-[4ch] max-w-[8ch]" />
       </Field>
 
       <span className="text-muted-foreground">×</span>
@@ -97,7 +97,7 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
           value={heightStr}
           onChange={e => setHeightStr(e.target.value)}
           onKeyDown={onKeyDown}
-          className="tabular-nums h-7 p-0.5 shrink-0 field-sizing-content min-w-[2ch] max-w-[8ch]" />
+          className="tabular-nums h-7 p-1 shrink-0 field-sizing-content min-w-[4ch] max-w-[8ch]" />
       </Field>
 
       <span className="text-muted-foreground text-sm shrink-0">px</span>
@@ -106,8 +106,8 @@ export const EditablePixelSize = (props: EditablePixelSizeProps) => {
     <button
       type="button"
       onClick={() => setIsEditing(true)}
-      className={EDITABLE_TRIGGER_CLASS}>
-      {Math.round(props.width).toLocaleString()} × {Math.round(props.height).toLocaleString()} px
+      className="tabular-nums hover:text-foreground hover:underline underline-offset-2 decoration-dotted cursor-text text-sm">
+      {props.width.toLocaleString()} × {props.height.toLocaleString()} px
     </button>
   )
 

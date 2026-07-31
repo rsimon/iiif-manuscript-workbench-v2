@@ -154,14 +154,15 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     });
   }, [viewer, layout, images]);
 
+  // Note to self: 'leading-0' on the OSD container keeps the navigator aligned with the page bottom!
   return (
     <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] 
       [&_.openseadragon-container]:z-10 [&_.navigator]:rounded-tl-md [&_.navigator]:bg-neutral-50! [&_.navigator]:border-r-0! 
       [&_.navigator]:border-b-0! [&_.navigator]:border-t! [&_.navigator]:border-l! [&_.navigator]:border-neutral-400/70! 
-      [&_.navigator]:shadow-md shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
-      <div ref={elementRef} className={cn('size-full', !isReady && 'invisible')}>
+      [&_.navigator]:shadow-md [&_.navigator]:flex! shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
+      <div ref={elementRef} className={cn('size-full leading-0', !isReady && 'invisible')}>
         {viewer && (
-         <ViewerSvgOverlay 
+          <ViewerSvgOverlay 
             viewer={viewer}
             bottomLayer={(
               <CanvasIndicatorBackgroundLayer 
