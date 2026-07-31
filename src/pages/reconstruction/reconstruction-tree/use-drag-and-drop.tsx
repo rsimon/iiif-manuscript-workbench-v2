@@ -67,6 +67,9 @@ export const useDragAndDrop = () => {
       type: 'original',
       id: source.canvas.id,
       label: source.canvas.getLabel(),
+      width: source.canvas.width,
+      height: source.canvas.height,
+      physicalSize: source.physicalSize,
       source
     };
   
@@ -90,20 +93,19 @@ export const useDragAndDrop = () => {
   
     return without.map((c, idx) => {
       if (c.id !== targetId) return c;
-  
-      return c.type === 'composite'
-        ? { 
-            ...c, 
-            sources: [...c.sources, dragged] 
-          }
-        : {
-            type: 'composite' as const,
-            id: `${baseURI}/${crypto.randomUUID()}`,
-            label: `Canvas ${idx + 1}`,
-            sources: [c.source, dragged],
-            width: c.source.canvas.width,
-            height: c.source.canvas.height
-          };
+
+      if (c.type === 'composite')
+        return { ...c, sources: [...c.sources, dragged] };
+
+      return {
+        type: 'composite' as const,
+        id: `${baseURI}/${crypto.randomUUID()}`,
+        label: `Canvas ${idx + 1}`,
+        sources: [c.source, dragged],
+        width: c.width,
+        height: c.height,
+        physicalSize: c.physicalSize
+      };
     });
   }, [take]);
 

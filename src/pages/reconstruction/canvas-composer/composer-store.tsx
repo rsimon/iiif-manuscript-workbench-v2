@@ -5,8 +5,9 @@ import pDebounce from 'p-debounce';
 import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
-import type { ComposerLayout, DraggableImage, DraggableImageSelection } from './composer-types';
-import { applyEdits, findSourceCanvasById, getDraggableImageKey, toDraggableImages } from './composer-utils';
+import { getDraggableImageKey } from '../reconstruction-utils';
+import type { ComposerLayout, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
+import { applyEdits, findSourceCanvasById, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
 
 export interface ComposerState {
@@ -23,7 +24,7 @@ export interface ComposerState {
 
   selectedImage?: DraggableImageSelection;
 
-  isDraggingImage: boolean;
+  isUserEdit: boolean;
 
   setViewer(viewer?: Viewer): void;
 
@@ -31,7 +32,7 @@ export interface ComposerState {
 
   setSelectedImage(selectedImage?: DraggableImageSelection): void;
 
-  setIsDraggingImage(isDraggingImage: boolean): void;
+  setIsUserEdit(isDraggingImage: boolean): void;
 
   updateImage(canvasId: string, updated: DraggableImage): void;
 
@@ -51,7 +52,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
 
   selectedImage: undefined,
 
-  isDraggingImage: false,
+  isUserEdit: false,
 
   setViewer: viewer => set({ viewer }),
 
@@ -59,7 +60,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
 
   setSelectedImage: selectedImage => set({ selectedImage }),
 
-  setIsDraggingImage: isDraggingImage => set({ isDraggingImage }),
+  setIsUserEdit: isUserEdit => set({ isUserEdit }),
 
   updateImage: (canvasId, updated) => set(({ imagesByCanvasId, selectedImage }) => {
     const onThisCanvas = imagesByCanvasId.get(canvasId);
@@ -155,15 +156,10 @@ const scheduleAppStoreSync = pDebounce(() => {
 
 // Downwards sync from app store to local state
 useAppStore.subscribe((state, prevState) => {
-  // Layout only needs recomputing if structural props changed by value
-  const stripIrrelevant = (r: ReconstructionCanvas) => r.type === 'composite' ? {
-    id: r.id,
-    height: r.height,
-    width: r.width
-  } : {
-    id: r.id,
-    height: r.source.canvas.height,
-    width: r.source.canvas.width
+  // Layout only needs recomputing if structural props changed by value.
+  const stripIrrelevant = (r: ReconstructionCanvas) => {
+    const { id, width, height } = r;
+    return { id, width, height };
   };
 
   const before = prevState.reconstruction.map(stripIrrelevant);

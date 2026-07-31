@@ -25,6 +25,11 @@ export const parseManifest = (source: unknown): CozyManifest => {
   return parsed.resource;
 }
 
+export const parseNumber = (s: string): number | undefined => {
+  const n = Number.parseFloat(s.replace(',', '.'));
+  return Number.isFinite(n) && n > 0 ? n : undefined;
+}
+
 export const getEmptyCanvasLabel = (reconstruction: ReconstructionCanvas[]) => {
   const regex = /^New Composite( \((\d+)\))?$/;
 
@@ -63,11 +68,9 @@ export const appendEmptyCanvas = (
   fallbackWidth = 1000, 
   fallbackHeight = 1000
 ): ReconstructionCanvas[] => {
-  const getDimensions = (r: ReconstructionCanvas) => r.type === 'original' ? r.source.canvas : r;
-
-  const { width, height } = reconstruction.length > 0 
-    ? getDimensions(reconstruction[reconstruction.length - 1]) 
-    : { width: fallbackWidth, height: fallbackHeight};
+  const { width, height } = reconstruction.length > 0
+    ? reconstruction[reconstruction.length - 1]
+    : { width: fallbackWidth, height: fallbackHeight };
 
   return [
     ...reconstruction,
@@ -131,8 +134,9 @@ export const mergeInto = (
             sources: sourcesToMerge,
             // Keep destination label and size
             label: r.label,
-            width: r.source.canvas.width,
-            height: r.source.canvas.height
+            width: r.width,
+            height: r.height,
+            physicalSize: r.physicalSize
           }
         }
       } else {

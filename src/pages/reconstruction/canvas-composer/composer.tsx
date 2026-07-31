@@ -3,11 +3,13 @@ import OpenSeadragon, { TiledImage } from 'openseadragon';
 import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
+import { useAppStore } from '@/store/app-store';
+import { getDraggableImageKey } from '../reconstruction-utils';
+import { ComposerControls } from './composer-controls';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
-import { getDraggableImageKey } from './composer-utils';
-import { useComposerSelection } from './use-composer-selection';
 import { ImageBoundsEditor } from './image-bounds-editor';
+import { useComposerSelection } from './use-composer-selection';
 import { 
   CanvasIndicatorBackgroundLayer, 
   CanvasIndicatorForegroundLayer 
@@ -16,7 +18,15 @@ import {
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
 
-export const CanvasComposer = () => {
+interface CanvasComposerProps {
+
+  isSidebarOpen: boolean;
+
+  onChangeSidebarOpen(open: boolean): void;
+
+}
+
+export const CanvasComposer = (props: CanvasComposerProps) => {
   const elementRef = useRef<HTMLDivElement>(null);
 
   const layout = useComposerStore(state => state.layout);
@@ -82,17 +92,21 @@ export const CanvasComposer = () => {
   useEffect(() => {
     if (!viewer) return;
 
+    const { reconstruction } = useAppStore.getState();
     const { tiledImages, isDraggingImage } = useComposerStore.getState();
 
-    // All layout items
-    const placements = layout.items.flatMap((item, i) =>
-      images[i].map(image => ({
+    const placements = layout.items.flatMap((item, i) => {
+      const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
+      if (!canvas) return [];
+
+      return images[i].map(image => ({
         key: getDraggableImageKey(image),
         tileSource: image.tileSource,
-        x: item.x + image.x / image.resource.width,
-        y: item.y + image.y / image.resource.width,
-        width: image.width / image.resource.width
-      })));
+        x: item.x + image.x / canvas.width,
+        y: item.y + image.y / canvas.width,
+        width: image.width / canvas.width
+      }));
+    });
 
     const toKeep = new Set(placements.map(p => p.key));
 
@@ -140,14 +154,15 @@ export const CanvasComposer = () => {
     });
   }, [viewer, layout, images]);
 
+  // Note to self: 'leading-0' on the OSD container keeps the navigator aligned with the page bottom!
   return (
     <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] 
       [&_.openseadragon-container]:z-10 [&_.navigator]:rounded-tl-md [&_.navigator]:bg-neutral-50! [&_.navigator]:border-r-0! 
       [&_.navigator]:border-b-0! [&_.navigator]:border-t! [&_.navigator]:border-l! [&_.navigator]:border-neutral-400/70! 
-      [&_.navigator]:shadow-md shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
-      <div ref={elementRef} className={cn('size-full', !isReady && 'invisible')}>
+      [&_.navigator]:shadow-md [&_.navigator]:flex! shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
+      <div ref={elementRef} className={cn('size-full leading-0', !isReady && 'invisible')}>
         {viewer && (
-         <ViewerSvgOverlay 
+          <ViewerSvgOverlay 
             viewer={viewer}
             bottomLayer={(
               <CanvasIndicatorBackgroundLayer 
@@ -166,6 +181,10 @@ export const CanvasComposer = () => {
             )}/>
         )}
       </div>
+
+      <ComposerControls
+        isSidebarOpen={props.isSidebarOpen}
+        onChangeSidebarOpen={props.onChangeSidebarOpen} />
 
       <ComposerToolbar />
     </div>

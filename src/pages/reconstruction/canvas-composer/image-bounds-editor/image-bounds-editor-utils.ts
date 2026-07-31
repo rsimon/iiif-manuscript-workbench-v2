@@ -1,15 +1,10 @@
 import type { PointerEvent } from 'react';
 import { Point, Viewer } from 'openseadragon';
 import type { ReconstructionCanvas } from '@/types';
-import type { 
-  ComposerLayoutItem, 
-  CornerHandleType, 
-  DraggableImage, 
-  DraggableImageSelection, 
-  ResizeHandleType 
-} from '../composer-types';
+import type {  ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../../reconstruction-types';
+import type { CornerHandleType, ResizeHandleType } from './corner-handle';
 
-/* Initial image state at drag start */
+// Initial image state at drag start
 export interface InitialShape {
 
   image: DraggableImage;
@@ -55,18 +50,18 @@ export const RESIZE_SIGNS: Record<ResizeHandleType, { h: number; v: number }> = 
 };
 
 /**
- * Returns list of corner points, OSD viewport coordinates. Optionally 
- * supports "overrides" for image position, in case image corners should 
+ * Returns list of corner points, OSD viewport coordinates. Optionally
+ * supports "overrides" for image position, in case image corners should
  * be computed from live data, before Zustand state has updated.
  */
-export const getImageCorners = (selected: DraggableImageSelection, ox?: number, oy?: number, ow?: number): Point[] => {
+export const getImageCorners = (selected: DraggableImageSelection, canvasWidth: number, ox?: number, oy?: number, ow?: number): Point[] => {
   const { image, item } = selected;
 
   const aspect = image.resource.width / image.resource.height;
 
-  const x = item.x + (ox ?? image.x) / image.resource.width;
-  const y = item.y + (oy ?? image.y) / image.resource.width;
-  const w = (ow ?? image.width) / image.resource.width;
+  const x = item.x + (ox ?? image.x) / canvasWidth;
+  const y = item.y + (oy ?? image.y) / canvasWidth;
+  const w = (ow ?? image.width) / canvasWidth;
   const h = w / aspect;
 
   return [

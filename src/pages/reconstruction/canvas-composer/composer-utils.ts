@@ -1,13 +1,9 @@
 import type { Point } from 'openseadragon';
+import type { CozyCanvas } from 'cozy-iiif';
 import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
-import type { 
-  ComposerLayout, 
-  ComposerLayoutItem, 
-  DraggableImage, 
-  DraggableImageSelection 
-} from './composer-types';
-import type { CozyCanvas } from 'cozy-iiif';
+import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
+import { getDraggableImageKey } from '../reconstruction-utils';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -48,20 +44,12 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
   }, []);
 }
 
-export const getDraggableImageKey = (image: DraggableImage): string =>
-  `${image.sourceCanvasId}:${image.index}`;
-
-export const getCanvasSize = (canvas: ReconstructionCanvas): [number, number] =>
-  canvas.type === 'original'
-    ? [canvas.source.canvas.width, canvas.source.canvas.height]
-    : [canvas.width, canvas.height];
-
 // x/y/width an image must have to fully fit the canvas
 export const getFillSize = (
   image: DraggableImage,
   canvas: ReconstructionCanvas
 ): { x: number; y: number; width: number } => {
-  const [canvasWidth, canvasHeight] = getCanvasSize(canvas);
+  const { width: canvasWidth, height: canvasHeight } = canvas;
 
   const aspect = image.resource.height / image.resource.width;
   const width = Math.min(canvasWidth, canvasHeight / aspect);
@@ -132,16 +120,15 @@ export const getImageAt = (
   const rc = reconstruction.find(r => r.id === item.reconstructionCanvasId);
   if (!rc) return;
 
-  const [canvasWidth] = getCanvasSize(rc);
   const images = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
   const hit = images.filter(image => {
     // Image size is in pixel!
     const aspect = image.resource.height / image.resource.width;
 
-    const viewportX = item.x + image.x / canvasWidth;
-    const viewportY = item.y + image.y / canvasWidth;
-    const viewportW = image.width / canvasWidth;
+    const viewportX = item.x + image.x / rc.width;
+    const viewportY = item.y + image.y / rc.width;
+    const viewportW = image.width / rc.width;
 
     const viewportR = viewportX + viewportW;
     const viewportB = viewportY + viewportW * aspect;
@@ -238,22 +225,24 @@ export const applyEdits = (
           id: `${baseURI}/${crypto.randomUUID()}`,
           label: r.label,
           sources: sources.map(applySourceEdits),
-          width: r.source.canvas.width,
-          height: r.source.canvas.height
+          width: r.width,
+          height: r.height,
+          physicalSize: r.physicalSize
         };
       } else {
         const nextSources = sources.map(applySourceEdits);
 
-        // Just one source - revert to OriginalCanvas
+        // Just one source left - revert to OriginalCanvas
         if (nextSources.length === 1) {
           const source = nextSources[0];
-          
           return {
             type: 'original',
             id: source.canvas.id,
             label: r.label,
             source,
-            physicalSize: source.physicalSize
+            width: r.width,
+            height: r.height,
+            physicalSize: r.physicalSize ?? source.physicalSize
           };
         }
 

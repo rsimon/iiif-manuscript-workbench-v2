@@ -1,10 +1,29 @@
 import { useEffect, useRef } from 'react';
 import type { Point, Viewer } from 'openseadragon';
-import type { CornerHandleType } from '../composer-types';
 
 const HANDLE_SIZE_PX = 8;
 
 export type HandleDirection = 'NW' | 'NE' | 'SE' | 'SW';
+
+export type CornerHandleType = 
+  | 'TOP_LEFT'
+  | 'TOP_RIGHT'
+  | 'BOTTOM_RIGHT'
+  | 'BOTTOM_LEFT';
+
+export type EdgeHandleType = 
+  | 'TOP'
+  | 'RIGHT'
+  | 'BOTTOM'
+  | 'LEFT';
+
+export type ResizeHandleType =
+  | CornerHandleType
+  | EdgeHandleType;
+
+export type HandleType = 
+  | 'SHAPE'
+  | ResizeHandleType;
 
 interface CornerHandleProps {
 

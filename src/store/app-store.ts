@@ -36,10 +36,12 @@ interface AppStore {
   removeCanvasFromReconstruction: (canvasId: string) => void;
   removeCanvasesFromReconstruction: (canvasIds: string[]) => void;
   renameCanvas: (canvasId: string, label: string) => void;
+  resizeCanvas: (canvasId: string, width: number, height: number) => void;
   updateReconstruction: (updated: ReconstructionCanvas[]) => void;
 
   // Actions: combined
-  setPhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
+  setSourcePhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
+  setReconstructionPhysicalSize: (canvasId: string, size?: PhysicalSize) => void;
   resetAll: () => void;
 
 }
@@ -83,6 +85,8 @@ export const useAppStore = create<AppStore>()(
               type: 'original',
               id: canvas.id,
               label: canvas.getLabel(),
+              width: canvas.width,
+              height: canvas.height,
               source: {
                 sourceManifestId: sourceId,
                 canvas,
@@ -104,6 +108,8 @@ export const useAppStore = create<AppStore>()(
               type: 'original' as const,
               id: s.canvas.id,
               label: s.canvas.getLabel(),
+              width: s.canvas.width,
+              height: s.canvas.height,
               source: {
                 sourceManifestId: s.sourceId,
                 canvas: s.canvas,
@@ -139,10 +145,14 @@ export const useAppStore = create<AppStore>()(
           ...r, label
         } : r)
       })),
+      
+      resizeCanvas: (canvasId, width, height) => set(({ reconstruction }) => ({
+        reconstruction: reconstruction.map(r => r.id === canvasId ? { ...r, width, height } : r)
+      })),
 
       updateReconstruction: reconstruction => set({ reconstruction }),
 
-      setPhysicalSize: (sourceCanvasId, size) => set(({ reconstruction, sizes }) => {
+      setSourcePhysicalSize: (sourceCanvasId, size) => set(({ reconstruction, sizes }) => {
         // Update 'sizes' map
         const updatedSizes = new Map(sizes);
         if (size)
@@ -171,6 +181,10 @@ export const useAppStore = create<AppStore>()(
 
         return { sizes: updatedSizes, reconstruction: updatedReconstruction };
       }),
+
+      setReconstructionPhysicalSize: (canvasId, size) => set(({ reconstruction }) => ({
+        reconstruction: reconstruction.map(r => r.id === canvasId ? { ...r, physicalSize: size } : r)
+      })),
 
       resetAll: () => set(() => ({
         reconstruction: [],

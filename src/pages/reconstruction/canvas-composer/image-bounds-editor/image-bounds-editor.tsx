@@ -2,10 +2,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Point, Viewer } from 'openseadragon';
 import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../../reconstruction-store';
+import type { ComposerLayoutItem, DraggableImage } from '../../reconstruction-types';
+import { getDraggableImageKey } from '../../reconstruction-utils';
 import { useComposerStore } from '../composer-store';
-import type { ComposerLayoutItem,  DraggableImage,  HandleType, ResizeHandleType } from '../composer-types';
-import { getDraggableImageKey, getIntersectingItems, getCanvasSize } from '../composer-utils';
-import { CornerHandle } from './corner-handle';
+import { getIntersectingItems } from '../composer-utils';
+import { CornerHandle, type HandleType, type ResizeHandleType } from './corner-handle';
 import { 
   cornersToSvgPoints, 
   getImageCorners, 
@@ -22,12 +23,14 @@ interface ImageBoundsEditorProps {
 }
 
 export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
+  const reconstruction = useAppStore(state => state.reconstruction);
+
   const layout = useComposerStore(state => state.layout);
   const selectedImage = useComposerStore(state => state.selectedImage);
 
   const updateImage = useComposerStore(state => state.updateImage);
   const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
-  const setIsDraggingImage = useComposerStore(state => state.setIsDraggingImage);
+  const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
 
   const setSelectedCanvas = useReconstructionStore(state => state.setSelection);
 
@@ -56,13 +59,19 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   useEffect(() => {
     origin.current = undefined;
     initialShape.current = undefined;
-
-    if (selectedImage) {
-      const { x, y, width } = selectedImage.image;
-      const liveCorners = getImageCorners(selectedImage, x, y, width);
-      updateIntersectingItems(liveCorners);
-    }
   }, [selectionKey]);
+
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const canvas = reconstruction
+      .find(r => r.id === selectedImage.item.reconstructionCanvasId);
+    if (!canvas) return;
+
+    const { x, y, width } = selectedImage.image;
+    const liveCorners = getImageCorners(selectedImage, canvas.width, x, y, width);
+    updateIntersectingItems(liveCorners);
+  }, [selectionKey, reconstruction]);
 
   useEffect(() => {
     if (!selectedImage || !initialShape.current) return;
@@ -71,7 +80,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     // Selected (= dragged) image and initialShape no longer point to the
     // same reconstruction canvas ID - this means the canvas was modified,
     // usually changed from 'original' to 'composite' -> follow!
-    const canvas = useAppStore.getState().reconstruction
+    const canvas = reconstruction
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
 
     if (!canvas) return;
@@ -81,12 +90,17 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       item: selectedImage.item,
       canvas
     };
-  }, [selectedImage]);
+  }, [selectedImage, reconstruction]);
 
   const corners = useMemo(() => {
     if (!selectedImage) return [];
-    return getImageCorners(selectedImage);
-  }, [selectedImage]);
+
+    const canvas = reconstruction
+      .find(r => r.id === selectedImage.item.reconstructionCanvasId);
+    if (!canvas) return [];
+
+    return getImageCorners(selectedImage, canvas.width);
+  }, [selectedImage, reconstruction]);
 
   const updateIntersectingItems = (corners: Point[]) => {
     const intersectingItems = getIntersectingItems({
@@ -113,11 +127,11 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const { image, item } = selectedImage;
 
     // Get current selection reference canvas
-    const canvas = useAppStore.getState().reconstruction
+    const canvas = reconstruction
       .find(r => r.id === selectedImage.item.reconstructionCanvasId);
     if (!canvas) return;
 
-    const [canvasWidth] = getCanvasSize(canvas);
+    const { width: canvasWidth } = canvas;
 
     origin.current = getPoint(evt, props.viewer);
 
@@ -130,7 +144,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       }
     };
 
-    setIsDraggingImage(true);    
+    setIsUserEdit(true);    
   }
 
   const onPointerMove = (handle: HandleType) => (evt: React.PointerEvent) => {
@@ -162,22 +176,22 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     origin.current = undefined;
     initialShape.current = undefined;
 
-    if (!selectedImage || !shape) return; // Should never happen
+    if (selectedImage && shape) {
+      const { x, y, width } = shape.image;
 
-    const { x, y, width } = shape.image;
+      // Revert position if dropped outside a canvas
+      if (intersectingItems.length === 0) {
+        updateImage(shape.item.reconstructionCanvasId, {
+          ...selectedImage.image,
+          x, y, width
+        });
 
-    // Revert position if dropped outside a canvas
-    if (intersectingItems.length === 0) {
-      updateImage(shape.item.reconstructionCanvasId, {
-        ...selectedImage.image,
-        x, y, width
-      });
-
-      const revertedCorners = getImageCorners(selectedImage, x, y, width);
-      updateIntersectingItems(revertedCorners);
+        const revertedCorners = getImageCorners(selectedImage, shape.canvas.width, x, y, width);
+        updateIntersectingItems(revertedCorners);
+      }
     }
 
-    requestAnimationFrame(() => setIsDraggingImage(false));
+    requestAnimationFrame(() => setIsUserEdit(false));
   }
 
   const onPointerCancel = (evt: React.PointerEvent) => {
@@ -186,7 +200,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     // Capture is auto-released by the browser on cancel
     origin.current = undefined;
     initialShape.current = undefined;
-    setIsDraggingImage(false);
+    setIsUserEdit(false);
   }
 
   const onMoveImage = (delta: number[]) => {
@@ -221,8 +235,6 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       (!hasChangedDestination || selectedImage.canChangeItem);
       
     if (hasChangedDestination && isValidDestination) {
-      const { reconstruction} = useAppStore.getState();
-
       const source = reconstruction.find(r => r.id === initialItem.reconstructionCanvasId);
       const target = reconstruction.find(r => r.id === destination.reconstructionCanvasId);
 
@@ -232,7 +244,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       if (!source || !target || !targetItem) return;
 
       // Translate image into the new canvas's local coordinate system
-      const [targetWidth] = getCanvasSize(target);
+      const { width: targetWidth } = target;
 
       const targetImage = {
         ...initialImg,
@@ -256,7 +268,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         setSelectedCanvas([target]);
       }
     } else {
-      const [canvasWidth] = getCanvasSize(initialShape.current.canvas);
+      const { width: canvasWidth } = initialShape.current.canvas;
 
       const updatedImage: DraggableImage = {
         ...initialImg, 
@@ -271,7 +283,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
     if (!selectedImage || !initialShape.current) return;
 
-    const [canvasWidth] = getCanvasSize(initialShape.current.canvas);
+    const { width: canvasWidth } = initialShape.current.canvas;
 
     const dx = delta[0] * canvasWidth;
     const dy = delta[1] * canvasWidth;

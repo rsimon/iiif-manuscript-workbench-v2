@@ -42,6 +42,10 @@ export interface OriginalCanvas {
 
   source: SourceCanvas;
 
+  width: number;
+
+  height: number;
+
   physicalSize?: PhysicalSize;
 
 }

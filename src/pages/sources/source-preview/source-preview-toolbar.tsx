@@ -53,7 +53,7 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
   const isFiltered = useSourcesStore(state => state.showInReconstructionOnly);
 
   const size = useAppStore(state => state.sizes.get(props.selectedCanvas.id));
-  const setSize = useAppStore(state => state.setPhysicalSize);
+  const setSize = useAppStore(state => state.setSourcePhysicalSize);
 
   const addToReconstruction = useAppStore(state => state.addCanvasToReconstruction);
   const removeFromReconstruction = useAppStore(state => state.removeCanvasFromReconstruction);
