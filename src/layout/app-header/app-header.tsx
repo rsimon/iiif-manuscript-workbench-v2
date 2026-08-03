@@ -42,7 +42,7 @@ export const AppHeader = () => {
     <header className="flex justify-between items-center px-2.5 text-sm 
       relative z-10 shadow-[0_0_1px_rgba(0,0,0,0.5)]">
       <img 
-        src="/Codicum_Logo_Horizontal_Texture.svg" 
+        src="/Codicum_Logo_Horizontal_Flat.svg" 
         alt="CODICUM project logo"
         className="h-9.5" />
 
