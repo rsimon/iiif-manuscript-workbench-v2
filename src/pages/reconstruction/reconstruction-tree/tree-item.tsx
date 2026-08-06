@@ -85,6 +85,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
   return (
     <li
       ref={ref}
+      data-canvas-id={item.id}
       className={cn(
         'relative border rounded-md shadow-xs bg-white',
         isSelected ? 'border-primary ring-1 ring-primary bg-primary/5' : undefined,

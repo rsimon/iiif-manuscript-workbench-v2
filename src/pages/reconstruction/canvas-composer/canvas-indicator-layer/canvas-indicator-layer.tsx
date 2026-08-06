@@ -9,13 +9,19 @@ interface CanvasIndicatorLayerProps {
 
   viewer: Viewer;
 
+  // Only canvases in this set get an indicator rect - keeps per-frame
+  // spring/DOM updates scoped to what's actually on (or near) screen.
+  visibleIds: Set<string>;
+
 }
 
 export const CanvasIndicatorBackgroundLayer = (props: CanvasIndicatorLayerProps) => {
 
+  const visibleItems = props.layout.items.filter(item => props.visibleIds.has(item.reconstructionCanvasId));
+
   return (
     <g>
-      {props.layout.items.map(item => (
+      {visibleItems.map(item => (
         <AnimatedRect
           key={item.reconstructionCanvasId}
           item={item}
@@ -37,9 +43,11 @@ export const CanvasIndicatorForegroundLayer = (props: CanvasIndicatorLayerProps)
   const isSelected = (canvasId: string) =>
     selected.some(s => s.id === canvasId);
 
+  const visibleItems = props.layout.items.filter(item => props.visibleIds.has(item.reconstructionCanvasId));
+
   return (
     <g>
-      {props.layout.items.map(item => (
+      {visibleItems.map(item => (
         <AnimatedRect
           key={item.reconstructionCanvasId}
           item={item}

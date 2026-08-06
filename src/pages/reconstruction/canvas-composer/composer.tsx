@@ -10,13 +10,18 @@ import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
 import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
-import { 
-  CanvasIndicatorBackgroundLayer, 
-  CanvasIndicatorForegroundLayer 
+import { useVisibleCanvases } from './use-visible-canvases';
+import {
+  CanvasIndicatorBackgroundLayer,
+  CanvasIndicatorForegroundLayer
 } from './canvas-indicator-layer';
 
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
+
+// How many layout items (in layout order) the initial view fits to, instead
+// of the whole manifest - keeps first paint cheap and fast on large manifests.
+const INITIAL_VISIBLE_ITEMS = 8;
 
 interface CanvasComposerProps {
 
@@ -34,11 +39,15 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   const setViewer = useComposerStore(state => state.setViewer);
 
   useComposerSelection(viewer, layout);
-  
+
+  const visibleIds = useVisibleCanvases(viewer, layout);
+
   const firstRender = useRef(true);
   const [isReady, setIsReady] = useState(false);
 
-  // images per layout item
+  // images per layout item - read only for its role as an effect dependency
+  // below (via useShallow, so it changes reference exactly when per-canvas
+  // image data changes); the effect itself looks images up fresh by ID.
   const images = useComposerStore(useShallow(state =>
     layout.items.map(item => state.imagesByCanvasId.get(item.reconstructionCanvasId) ?? [])
   ));
@@ -74,17 +83,21 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
         dblClickToZoom: true
       },
       preserveViewport: true,
-      showNavigator:  true,
-      navigatorPosition: 'BOTTOM_RIGHT'
+      // The built-in navigator mirrors the exact set of TiledImages in the
+      // main world - incompatible with lazily adding/removing them as the
+      // user pans. Disabled until we build a geometry-only replacement.
+      showNavigator: false,
+      // Default is unlimited concurrent tile/info.json requests - with 100+
+      // pages that's a thundering herd. Cap it.
+      imageLoaderLimit: 6
     });
-
-    viewerInstance.navigator?.viewport.setMargins({ left: 8, top: 8, right: 8, bottom: 8 });
 
     setViewer(viewerInstance);
     
     return () => {
       viewerInstance.destroy();
       useComposerStore.getState().tiledImages.clear();
+      useComposerStore.getState().pendingTiledImageKeys.clear();
       setViewer(undefined);
     }
   }, []);
@@ -92,14 +105,52 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   useEffect(() => {
     if (!viewer) return;
 
-    const { reconstruction } = useAppStore.getState();
-    const { tiledImages, isUserEdit } = useComposerStore.getState();
+    // Initial view fits the first few layout items only, not the whole
+    // manifest - on a 150-page document, fitting everything would put every
+    // single canvas inside the viewport on frame one, defeating the
+    // visibility-based loading below before it can do anything.
+    const isFirstRender = firstRender.current;
+    const initialItems = layout.items.slice(0, INITIAL_VISIBLE_ITEMS);
 
-    const placements = layout.items.flatMap((item, i) => {
+    if (isFirstRender) {
+      const initialHeight = initialItems.length > 0
+        ? Math.max(...initialItems.map(item => item.y + item.height))
+        : layout.layoutHeight;
+
+      const aspectRatio = layout.layoutWidth / (initialHeight || 1);
+      const worldRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3 * layout.layoutWidth, 1.3 * layout.layoutWidth / aspectRatio);
+      viewer.viewport.fitBounds(worldRect, true);
+
+      firstRender.current = false;
+      setIsReady(true);
+    }
+
+    const { reconstruction } = useAppStore.getState();
+    const { tiledImages, pendingTiledImageKeys, isUserEdit, imagesByCanvasId } = useComposerStore.getState();
+
+    // Only place images for canvases currently within the viewport (+
+    // margin, see use-visible-canvases.ts) - everything else keeps whatever
+    // TiledImage (or lack thereof) it already had. On the very first pass,
+    // `visibleIds` can't be trusted yet: OpenSeadragon only starts its
+    // internal update loop (and with it, the 'update-viewport' events
+    // useVisibleCanvases relies on) once something has actually been added
+    // to the world, so nothing would ever kick that loop off if we waited
+    // for a viewport-derived answer here. Use the same deterministic first
+    // batch as the fitBounds call above instead; visibleIds takes over from
+    // the next pass onward, once the loop is running for real.
+    const effectiveVisibleIds = isFirstRender
+      ? new Set(initialItems.map(item => item.reconstructionCanvasId))
+      : visibleIds;
+
+    const visibleItems = layout.items.filter(item => effectiveVisibleIds.has(item.reconstructionCanvasId));
+
+    const placements = visibleItems.flatMap(item => {
       const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
       if (!canvas) return [];
 
-      return images[i].map(image => ({
+      const imagesForCanvas = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
+
+      return imagesForCanvas.map(image => ({
         key: getDraggableImageKey(image),
         tileSource: image.tileSource,
         x: item.x + image.x / canvas.width,
@@ -110,7 +161,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
     const toKeep = new Set(placements.map(p => p.key));
 
-    // 1. Remove all images that are no longer in the layout
+    // 1. Evict images that scrolled out of the visible range
     [...tiledImages.entries()].forEach(([key, tiledImage]) => {
       if (!toKeep.has(key)) {
         viewer.world.removeItem(tiledImage);
@@ -118,17 +169,26 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       }
     });
 
-    const toAdd = placements.map(({ key, tileSource, x, y, width }) => {
-      // 2. move/resize images that already exist
+    // 2. Move/resize images that already exist
+    placements.forEach(({ key, x, y, width }) => {
       const existing = tiledImages.get(key);
       if (existing) {
         existing.setPosition(new OpenSeadragon.Point(x, y), isUserEdit);
         existing.setWidth(width, isUserEdit);
-        return Promise.resolve();
       }
+    });
 
-      // 3. Add images that don't exist yet
-      return new Promise<void>(resolve => {
+    // 3. Add images that don't exist yet and aren't already being added -
+    // addTiledImage() is async, so a key can be "requested but not yet in
+    // tiledImages" for a while; without the pending check, a second effect
+    // run in that window (e.g. once useVisibleCanvases picks up the real
+    // viewport right after the initial deterministic batch) would fire a
+    // duplicate request for the same image.
+    placements
+      .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
+      .forEach(({ key, tileSource, x, y, width }) => {
+        pendingTiledImageKeys.add(key);
+
         viewer.addTiledImage({
           tileSource,
           x, y, width,
@@ -136,46 +196,34 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           // OSD actually calls it with { item: TiledImage }.
           success: (evt: Event) => {
             const { item: tiledImage } = evt as unknown as { item: TiledImage };
+            pendingTiledImageKeys.delete(key);
             tiledImages.set(key, tiledImage);
-            resolve();
           }
         });
       });
-    });
+  }, [viewer, layout, images, visibleIds]);
 
-    Promise.all(toAdd).then(() => {
-      if (firstRender.current) {
-        const aspectRatio = layout.layoutWidth / layout.layoutHeight;
-        const worldRect = new OpenSeadragon.Rect(-0.15, -0.12, 1.3 * layout.layoutWidth, 1.3 * layout.layoutWidth / aspectRatio);
-        viewer.viewport.fitBounds(worldRect, true);
-        firstRender.current = false;
-        setIsReady(true);
-      }
-    });
-  }, [viewer, layout, images]);
-
-  // Note to self: 'leading-0' on the OSD container keeps the navigator aligned with the page bottom!
   return (
-    <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px] 
-      [&_.openseadragon-container]:z-10 [&_.navigator]:rounded-tl-md [&_.navigator]:bg-neutral-50! [&_.navigator]:border-r-0! 
-      [&_.navigator]:border-b-0! [&_.navigator]:border-t! [&_.navigator]:border-l! [&_.navigator]:border-neutral-400/70! 
-      [&_.navigator]:shadow-md [&_.navigator]:flex! shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
+    <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px]
+      [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
       <div ref={elementRef} className={cn('size-full leading-0', !isReady && 'invisible')}>
         {viewer && (
-          <ViewerSvgOverlay 
+          <ViewerSvgOverlay
             viewer={viewer}
             bottomLayer={(
-              <CanvasIndicatorBackgroundLayer 
-                layout={layout} 
-                viewer={viewer} />
-            )} 
+              <CanvasIndicatorBackgroundLayer
+                layout={layout}
+                viewer={viewer}
+                visibleIds={visibleIds} />
+            )}
             topLayer={(
               <>
-                <CanvasIndicatorForegroundLayer 
-                  layout={layout} 
-                  viewer={viewer} />
+                <CanvasIndicatorForegroundLayer
+                  layout={layout}
+                  viewer={viewer}
+                  visibleIds={visibleIds} />
 
-                <ImageBoundsEditor 
+                <ImageBoundsEditor
                   viewer={viewer}/>
               </>
             )}/>

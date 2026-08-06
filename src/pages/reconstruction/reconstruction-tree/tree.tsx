@@ -51,6 +51,17 @@ export const ReconstructionTree = () => {
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
+  // Keep the selected row in view - covers selection changes made outside
+  // the tree too (e.g. clicking a canvas in the composer). 'nearest' is a
+  // no-op if the row is already visible, so this doesn't fight a selection
+  // made by clicking the row itself.
+  useEffect(() => {
+    if (selection.length !== 1) return;
+
+    const el = listRef.current?.querySelector(`[data-canvas-id="${selection[0].id}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [selection]);
+
   useEffect(() => {
     if (!viewportEl) return;
 
