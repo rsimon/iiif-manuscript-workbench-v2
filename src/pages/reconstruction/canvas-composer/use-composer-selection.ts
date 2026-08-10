@@ -22,13 +22,7 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
     if (!stillSelected) setSelectedImage();
   }, [selection, setSelectedImage]);
 
-  // Bring a selected canvas into view if it isn't already visible - this is
-  // what makes selecting a page in the tree sidebar useful once the composer
-  // no longer starts zoomed out to fit the entire manifest. A canvas that's
-  // already at least partially on screen is left alone: that can only happen
-  // if the selection came from clicking inside the composer itself (you
-  // can't click something with zero screen overlap), where re-centering
-  // would just be disorienting.
+  // Bring a selected canvas into view if it isn't already visible
   useEffect(() => {
     if (!viewer) return;
     if (selection.length !== 1) return;
