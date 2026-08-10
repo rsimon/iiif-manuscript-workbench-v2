@@ -11,10 +11,7 @@ import { ComposerToolbar } from './composer-toolbar';
 import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
 import { useVisibleCanvases } from './use-visible-canvases';
-import {
-  CanvasIndicatorBackgroundLayer,
-  CanvasIndicatorForegroundLayer
-} from './canvas-indicator-layer';
+import { CanvasIndicatorLayer } from './canvas-indicator-layer';
 
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
@@ -187,25 +184,19 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       [&_.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.06)]">
       <div ref={elementRef} className={cn('size-full leading-0', !isReady && 'invisible')}>
         {viewer && (
-          <ViewerSvgOverlay
-            viewer={viewer}
-            bottomLayer={(
-              <CanvasIndicatorBackgroundLayer
-                layout={layout}
-                viewer={viewer}
-                visibleIds={visibleIds} />
-            )}
-            topLayer={(
-              <>
-                <CanvasIndicatorForegroundLayer
-                  layout={layout}
-                  viewer={viewer}
-                  visibleIds={visibleIds} />
+          <>
+            <CanvasIndicatorLayer
+              viewer={viewer}
+              layout={layout}
+              visibleIds={visibleIds} />
 
+            <ViewerSvgOverlay
+              viewer={viewer}
+              topLayer={(
                 <ImageBoundsEditor
                   viewer={viewer}/>
-              </>
-            )}/>
+              )}/>
+          </>
         )}
       </div>
 
