@@ -9,8 +9,6 @@ interface CanvasIndicatorLayerProps {
 
   viewer: Viewer;
 
-  // Only canvases in this set get an indicator rect - keeps per-frame
-  // spring/DOM updates scoped to what's actually on (or near) screen.
   visibleIds: Set<string>;
 
 }

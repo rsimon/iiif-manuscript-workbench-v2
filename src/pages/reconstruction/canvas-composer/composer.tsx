@@ -19,8 +19,7 @@ import {
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
 
-// How many layout items (in layout order) the initial view fits to, instead
-// of the whole manifest - keeps first paint cheap and fast on large manifests.
+// Bit of a temporary hack: number of layout items in the the initial view
 const INITIAL_VISIBLE_ITEMS = 8;
 
 interface CanvasComposerProps {
