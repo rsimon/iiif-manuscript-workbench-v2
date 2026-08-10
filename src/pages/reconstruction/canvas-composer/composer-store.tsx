@@ -19,18 +19,10 @@ export interface ComposerState {
   // Images by reconstruction canvas ID
   imagesByCanvasId: Map<string, DraggableImage[]>,
 
-  // Non-reactive & mutable by convention, use without re-render
+  // OSD images - non-reactive & mutable by convention, use without re-render
   tiledImages: Map<string, TiledImage>;
 
-  // Keys with an addTiledImage() call in flight (not yet in tiledImages).
-  // viewer.addTiledImage() is async, and the sync effect in composer.tsx can
-  // re-run - e.g. once useVisibleCanvases picks up the real viewport shortly
-  // after the deterministic first batch is requested - before an earlier
-  // call for the same image has resolved. Without this, that re-run can't
-  // tell "already loading" from "not requested yet" and fires a duplicate
-  // addTiledImage for the same key, leaving an orphaned TiledImage in the
-  // OSD world once both resolve. Non-reactive & mutable by convention, like
-  // tiledImages.
+  // Keys with an addTiledImage() call in progress, but not yet loaded as `tiledImages`.
   pendingTiledImageKeys: Set<string>;
 
   selectedImage?: DraggableImageSelection;

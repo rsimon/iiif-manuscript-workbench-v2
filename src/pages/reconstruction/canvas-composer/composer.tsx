@@ -44,9 +44,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   const firstRender = useRef(true);
   const [isReady, setIsReady] = useState(false);
 
-  // images per layout item - read only for its role as an effect dependency
-  // below (via useShallow, so it changes reference exactly when per-canvas
-  // image data changes); the effect itself looks images up fresh by ID.
+  // images per layout item
   const images = useComposerStore(useShallow(state =>
     layout.items.map(item => state.imagesByCanvasId.get(item.reconstructionCanvasId) ?? [])
   ));
@@ -82,12 +80,6 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
         dblClickToZoom: true
       },
       preserveViewport: true,
-      // The built-in navigator mirrors the exact set of TiledImages in the
-      // main world - incompatible with lazily adding/removing them as the
-      // user pans. Disabled until we build a geometry-only replacement.
-      showNavigator: false,
-      // Default is unlimited concurrent tile/info.json requests - with 100+
-      // pages that's a thundering herd. Cap it.
       imageLoaderLimit: 6
     });
 
@@ -104,10 +96,6 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   useEffect(() => {
     if (!viewer) return;
 
-    // Initial view fits the first few layout items only, not the whole
-    // manifest - on a 150-page document, fitting everything would put every
-    // single canvas inside the viewport on frame one, defeating the
-    // visibility-based loading below before it can do anything.
     const isFirstRender = firstRender.current;
     const initialItems = layout.items.slice(0, INITIAL_VISIBLE_ITEMS);
 
@@ -127,21 +115,12 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     const { reconstruction } = useAppStore.getState();
     const { tiledImages, pendingTiledImageKeys, isUserEdit, imagesByCanvasId } = useComposerStore.getState();
 
-    // Only place images for canvases currently within the viewport (+
-    // margin, see use-visible-canvases.ts) - everything else keeps whatever
-    // TiledImage (or lack thereof) it already had. On the very first pass,
-    // `visibleIds` can't be trusted yet: OpenSeadragon only starts its
-    // internal update loop (and with it, the 'update-viewport' events
-    // useVisibleCanvases relies on) once something has actually been added
-    // to the world, so nothing would ever kick that loop off if we waited
-    // for a viewport-derived answer here. Use the same deterministic first
-    // batch as the fitBounds call above instead; visibleIds takes over from
-    // the next pass onward, once the loop is running for real.
-    const effectiveVisibleIds = isFirstRender
+    // `visibleIds` isn't reliable in the first pass because OSD hasn't set the viewport yet
+    const reliableVisibleIds = isFirstRender
       ? new Set(initialItems.map(item => item.reconstructionCanvasId))
       : visibleIds;
 
-    const visibleItems = layout.items.filter(item => effectiveVisibleIds.has(item.reconstructionCanvasId));
+    const visibleItems = layout.items.filter(item => reliableVisibleIds.has(item.reconstructionCanvasId));
 
     const placements = visibleItems.flatMap(item => {
       const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
@@ -160,7 +139,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
     const toKeep = new Set(placements.map(p => p.key));
 
-    // 1. Evict images that scrolled out of the visible range
+    // 1. Remove images no longer present/visible
     [...tiledImages.entries()].forEach(([key, tiledImage]) => {
       if (!toKeep.has(key)) {
         viewer.world.removeItem(tiledImage);
@@ -168,7 +147,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       }
     });
 
-    // 2. Move/resize images that already exist
+    // 2. Move/resize existing images
     placements.forEach(({ key, x, y, width }) => {
       const existing = tiledImages.get(key);
       if (existing) {
@@ -177,12 +156,10 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       }
     });
 
-    // 3. Add images that don't exist yet and aren't already being added -
-    // addTiledImage() is async, so a key can be "requested but not yet in
-    // tiledImages" for a while; without the pending check, a second effect
-    // run in that window (e.g. once useVisibleCanvases picks up the real
-    // viewport right after the initial deterministic batch) would fire a
-    // duplicate request for the same image.
+    // 3. Add images that don't exist yet and AREN'T IN THE PROCESS OF BEING ADDED!
+    // In the initial phase, an image can be loading, but not yet in `tiledImages`:
+    // Once `useVisibleCanvases` picks up the initial viewport change, this effect
+    // runs again, and will cause duplicates otherwise.
     placements
       .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
       .forEach(({ key, tileSource, x, y, width }) => {
