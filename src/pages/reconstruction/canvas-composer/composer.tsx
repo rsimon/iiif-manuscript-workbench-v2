@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import OpenSeadragon, { TiledImage } from 'openseadragon';
 import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
@@ -40,6 +40,10 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   useComposerSelection(viewer, layout);
 
   const visibleIds = useVisibleCanvases(viewer, layout);
+
+  const reconstructionById = useMemo(() => 
+    new Map(useAppStore.getState().reconstruction.map(r => [r.id, r]))
+  , [layout]);
 
   const firstRender = useRef(true);
   const [isReady, setIsReady] = useState(false);
@@ -112,7 +116,6 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       setIsReady(true);
     }
 
-    const { reconstruction } = useAppStore.getState();
     const { tiledImages, pendingTiledImageKeys, isUserEdit, imagesByCanvasId } = useComposerStore.getState();
 
     // `visibleIds` isn't reliable in the first pass because OSD hasn't set the viewport yet
@@ -123,7 +126,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     const visibleItems = layout.items.filter(item => reliableVisibleIds.has(item.reconstructionCanvasId));
 
     const placements = visibleItems.flatMap(item => {
-      const canvas = reconstruction.find(r => r.id === item.reconstructionCanvasId);
+      const canvas = reconstructionById.get(item.reconstructionCanvasId);
       if (!canvas) return [];
 
       const imagesForCanvas = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
@@ -177,7 +180,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           }
         });
       });
-  }, [viewer, layout, images, visibleIds]);
+  }, [viewer, layout, images, visibleIds, reconstructionById]);
 
   return (
     <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px]
