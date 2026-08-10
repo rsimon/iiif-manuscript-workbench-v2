@@ -51,10 +51,7 @@ export const ReconstructionTree = () => {
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
-  // Keep the selected row in view - covers selection changes made outside
-  // the tree too (e.g. clicking a canvas in the composer). 'nearest' is a
-  // no-op if the row is already visible, so this doesn't fight a selection
-  // made by clicking the row itself.
+  // Scroll selected into view ('nearest' has no effect if the row is already visible)
   useEffect(() => {
     if (selection.length !== 1) return;
 
@@ -67,6 +64,7 @@ export const ReconstructionTree = () => {
 
     return combine(
       autoScrollForElements({ element: viewportEl }),
+      
       // Keeps scrolling once the pointer has moved past the panel's own
       // edge, so a card can be dragged from the bottom of a long list to
       // the top without first scrolling it into view by hand.
