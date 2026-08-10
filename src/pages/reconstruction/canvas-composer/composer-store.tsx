@@ -19,8 +19,11 @@ export interface ComposerState {
   // Images by reconstruction canvas ID
   imagesByCanvasId: Map<string, DraggableImage[]>,
 
-  // Non-reactive & mutable by convention, use without re-render
+  // OSD images - non-reactive & mutable by convention, use without re-render
   tiledImages: Map<string, TiledImage>;
+
+  // Keys with an addTiledImage() call in progress, but not yet loaded as `tiledImages`.
+  pendingTiledImageKeys: Set<string>;
 
   selectedImage?: DraggableImageSelection;
 
@@ -49,6 +52,8 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   imagesByCanvasId: new Map(useAppStore.getState().reconstruction.map(r => [r.id, toDraggableImages(r)])),
 
   tiledImages: new Map(),
+
+  pendingTiledImageKeys: new Set(),
 
   selectedImage: undefined,
 

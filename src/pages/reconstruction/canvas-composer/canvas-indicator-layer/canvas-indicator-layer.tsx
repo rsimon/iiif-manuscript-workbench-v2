@@ -9,13 +9,17 @@ interface CanvasIndicatorLayerProps {
 
   viewer: Viewer;
 
+  visibleIds: Set<string>;
+
 }
 
 export const CanvasIndicatorBackgroundLayer = (props: CanvasIndicatorLayerProps) => {
 
+  const visibleItems = props.layout.items.filter(item => props.visibleIds.has(item.reconstructionCanvasId));
+
   return (
     <g>
-      {props.layout.items.map(item => (
+      {visibleItems.map(item => (
         <AnimatedRect
           key={item.reconstructionCanvasId}
           item={item}
@@ -37,9 +41,11 @@ export const CanvasIndicatorForegroundLayer = (props: CanvasIndicatorLayerProps)
   const isSelected = (canvasId: string) =>
     selected.some(s => s.id === canvasId);
 
+  const visibleItems = props.layout.items.filter(item => props.visibleIds.has(item.reconstructionCanvasId));
+
   return (
     <g>
-      {props.layout.items.map(item => (
+      {visibleItems.map(item => (
         <AnimatedRect
           key={item.reconstructionCanvasId}
           item={item}

@@ -1,4 +1,4 @@
-import type { CanvasClickEvent, Viewer } from 'openseadragon';
+import { Point, type CanvasClickEvent, type Viewer } from 'openseadragon';
 import { useReconstructionStore } from '../reconstruction-store';
 import { useEffect } from 'react';
 import type { ComposerLayout } from '../reconstruction-types';
@@ -21,6 +21,26 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
 
     if (!stillSelected) setSelectedImage();
   }, [selection, setSelectedImage]);
+
+  // Bring a selected canvas into view if it isn't already visible
+  useEffect(() => {
+    if (!viewer) return;
+    if (selection.length !== 1) return;
+
+    const item = layout.items.find(i => i.reconstructionCanvasId === selection[0].id);
+    if (!item) return;
+
+    const bounds = viewer.viewport.getBounds(true);
+
+    const isVisible =
+      item.x < bounds.x + bounds.width && item.x + item.width > bounds.x &&
+      item.y < bounds.y + bounds.height && item.y + item.height > bounds.y;
+
+    if (isVisible) return;
+
+    const center = new Point(item.x + item.width / 2, item.y + item.height / 2);
+    viewer.viewport.panTo(center, false);
+  }, [selection, viewer, layout]);
 
   useEffect(() => {
     if (!viewer) return;

@@ -51,11 +51,20 @@ export const ReconstructionTree = () => {
 
   const [viewportEl, setViewportEl] = useState<HTMLDivElement | null>(null);
 
+  // Scroll selected into view ('nearest' has no effect if the row is already visible)
+  useEffect(() => {
+    if (selection.length !== 1) return;
+
+    const el = listRef.current?.querySelector(`[data-canvas-id="${selection[0].id}"]`);
+    el?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [selection]);
+
   useEffect(() => {
     if (!viewportEl) return;
 
     return combine(
       autoScrollForElements({ element: viewportEl }),
+      
       // Keeps scrolling once the pointer has moved past the panel's own
       // edge, so a card can be dragged from the bottom of a long list to
       // the top without first scrolling it into view by hand.
