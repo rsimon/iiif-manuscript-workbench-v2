@@ -3,15 +3,11 @@ import { useInView } from 'react-intersection-observer';
 import pLimit from 'p-limit';
 import { cn } from '@/shadcn/utils';
 
-// Skip loading thumbnails the user is just scrolling past.
 const IDLE_DELAY_MS = 350;
 
-// Caps how many thumbnails can be fetching/decoding at once, so a burst of
-// rows crossing the intersection threshold during fast scroll doesn't all
-// hit the network simultaneously. Shared across every thumbnail on the page.
 const limit = pLimit(5);
 
-type Status = 'idle' | 'active' | 'loaded';
+type LazyThumbnailStatus = 'idle' | 'active' | 'loaded';
 
 interface LazyThumbnailProps {
 
@@ -28,11 +24,8 @@ interface LazyThumbnailProps {
 export const LazyThumbnail = (props: LazyThumbnailProps) => {
   const { src, alt, className, style } = props;
 
-  const [status, setStatus] = useState<Status>('idle');
-  const statusRef = useRef<Status>('idle');
+  const [status, setStatus] = useState<LazyThumbnailStatus>('idle');
 
-  // Resolves the p-limit task, freeing its concurrency slot. Set while a
-  // load is queued or active; cleared once settled or aborted.
   const releaseRef = useRef<(() => void) | undefined>(undefined);
 
   const { ref, inView } = useInView({
@@ -40,43 +33,40 @@ export const LazyThumbnail = (props: LazyThumbnailProps) => {
     skip: status === 'loaded'
   });
 
-  // Debounce + queue a load once the thumbnail comes into view.
   useEffect(() => {
-    if (!inView || statusRef.current !== 'idle') return;
+    if (!inView) return;
 
-    let cancelled = false;
+    let phase: 'debouncing' | 'queued' | 'active' | 'cancelled' = 'debouncing';
 
     const timer = setTimeout(() => {
+      phase = 'queued';
+
       const done = new Promise<void>(resolve => { releaseRef.current = resolve; });
 
       limit(() => {
-        if (cancelled) return;
-        statusRef.current = 'active';
+        if (phase === 'cancelled') return;
+        phase = 'active';
         setStatus('active');
         return done;
       });
     }, IDLE_DELAY_MS);
 
     return () => {
-      cancelled = true;
       clearTimeout(timer);
+
+      if (phase === 'active') {
+        releaseRef.current?.();
+        releaseRef.current = undefined;
+        setStatus('idle');
+      }
+
+      phase = 'cancelled';
     };
   }, [inView]);
-
-  // Abort if the thumbnail leaves the viewport before it finished loading.
-  useEffect(() => {
-    if (status !== 'active' || inView) return;
-
-    releaseRef.current?.();
-    releaseRef.current = undefined;
-    statusRef.current = 'idle';
-    setStatus('idle');
-  }, [inView, status]);
 
   const onSettled = () => {
     releaseRef.current?.();
     releaseRef.current = undefined;
-    statusRef.current = 'loaded';
     setStatus('loaded');
   }
 
