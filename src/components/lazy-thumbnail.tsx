@@ -1,13 +1,30 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
 import pLimit from 'p-limit';
 import { cn } from '@/shadcn/utils';
+import { Skeleton } from '@/shadcn/skeleton';
 
 const IDLE_DELAY_MS = 350;
+const TIMEOUT_MS = 30000;
 
 const limit = pLimit(5);
 
-type LazyThumbnailStatus = 'idle' | 'active' | 'loaded';
+const preload = (src: string) => new Promise<void>((resolve, reject) => {
+  const img = new Image();
+
+  // Additional load timeout for convenience
+  const timer = setTimeout(() => {
+    img.src = '';
+    reject();
+  }, TIMEOUT_MS);
+
+  const settle = (fn: () => void) => () => { clearTimeout(timer); fn(); };
+  
+  img.onload = settle(resolve);
+  img.onerror = settle(reject);
+
+  img.src = src;
+});
 
 interface LazyThumbnailProps {
 
@@ -17,74 +34,44 @@ interface LazyThumbnailProps {
 
   className?: string;
 
-  style?: React.CSSProperties;
-
 }
 
 export const LazyThumbnail = (props: LazyThumbnailProps) => {
-  const { src, alt, className, style } = props;
+  const { src, alt, className } = props;
 
-  const [status, setStatus] = useState<LazyThumbnailStatus>('idle');
+  const [loaded, setLoaded] = useState(false);
 
-  const releaseRef = useRef<(() => void) | undefined>(undefined);
-
-  const { ref, inView } = useInView({
-    rootMargin: '200px 0px',
-    skip: status === 'loaded'
-  });
+  const { ref, inView } = useInView({ rootMargin: '200px 0px', skip: loaded });
 
   useEffect(() => {
-    if (!inView) return;
+    if (!inView || loaded) return;
 
-    let phase: 'debouncing' | 'queued' | 'active' | 'cancelled' = 'debouncing';
+    let cancelled = false;
 
     const timer = setTimeout(() => {
-      phase = 'queued';
-
-      const done = new Promise<void>(resolve => { releaseRef.current = resolve; });
-
-      limit(() => {
-        if (phase === 'cancelled') return;
-        phase = 'active';
-        setStatus('active');
-        return done;
+      limit(async () => {
+        if (cancelled) return;
+        await preload(src).catch(() => {});
+        if (!cancelled) setLoaded(true);
       });
     }, IDLE_DELAY_MS);
 
-    return () => {
-      clearTimeout(timer);
-
-      if (phase === 'active') {
-        releaseRef.current?.();
-        releaseRef.current = undefined;
-        setStatus('idle');
-      }
-
-      phase = 'cancelled';
+    return () => { 
+      cancelled = true; 
+      clearTimeout(timer); 
     };
-  }, [inView]);
+  }, [inView, loaded, src]);
 
-  const onSettled = () => {
-    releaseRef.current?.();
-    releaseRef.current = undefined;
-    setStatus('loaded');
-  }
-
-  return status === 'idle' ? (
-    <div
-      ref={ref}
-      aria-hidden="true"
-      className={cn(className, 'bg-muted animate-pulse')}
-      style={style} />
-  ) : (
-    <img
-      ref={ref}
-      src={src}
-      alt={alt}
-      className={className}
-      style={style}
-      onLoad={onSettled}
-      onError={onSettled} />
-  )
-
-}
+  return (
+    <div ref={ref} className={cn(className, 'relative overflow-hidden')}>
+      {loaded ? (
+        <img 
+          src={src} 
+          alt={alt} 
+          className="size-full object-cover" />
+      ) : ( 
+        <Skeleton className="size-full" />
+      )}
+    </div>
+  );
+};
