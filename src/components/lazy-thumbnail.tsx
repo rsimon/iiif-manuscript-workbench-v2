@@ -10,11 +10,6 @@ const FETCH_TIMEOUT_MS = 30000;
 const limit = pLimit(5);
 
 const preload = (src: string, signal: AbortSignal) => new Promise<void>((resolve, reject) => {
-  if (signal.aborted) {
-    reject(new Error('aborted'));
-    return;
-  }
-
   const img = new Image();
 
   const cleanup = () => {
@@ -86,7 +81,7 @@ export const LazyThumbnail = (props: LazyThumbnailProps) => {
   }, [inView, state, src]);
 
   return (
-    <div ref={ref} className={cn('relative aspect-square overflow-hidden', className)}>
+    <div ref={ref} className={cn('relative overflow-hidden', className)}>
       {state === 'loaded' ? (
         <img
           src={src}
@@ -96,7 +91,7 @@ export const LazyThumbnail = (props: LazyThumbnailProps) => {
       ) : state === 'pending' ? (
         <Skeleton className="size-full" />
       ) : state === 'failed' ? (
-        <div role="img" aria-label={alt} className="bg-muted size-full" />
+        <Skeleton role="img" aria-label={alt} className="size-full" />
       ) : null}
     </div>
   )
