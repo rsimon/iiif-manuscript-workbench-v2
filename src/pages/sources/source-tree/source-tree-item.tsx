@@ -5,6 +5,7 @@ import { Checkbox } from '@/shadcn/checkbox';
 import { Label } from '@/shadcn/label';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { cn, withStopPropagation } from '@/shadcn/utils';
+import { LazyThumbnail } from '@/components/lazy-thumbnail';
 import { useAppStore } from '@/store/app-store';
 import type { SourceManifest } from '@/types';
 import { SourceTreeItemActions } from './source-tree-item-actions';
@@ -133,11 +134,10 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
           </Tooltip>
         </div>
 
-        <img
+        <LazyThumbnail
           src={props.canvas.getThumbnailURL(80)}
           alt={`${props.canvas.getLabel()} preview image`}
-          className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/10"
-          loading="lazy" />
+          className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/10" />
 
         <div className="space-y-px">
           <div className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</div>

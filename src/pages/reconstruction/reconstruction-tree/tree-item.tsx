@@ -6,6 +6,7 @@ import { DropIndicator as LineIndicator } from '@atlaskit/pragmatic-drag-and-dro
 import { attachInstruction, extractInstruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import type { Instruction } from '@atlaskit/pragmatic-drag-and-drop-hitbox/tree-item';
 import { cn, withStopPropagation } from '@/shadcn/utils';
+import { LazyThumbnail } from '@/components/lazy-thumbnail';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import { EditableCanvasLabel } from './editable-canvas-label';
@@ -258,11 +259,10 @@ const TreeItemContent = (props: TreeItemContentProps) => {
 
   return (
     <div className="w-full flex gap-2 min-w-0 px-2 py-2">
-      <img
+      <LazyThumbnail
         src={source.canvas.getThumbnailURL(80)}
         alt={`${label} preview image`}
-        className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/20"
-        loading="lazy" />
+        className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/20" />
 
       <div className="flex flex-col gap-0.5 justify-start items-start min-w-0">
         {props.editable ? (
