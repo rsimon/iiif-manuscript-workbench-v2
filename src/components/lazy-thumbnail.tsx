@@ -5,7 +5,7 @@ import { cn } from '@/shadcn/utils';
 import { Skeleton } from '@/shadcn/skeleton';
 
 const IDLE_DELAY_MS = 350;
-const TIMEOUT_MS = 30000;
+const FETCH_TIMEOUT_MS = 30000;
 
 const limit = pLimit(5);
 
@@ -16,7 +16,7 @@ const preload = (src: string) => new Promise<void>((resolve, reject) => {
   const timer = setTimeout(() => {
     img.src = '';
     reject();
-  }, TIMEOUT_MS);
+  }, FETCH_TIMEOUT_MS);
 
   const settle = (fn: () => void) => () => { clearTimeout(timer); fn(); };
   
