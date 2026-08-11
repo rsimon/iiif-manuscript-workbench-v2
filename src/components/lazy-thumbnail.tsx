@@ -9,22 +9,40 @@ const FETCH_TIMEOUT_MS = 30000;
 
 const limit = pLimit(5);
 
-const preload = (src: string) => new Promise<void>((resolve, reject) => {
+const preload = (src: string, signal: AbortSignal) => new Promise<void>((resolve, reject) => {
+  if (signal.aborted) {
+    reject(new Error('aborted'));
+    return;
+  }
+
   const img = new Image();
 
-  // Additional load timeout for convenience
-  const timer = setTimeout(() => {
-    img.src = '';
-    reject();
-  }, FETCH_TIMEOUT_MS);
+  const cleanup = () => {
+    clearTimeout(timer);
+    signal.removeEventListener('abort', onAbort);
+    img.onload = null;
+    img.onerror = null;
+  };
 
-  const settle = (fn: () => void) => () => { clearTimeout(timer); fn(); };
-  
-  img.onload = settle(resolve);
-  img.onerror = settle(reject);
+  const cancel = (reason: string) => {
+    cleanup();
+    img.removeAttribute('src');
+    reject(new Error(reason));
+  };
+
+  const onAbort = () => cancel('Aborted');
+
+  signal.addEventListener('abort', onAbort, { once: true });
+
+  const timer = setTimeout(() => cancel('Timeout'), FETCH_TIMEOUT_MS);
+
+  img.onload = () => { cleanup(); resolve(); };
+  img.onerror = () => { cleanup(); reject(new Error(`Failed to load: ${src}`)); };
 
   img.src = src;
 });
+
+type LazyThumbnailState = 'pending' | 'loaded' | 'failed';
 
 interface LazyThumbnailProps {
 
@@ -39,39 +57,48 @@ interface LazyThumbnailProps {
 export const LazyThumbnail = (props: LazyThumbnailProps) => {
   const { src, alt, className } = props;
 
-  const [loaded, setLoaded] = useState(false);
+  const [state, setState] = useState<LazyThumbnailState>('pending');
 
-  const { ref, inView } = useInView({ rootMargin: '200px 0px', skip: loaded });
+  const { ref, inView } = useInView({
+    rootMargin: '200px 0px',
+    skip: state !== 'pending',
+  });
 
   useEffect(() => {
-    if (!inView || loaded) return;
+    if (!inView || state !== 'pending') return;
 
-    let cancelled = false;
+    const controller = new AbortController();
 
     const timer = setTimeout(() => {
-      limit(async () => {
-        if (cancelled) return;
-        await preload(src).catch(() => {});
-        if (!cancelled) setLoaded(true);
+      void limit(async () => {
+        if (controller.signal.aborted) return;
+        await preload(src, controller.signal).then(
+          () => { if (!controller.signal.aborted) setState('loaded'); },
+          () => { if (!controller.signal.aborted) setState('failed'); },
+        );
       });
     }, IDLE_DELAY_MS);
 
-    return () => { 
-      cancelled = true; 
-      clearTimeout(timer); 
+    return () => {
+      clearTimeout(timer);
+      controller.abort();
     };
-  }, [inView, loaded, src]);
+  }, [inView, state, src]);
 
   return (
-    <div ref={ref} className={cn(className, 'relative overflow-hidden')}>
-      {loaded ? (
-        <img 
-          src={src} 
-          alt={alt} 
+    <div ref={ref} className={cn('relative aspect-square overflow-hidden', className)}>
+      {state === 'loaded' ? (
+        <img
+          src={src}
+          alt={alt}
+          decoding="async"
           className="size-full object-cover" />
-      ) : ( 
+      ) : state === 'pending' ? (
         <Skeleton className="size-full" />
-      )}
+      ) : state === 'failed' ? (
+        <div role="img" aria-label={alt} className="bg-muted size-full" />
+      ) : null}
     </div>
-  );
-};
+  )
+
+}
