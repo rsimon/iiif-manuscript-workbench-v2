@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
 import { Construction } from 'lucide-react';
 import { IconDownload, IconRestore, IconUpload } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
@@ -14,8 +15,11 @@ import {
   DropdownMenuTrigger
 } from '@/shadcn/dropdown-menu';
 
+
 export const Project = () => {
   const reset  = useAppStore(state => state.resetAll);
+
+  const [_, navigate] = useLocation();
 
   const [showExportReconstructionDialog, setShowExportReconstructionDialog] = useState(false);
   const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
@@ -29,7 +33,10 @@ export const Project = () => {
       confirmLabel: 'Reset project',
       variant: 'destructive',
     }).then(confirmed => {
-      if (confirmed) reset();
+      if (confirmed) { 
+        reset();
+        navigate('/sources');
+      }
     });
   }
 
