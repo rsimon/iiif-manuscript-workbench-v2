@@ -10,7 +10,7 @@ import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
 import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
-import { useVisibleCanvases } from './use-visible-canvases';
+import { computeVisibleIds, useVisibleCanvases } from './use-visible-canvases';
 import { CanvasIndicatorLayer } from './canvas-indicator-layer';
 
 export const OSD_SPRING_STIFFNESS = 10;
@@ -98,9 +98,10 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     if (!viewer) return;
 
     const isFirstRender = firstRender.current;
-    const initialItems = layout.items.slice(0, INITIAL_VISIBLE_ITEMS);
 
     if (isFirstRender) {
+      const initialItems = layout.items.slice(0, INITIAL_VISIBLE_ITEMS);
+
       const initialHeight = initialItems.length > 0
         ? Math.max(...initialItems.map(item => item.y + item.height))
         : layout.layoutHeight;
@@ -115,12 +116,11 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
     const { tiledImages, pendingTiledImageKeys, isUserEdit, imagesByCanvasId } = useComposerStore.getState();
 
-    // `visibleIds` isn't reliable in the first pass because OSD hasn't set the viewport yet
-    const reliableVisibleIds = isFirstRender
-      ? new Set(initialItems.map(item => item.reconstructionCanvasId))
-      : visibleIds;
-
-    const visibleItems = layout.items.filter(item => reliableVisibleIds.has(item.reconstructionCanvasId));
+    // Recompute directly - after `layout` change, `visibleIds` is stale. Otherwise, user
+    // edits that change canvas IDs ('original' -> 'composite' canvas and vice versa) will
+    // remove images, and then re-add them in the next effect run!
+    const currentVisibleIds = computeVisibleIds(viewer, layout);
+    const visibleItems = layout.items.filter(item => currentVisibleIds.has(item.reconstructionCanvasId));
 
     const placements = visibleItems.flatMap(item => {
       const canvas = reconstructionById.get(item.reconstructionCanvasId);

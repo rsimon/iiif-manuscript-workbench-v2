@@ -5,7 +5,7 @@ import type { ComposerLayout, ComposerLayoutItem } from '../reconstruction-types
 // Overscan margin around current viewport, as a multiple of the viewport size
 const VIEWPORT_OVERSCAN = 1;
 
-const computeVisibleIds = (viewer: Viewer, layout: ComposerLayout): Set<string> => {
+export const computeVisibleIds = (viewer: Viewer, layout: ComposerLayout): Set<string> => {
   const bounds = viewer.viewport.getBounds(true);
 
   const minX = bounds.x - bounds.width * VIEWPORT_OVERSCAN;
