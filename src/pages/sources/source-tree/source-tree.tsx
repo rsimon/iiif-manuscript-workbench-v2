@@ -93,6 +93,8 @@ export const SourceTree = () => {
     )
   }
 
+  const canContinue = sourceCanvasesInReconstruction > 0;
+
   return (
     <div className="flex flex-col h-full">
       <SourceTreeToolbar />
@@ -122,11 +124,16 @@ export const SourceTree = () => {
           <div className="p-2.5 border-t">
             <Link 
               href="/reconstruction"
-              className="cursor-pointer flex items-center justify-center rounded-md border border-transparent text-sm w-full whitespace-nowrap transition-all 
-                outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px 
-                disabled:pointer-events-none disabled:opacity-30 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 
-                [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80 
-                h-10 gap-1.5 px-2.5">
+              aria-disabled={!canContinue}
+              tabIndex={canContinue ? undefined : -1}
+              onClick={e => { if (!canContinue) e.preventDefault(); }}
+              className={cn(
+                'cursor-pointer flex items-center justify-center rounded-md border border-transparent text-sm w-full whitespace-nowrap transition-all',
+                'outline-none select-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 active:not-aria-[haspopup]:translate-y-px', 
+                '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*="size-"])]:size-4 bg-primary text-primary-foreground hover:bg-primary/80',
+                'h-10 gap-1.5 px-2.5',
+                canContinue ? undefined : 'pointer-events-none opacity-30'
+              )}>
               Continue to Reconstruction
               <Badge 
                 className="bg-white/25">
