@@ -33,14 +33,31 @@ export const useDragAndDrop = () => {
         : [list, undefined];
     } else {
       let child: SourceCanvas | undefined;
-  
+
       const next = list.map(c => {
         if (c.type !== 'composite' || c.id !== payload.compositeId) return c;
-  
+
         child = c.sources.find(s => s.canvas.id === payload.canvasId);
-        return { ...c, sources: c.sources.filter(s => s.canvas.id !== payload.canvasId) };
+        const remaining = c.sources.filter(s => s.canvas.id !== payload.canvasId);
+
+        // Just one source left - revert to OriginalCanvas, same as the composer's applyEdits
+        if (remaining.length === 1) {
+          const source = remaining[0];
+          const original: OriginalCanvas = {
+            type: 'original',
+            id: source.canvas.id,
+            label: c.label,
+            width: c.width,
+            height: c.height,
+            physicalSize: c.physicalSize ?? source.physicalSize,
+            source
+          };
+          return original;
+        }
+
+        return { ...c, sources: remaining };
       });
-  
+
       return [next, child];
     }
   }, []);
