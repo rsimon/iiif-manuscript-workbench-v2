@@ -12,7 +12,10 @@ import {
 } from '@/shadcn/dialog';
 import { Button } from '@/shadcn/button';
 import { Alert, AlertDescription } from '@/shadcn/alert';
-import { IconAlertCircle } from '@tabler/icons-react';
+import { IconAlertCircle, IconLoader2 } from '@tabler/icons-react';
+import { Cozy } from 'cozy-iiif';
+import { parseReconstructionManifest } from './parse-reconstruction-manifest';
+import { useAppStore } from '@/store/app-store';
 
 interface OpenReconstructionDialogProps {
 
@@ -23,8 +26,10 @@ interface OpenReconstructionDialogProps {
 }
 
 export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) => {
+  const loadProject = useAppStore(state => state.loadProject);
 
   const [url, setUrl] = useState('');
+  const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const resetDialog = () => {
@@ -38,11 +43,25 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
   }
 
   const onImport = () => {
-      if (!url.trim()) {
+    if (!url.trim()) {
       setError('Please enter a manifest URL');
       return;
     }
 
+    setError(null);
+    setFetching(true);
+
+    Cozy.parseURL(url.trim()).then(async result => {
+      if (result.type === 'error') {
+        setError(result.message);
+        return;
+      } else if (result.type !== 'manifest') {
+        setError('Not a presentation manifest');
+      } else {
+        const parsed = await parseReconstructionManifest(result.resource);
+        loadProject(parsed.sources, parsed.reconstruction);
+      }
+    });
   }
 
   return (
@@ -59,28 +78,36 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <Label htmlFor="manifest-url">Manifest URL</Label>
-          <Input
-            id="reconstruction-url"
-            placeholder="https://example.org/iiif/manifest.json"
-            value={url}
-            onChange={(e) => {
-              setUrl(e.target.value);
-              setError(null);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter')
-                onImport();
-            }}
-          />
-          
-          {error && (
-            <Alert 
-              variant="destructive"
-              className="rounded">
-              <IconAlertCircle className="size-4" />
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+          {fetching ? (
+            <div className="p-4 animate-spin flex justify-center items-center">
+              <IconLoader2 className="size-4 animate-spin" />
+            </div>
+          ) : (
+            <>
+              <Label htmlFor="manifest-url">Manifest URL</Label>
+              <Input
+                id="reconstruction-url"
+                placeholder="https://example.org/iiif/manifest.json"
+                value={url}
+                onChange={(e) => {
+                  setUrl(e.target.value);
+                  setError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter')
+                    onImport();
+                }}
+              />
+              
+              {error && (
+                <Alert 
+                  variant="destructive"
+                  className="rounded">
+                  <IconAlertCircle className="size-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+            </>
           )}
         </div>
 
