@@ -59,6 +59,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
         setError('Not a presentation manifest');
       } else {
         const parsed = await parseReconstructionManifest(result.resource);
+        console.log(parsed.reconstruction);
         loadProject(parsed.sources, parsed.reconstruction);
       }
     });
