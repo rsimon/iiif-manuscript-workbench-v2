@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
-import { Construction } from 'lucide-react';
-import { IconDownload, IconRestore, IconUpload } from '@tabler/icons-react';
+import { IconDownload, IconFolderOpen, IconRestore, IconUpload } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 import { useAppStore } from '@/store/app-store';
 import { useConfirm } from '@/dialogs/confirm';
 import { ExportReconstructionDialog } from '@/dialogs/export-reconstruction';
 import { ImportSourceDialog } from '@/dialogs/import-source';
+import { OpenReconstructionDialog } from '@/dialogs/open-reconstruction';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,12 +15,12 @@ import {
   DropdownMenuTrigger
 } from '@/shadcn/dropdown-menu';
 
-
 export const Project = () => {
   const reset  = useAppStore(state => state.resetAll);
 
   const [_, navigate] = useLocation();
 
+  const [showOpenReconstructionDialog, setShowOpenReconstructionDialog] = useState(false);
   const [showExportReconstructionDialog, setShowExportReconstructionDialog] = useState(false);
   const [showImportSourceDialog, setShowImportSourceDialog] = useState(false);
 
@@ -53,10 +53,9 @@ export const Project = () => {
 
         <DropdownMenuContent className="min-w-58">
           <DropdownMenuItem 
-            disabled
-            className="gap-2.5">
-            <Construction />
-            {/* <IconFolderOpen /> */} Open reconstruction...
+            className="gap-2.5"
+            onClick={() => setShowOpenReconstructionDialog(true)}>
+            <IconFolderOpen /> Open reconstruction...
           </DropdownMenuItem>
 
           <DropdownMenuItem 
@@ -83,6 +82,10 @@ export const Project = () => {
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      <OpenReconstructionDialog
+        open={showOpenReconstructionDialog}
+        onOpenChange={setShowOpenReconstructionDialog} />
 
       <ExportReconstructionDialog
         open={showExportReconstructionDialog}

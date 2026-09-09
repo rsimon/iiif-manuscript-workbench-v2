@@ -43,6 +43,7 @@ interface AppStore {
   setSourcePhysicalSize: (sourceId: string, size?: PhysicalSize) => void;
   setReconstructionPhysicalSize: (canvasId: string, size?: PhysicalSize) => void;
   resetAll: () => void;
+  loadProject: (sources: SourceManifest[], reconstruction: ReconstructionCanvas[]) => void;
 
 }
 
@@ -190,6 +191,10 @@ export const useAppStore = create<AppStore>()(
         reconstruction: [],
         sources: [],
         sizes: new Map()
+      })),
+
+      loadProject: (sources, reconstruction) => set(() => ({
+        sources, reconstruction, sizes: new Map()
       }))
     }), {
       name: 'iiif-workbench-state',
