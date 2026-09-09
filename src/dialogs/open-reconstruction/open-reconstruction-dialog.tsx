@@ -1,7 +1,14 @@
 import { useState } from 'react';
+import { useLocation } from 'wouter';
+import { IconAlertCircle, IconLoader2 } from '@tabler/icons-react';
+import { Cozy } from 'cozy-iiif';
 import { IIIFIcon } from '@/components/iiif-icon';
+import { Alert, AlertDescription } from '@/shadcn/alert';
+import { Button } from '@/shadcn/button';
 import { Input } from '@/shadcn/input';
 import { Label } from '@/shadcn/label';
+import { useAppStore } from '@/store/app-store';
+import { parseReconstructionManifest } from './parse-reconstruction-manifest';
 import { 
   Dialog, 
   DialogContent, 
@@ -10,12 +17,6 @@ import {
   DialogHeader, 
   DialogTitle 
 } from '@/shadcn/dialog';
-import { Button } from '@/shadcn/button';
-import { Alert, AlertDescription } from '@/shadcn/alert';
-import { IconAlertCircle, IconLoader2 } from '@tabler/icons-react';
-import { Cozy } from 'cozy-iiif';
-import { parseReconstructionManifest } from './parse-reconstruction-manifest';
-import { useAppStore } from '@/store/app-store';
 
 interface OpenReconstructionDialogProps {
 
@@ -27,6 +28,8 @@ interface OpenReconstructionDialogProps {
 
 export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) => {
   const loadProject = useAppStore(state => state.loadProject);
+
+  const [_, navigate] = useLocation();
 
   const [url, setUrl] = useState('');
   const [fetching, setFetching] = useState(false);
@@ -59,8 +62,10 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
         setError('Not a presentation manifest');
       } else {
         const parsed = await parseReconstructionManifest(result.resource);
-        console.log(parsed.reconstruction);
         loadProject(parsed.sources, parsed.reconstruction);
+        setFetching(false);
+        navigate('/reconstruction');
+        props.onOpenChange(false);
       }
     });
   }
