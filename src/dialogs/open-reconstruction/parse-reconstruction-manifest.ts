@@ -55,6 +55,9 @@ export const parseReconstructionManifest = async (manifest: CozyManifest): Promi
     return match ? { sourceManifestId: source.manifest.id, canvas } : found;
   }, undefined);
 
+  const getIdentifier = (img: CozyImageResource) =>
+    img.type === 'static' ? img.url : img.serviceUrl;
+
   const findCompositeSources = (canvas: CozyCanvas) => {
     // The export flattens all source canvases into one canvas. Group the
     // exported images back by the resolved source canvas they came from.
@@ -64,14 +67,13 @@ export const parseReconstructionManifest = async (manifest: CozyManifest): Promi
     }>();
 
     canvas.images.forEach(image => {
-      const imageId = image.source.id;
-      if (!imageId) return;
+      const imageId = getIdentifier(image);
 
       const source = sources.reduce<SourceCanvas | undefined>((found, sourceManifest) => {
         if (found) return found;
 
         const sourceCanvas = sourceManifest.manifest.canvases.find(sourceCanvas =>
-          sourceCanvas.images.some(sourceImage => sourceImage.source.id === imageId));
+          sourceCanvas.images.some(sourceImage => getIdentifier(sourceImage) === imageId));
 
         return sourceCanvas
           ? { sourceManifestId: sourceManifest.manifest.id, canvas: sourceCanvas }
@@ -88,15 +90,16 @@ export const parseReconstructionManifest = async (manifest: CozyManifest): Promi
     });
 
     return [...groups.values()].map(({ source, images }) => {
-      const targetsByImageId = new Map<string, string[]>();
+      const targetsByImage = new Map<string, string[]>();
 
       images.forEach(image => {
-        const imageId = image.source.id;
-        if (!imageId || !image.target) return;
+        if (!image.target) return;
+
+        const key = JSON.stringify(image.source);
 
         const target = `${canvas.id}#xywh=${image.target.x},${image.target.y},${image.target.w},${image.target.h}`;
-        targetsByImageId.set(imageId, [
-          ...(targetsByImageId.get(imageId) || []),
+        targetsByImage.set(key, [
+          ...(targetsByImage.get(key) || []),
           target
         ]);
       });
@@ -107,12 +110,8 @@ export const parseReconstructionManifest = async (manifest: CozyManifest): Promi
           ...page,
           items: page.items?.map(annotation => {
             const body = Array.isArray(annotation.body) ? annotation.body[0] : annotation.body;
-            const imageId = body && typeof body === 'object' && 'id' in body && typeof body.id === 'string'
-              ? body.id
-              : undefined;
-            const targets = imageId ? targetsByImageId.get(imageId) : undefined;
+            const targets = targetsByImage.get(JSON.stringify(body))
             const target = targets?.shift();
-
             return target ? { ...annotation, target } : annotation;
           })
         }))
