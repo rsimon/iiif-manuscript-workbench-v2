@@ -25,9 +25,9 @@ export const App = () => {
             <Route path="/preview" component={Preview} />
           </div>
 
-          <URLInitializer />
-          
-          <Splash />
+          <URLInitializer>
+            <Splash />
+          </URLInitializer>
         </Router>
       </ConfirmDialogProvider>
     </TooltipProvider>

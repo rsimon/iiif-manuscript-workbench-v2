@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import { useAppStore } from '../app-store';
 import { openReconstructionFromURL } from './open-from-url';
@@ -12,16 +12,28 @@ import {
   AlertDialogTitle
 } from '@/shadcn/alert-dialog';
 
+interface URLInitializerProps {
+
+  children?: ReactNode;
+
+}
+
 const removeQueryParam = () => {
   const url = new URL(window.location.href);
   url.searchParams.delete('iiif-content');
   window.history.replaceState(null, '', url);
 }
 
-export const URLInitializer = () => {
+const CONTENT_URL = new URLSearchParams(window.location.search)
+  .get('iiif-content');
+
+const HAS_CONTENT_PARAM = new URLSearchParams(window.location.search)
+  .has('iiif-content');
+
+export const URLInitializer = ({ children }: URLInitializerProps) => {
 
   const initialized = useRef(false);
-    
+
   const [error, setError] = useState<string | null>(null);
 
   const [_, navigate] = useLocation();
@@ -30,10 +42,9 @@ export const URLInitializer = () => {
     if (initialized.current) return;
     initialized.current = true;
 
-    const contentURL = new URLSearchParams(window.location.search).get('iiif-content');
-    if (!contentURL) return;
+    if (!CONTENT_URL) return;
 
-    openReconstructionFromURL(contentURL)
+    openReconstructionFromURL(CONTENT_URL)
       .then(({ sources, reconstruction }) => {
         useAppStore.getState().loadProject(sources, reconstruction);
         removeQueryParam();
@@ -45,21 +56,25 @@ export const URLInitializer = () => {
   }, [navigate]);
 
   return (
-    <AlertDialog open={error !== null}>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>
-            Could not open reconstruction
-          </AlertDialogTitle>
-          <AlertDialogDescription>{error}</AlertDialogDescription>
-        </AlertDialogHeader>
+    <>
+      <AlertDialog open={error !== null}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Could not open reconstruction
+            </AlertDialogTitle>
+            <AlertDialogDescription>{error}</AlertDialogDescription>
+          </AlertDialogHeader>
 
-        <AlertDialogFooter>
-          <AlertDialogAction 
-            onClick={() => setError(null)}>Close</AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
+          <AlertDialogFooter>
+            <AlertDialogAction 
+              onClick={() => setError(null)}>Close</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {!HAS_CONTENT_PARAM && children}
+    </>
   )
 
 }
