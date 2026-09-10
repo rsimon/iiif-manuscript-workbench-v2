@@ -193,9 +193,19 @@ export const useAppStore = create<AppStore>()(
         sizes: new Map()
       })),
 
-      loadProject: (sources, reconstruction) => set(() => ({
-        sources, reconstruction, sizes: new Map()
-      }))
+      loadProject: (sources, reconstruction) => set(() => {
+        // Update physical sizes map for each reconstruction canvas
+        // loaded from manifest
+        const sizes = new Map();
+
+        reconstruction.forEach(rc => {
+          if (rc.physicalSize) sizes.set(rc.id, rc.physicalSize)
+        });
+        
+        return {
+          sources, reconstruction, sizes
+        }
+      })
     }), {
       name: 'iiif-workbench-state',
       version: 2,

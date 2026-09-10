@@ -5,9 +5,8 @@ import {
   type CozyImageResource, 
   type CozyManifest 
 } from 'cozy-iiif';
-import type { 
-  CompositeCanvas, 
-  OriginalCanvas, 
+import type {
+  PhysicalSize, 
   ReconstructionCanvas, 
   SourceCanvas, 
   SourceManifest 
@@ -19,6 +18,35 @@ export interface ReconstructionParseResult {
 
   reconstruction: ReconstructionCanvas[];
 
+}
+
+const parsePhysicalSize = (canvas: CozyCanvas): PhysicalSize | undefined => {
+  const services = 
+    Array.isArray(canvas.source.service) ? canvas.source.service : 
+    canvas.source.service ? [canvas.source.service] :
+    [];
+
+  const physDimService = services.find(s => s.profile === 'http://iiif.io/api/annex/services/physdim');
+  if (!physDimService) return;
+
+  try {
+    const physicalScale = parseFloat((physDimService as any).physicalScale);
+    const unit = (physDimService as any).physicalUnits;
+
+    if (isNaN(physicalScale))
+      throw new Error(`Could not parse scale: ${(physDimService as any).physicalScale}`);
+
+    if (!unit)
+      throw new Error(`Physical units missing`);
+
+    const width = Math.round(100 * canvas.width * physicalScale) / 100;
+    const height = Math.round(100 * canvas.height * physicalScale) / 100;
+    return { width, height, unit };
+  } catch (error) {
+    console.error(error);
+    console.warn(physDimService);
+    console.warn('Error parsing physical size');
+  }
 }
 
 export const parseReconstructionManifest = async (manifest: CozyManifest): Promise<ReconstructionParseResult> => {
@@ -49,16 +77,25 @@ export const parseReconstructionManifest = async (manifest: CozyManifest): Promi
     });
   }), Promise.resolve([]));
 
-  const findOriginalSource = (canvas: CozyCanvas) => sources.reduce<SourceCanvas | undefined>((found, source) => {
-    if (found) return found;
-    const match = source.manifest.canvases.find(c => c.id === canvas.id);
-    return match ? { sourceManifestId: source.manifest.id, canvas } : found;
-  }, undefined);
+  // Based on a CozyCanvas from the imported project manifest WITH A SINGLE IMAGE, this 
+  // function regenerates the (single) `SourceCanvas` object, by linking the CozyCanvas to its
+  // original source manifest, and injecting the physical size (if any)
+  const regenerateSourceCanvas = (canvas: CozyCanvas, physicalSize?: PhysicalSize): SourceCanvas | undefined => 
+    sources.reduce<SourceCanvas | undefined>((found, source) => {
+      if (found) return found;
+      const match = source.manifest.canvases.find(c => c.id === canvas.id);
+      return match ? { sourceManifestId: source.manifest.id, canvas, physicalSize } : found;
+    }, undefined);
 
-  const getIdentifier = (img: CozyImageResource) =>
-    img.type === 'static' ? img.url : img.serviceUrl;
+  // Based on a CozyCanvas from the imported project manifest, WITH MULTIPLE IMAGES,
+  // this function creates the list of `SourceCanvas` objects, by:
+  // - Identfying which source canvases the images belong to
+  // - Re-grouping them accordingly
+  // - Regenerating the SourceCanvas list, with images and targets 
+  const regenerateCompositeSources = (canvas: CozyCanvas): SourceCanvas[] => {
+    const getIdentifier = (img: CozyImageResource) =>
+      img.type === 'static' ? img.url : img.serviceUrl;
 
-  const findCompositeSources = (canvas: CozyCanvas) => {
     // The export flattens all source canvases into one canvas. Group the
     // exported images back by the resolved source canvas they came from.
     const groups = new Map<string, {
@@ -126,31 +163,35 @@ export const parseReconstructionManifest = async (manifest: CozyManifest): Promi
 
   // Compile reconstruction canvases
   const reconstruction: Partial<ReconstructionCanvas>[] = manifest.canvases.map(canvas => {
-    return canvas.images.length === 1 ? {
-      type: 'original',
-      id: canvas.id,
-      label: canvas.getLabel(),
-      height: canvas.height,
-      width: canvas.width,
-      source: findOriginalSource(canvas)
-    } as Partial<OriginalCanvas> : {
-      type: 'composite',
-      id: canvas.id,
-      label: canvas.getLabel(),
-      height: canvas.height,
-      width: canvas.width,
-      sources: findCompositeSources(canvas)
-    } as CompositeCanvas;
+    if (canvas.images.length === 1) {
+      const physicalSize = parsePhysicalSize(canvas);
+      return {
+        type: 'original',
+        id: canvas.id,
+        label: canvas.getLabel(),
+        height: canvas.height,
+        width: canvas.width,
+        source: regenerateSourceCanvas(canvas, physicalSize),
+        physicalSize
+      }
+    } else {
+      return {
+        type: 'composite',
+        id: canvas.id,
+        label: canvas.getLabel(),
+        height: canvas.height,
+        width: canvas.width,
+        sources: regenerateCompositeSources(canvas),
+        physicalSize: parsePhysicalSize(canvas)
+      }
+    }
   });
 
   if (reconstruction.some(rc => rc.type === 'original' && !rc.source))
     throw new Error('Could not parse reconstruction manifest');
 
   return {
-
     sources,
-
     reconstruction: reconstruction as ReconstructionCanvas[]
-  
   };
 }
