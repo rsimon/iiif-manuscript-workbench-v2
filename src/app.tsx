@@ -7,6 +7,7 @@ import { ConfirmDialogProvider } from '@/dialogs/confirm';
 import { Sources } from '@/pages/sources';
 import { Reconstruction } from '@/pages/reconstruction';
 import { Preview } from '@/pages/preview';
+import { URLInitializer } from '@/store/open-from-url';
 
 export const App = () => {
 
@@ -24,6 +25,8 @@ export const App = () => {
             <Route path="/preview" component={Preview} />
           </div>
 
+          <URLInitializer />
+          
           <Splash />
         </Router>
       </ConfirmDialogProvider>
