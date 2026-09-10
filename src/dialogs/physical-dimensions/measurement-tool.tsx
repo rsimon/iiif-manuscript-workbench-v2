@@ -75,10 +75,12 @@ export const MeasurementTool = (props: MeasurementToolProps) => {
     viewer.element.addEventListener('pointermove', onPointerMove);
 
     return () => {
-      viewer.element.style.cursor = '';
+      if (viewer.element) {
+        viewer.element.style.cursor = '';
+        viewer.element.removeEventListener('pointermove', onPointerMove);
+      }
 
       viewer.removeHandler('canvas-click', onCanvasClick);
-      viewer.element.removeEventListener('pointermove', onPointerMove);
 
       setTapeMeasureState({ phase: 'idle' });
     };
