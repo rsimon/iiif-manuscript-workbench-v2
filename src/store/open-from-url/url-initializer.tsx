@@ -32,7 +32,6 @@ const HAS_CONTENT_PARAM = new URLSearchParams(window.location.search)
   .has('iiif-content');
 
 export const URLInitializer = ({ children }: URLInitializerProps) => {
-
   const initialized = useRef(false);
   const [loading, setLoading] = useState(Boolean(CONTENT_URL));
 
