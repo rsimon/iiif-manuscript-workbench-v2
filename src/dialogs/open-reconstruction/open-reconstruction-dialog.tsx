@@ -1,14 +1,13 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { IconAlertCircle, IconLoader2 } from '@tabler/icons-react';
-import { Cozy } from 'cozy-iiif';
 import { IIIFIcon } from '@/components/iiif-icon';
 import { Alert, AlertDescription } from '@/shadcn/alert';
 import { Button } from '@/shadcn/button';
 import { Input } from '@/shadcn/input';
 import { Label } from '@/shadcn/label';
 import { useAppStore } from '@/store/app-store';
-import { parseReconstructionManifest } from './parse-reconstruction-manifest';
+import { openReconstructionFromURL } from '@/store/open-from-url';
 import { 
   Dialog, 
   DialogContent, 
@@ -45,7 +44,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
     props.onOpenChange(open);
   }
 
-  const onImport = () => {
+  const onImport = async () => {
     if (!url.trim()) {
       setError('Please enter a manifest URL');
       return;
@@ -54,20 +53,16 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
     setError(null);
     setFetching(true);
 
-    Cozy.parseURL(url.trim()).then(async result => {
-      if (result.type === 'error') {
-        setError(result.message);
-        return;
-      } else if (result.type !== 'manifest') {
-        setError('Not a presentation manifest');
-      } else {
-        const parsed = await parseReconstructionManifest(result.resource);
-        loadProject(parsed.sources, parsed.reconstruction);
-        setFetching(false);
-        navigate('/reconstruction');
-        props.onOpenChange(false);
-      }
-    });
+    try {
+      const parsed = await openReconstructionFromURL(url.trim());
+      loadProject(parsed.sources, parsed.reconstruction);
+      navigate('/reconstruction');
+      props.onOpenChange(false);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not load reconstruction');
+    } finally {
+      setFetching(false);
+    }
   }
 
   return (

@@ -49,7 +49,7 @@ const parsePhysicalSize = (canvas: CozyCanvas): PhysicalSize | undefined => {
   }
 }
 
-export const parseReconstructionManifest = async (manifest: CozyManifest): Promise<ReconstructionParseResult> => {
+const parseReconstructionManifest = async (manifest: CozyManifest): Promise<ReconstructionParseResult> => {
   // Parse list of source manifests
   const field = (manifest.source.metadata || []).find(m => {
     // Brittle... perhaps we can find a more robust way to encode this in the future
@@ -194,4 +194,16 @@ export const parseReconstructionManifest = async (manifest: CozyManifest): Promi
     sources,
     reconstruction: reconstruction as ReconstructionCanvas[]
   };
+}
+
+export const openReconstructionFromURL = async (url: string) => {
+  const result = await Cozy.parseURL(url);
+
+  if (result.type === 'error')
+    throw new Error(result.message);
+
+  if (result.type !== 'manifest')
+    throw new Error('Not a presentation manifest');
+
+  return parseReconstructionManifest(result.resource);
 }
