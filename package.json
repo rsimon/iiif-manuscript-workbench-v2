@@ -43,6 +43,7 @@
     "p-throttle": "^8.1.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "react-dropzone": "^20.1.2",
     "react-intersection-observer": "^11.0.1",
     "react-resizable-panels": "^4.12.4",
     "react-virtuoso": "^4.18.13",

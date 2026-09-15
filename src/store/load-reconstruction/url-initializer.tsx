@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import { IconLoader2 } from '@tabler/icons-react';
 import { useAppStore } from '../app-store';
-import { openReconstructionFromURL } from './open-from-url';
+import { loadReconstructionFromURL } from './load-reconstruction';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,7 +45,7 @@ export const URLInitializer = ({ children }: URLInitializerProps) => {
 
     if (!CONTENT_URL) return;
 
-    openReconstructionFromURL(CONTENT_URL)
+    loadReconstructionFromURL(CONTENT_URL)
       .then(({ sources, reconstruction }) => {
         useAppStore.getState().loadProject(sources, reconstruction);
         removeQueryParam();
