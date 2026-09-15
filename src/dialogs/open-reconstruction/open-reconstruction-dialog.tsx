@@ -34,7 +34,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
   const [_, navigate] = useLocation();
 
   const [url, setUrl] = useState('');
-  const [inputMode, setInputMode] = useState<'url' | 'file'>('url');
+  const [tab, setTab] = useState<'url' | 'file'>('url');
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -71,12 +71,12 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
 
   const resetDialog = () => {
     setUrl('');
-    setInputMode('url');
+    setTab('url');
     setError(null);
   }
 
   const onTabChange = (tab: string) => {
-    setInputMode(tab as 'url' | 'file');
+    setTab(tab as 'url' | 'file');
     setError(null);
   }
 
@@ -127,7 +127,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
           ) : (
             <>
               <Tabs
-                value={inputMode}
+                value={tab}
                 onValueChange={onTabChange}>
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="url">From URL</TabsTrigger>
@@ -196,7 +196,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
             Cancel
           </Button>
               
-          {inputMode === 'url' && (
+          {tab === 'url' && (
             <Button
               className="tracking-wide"
               onClick={onURLImport}>
