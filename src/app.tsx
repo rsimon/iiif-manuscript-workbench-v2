@@ -7,7 +7,7 @@ import { ConfirmDialogProvider } from '@/dialogs/confirm';
 import { Sources } from '@/pages/sources';
 import { Reconstruction } from '@/pages/reconstruction';
 import { Preview } from '@/pages/preview';
-import { URLInitializer } from '@/store/open-from-url';
+import { URLInitializer } from '@/store/load-reconstruction';
 
 export const App = () => {
 

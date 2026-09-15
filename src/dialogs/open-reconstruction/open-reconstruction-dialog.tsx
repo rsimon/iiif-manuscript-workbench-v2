@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { useLocation } from 'wouter';
+import { useDropzone } from 'react-dropzone';
 import { IconAlertCircle, IconLoader2 } from '@tabler/icons-react';
 import { IIIFIcon } from '@/components/iiif-icon';
 import { Alert, AlertDescription } from '@/shadcn/alert';
 import { Button } from '@/shadcn/button';
 import { Input } from '@/shadcn/input';
 import { Label } from '@/shadcn/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/shadcn/tabs';
+import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
-import { openReconstructionFromURL } from '@/store/open-from-url';
+import { loadReconstructionFromJSON, loadReconstructionFromURL } from '@/store/load-reconstruction';
 import { 
   Dialog, 
   DialogContent, 
@@ -31,20 +34,58 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
   const [_, navigate] = useLocation();
 
   const [url, setUrl] = useState('');
+  const [inputMode, setInputMode] = useState<'url' | 'file'>('url');
   const [fetching, setFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const onFileImport = async (selectedFile: File) => {
+    setError(null);
+    setFetching(true);
+
+    try {
+      const json = JSON.parse(await selectedFile.text());
+      const parsed = await loadReconstructionFromJSON(json);
+      loadProject(parsed.sources, parsed.reconstruction);
+      navigate('/reconstruction');
+      props.onOpenChange(false);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Could not load reconstruction');
+    } finally {
+      setFetching(false);
+    }
+  };
+
+  const { getRootProps, getInputProps, isDragActive, open: openFilePicker } = useDropzone({
+    accept: { 'application/json': ['.json'] },
+    maxFiles: 1,
+    multiple: false,
+    noClick: true,
+    onDrop: acceptedFiles => {
+      const selectedFile = acceptedFiles[0];
+      if (selectedFile) void onFileImport(selectedFile);
+    },
+    onDropRejected: () => {
+      setError('Please choose a JSON file');
+    },
+  });
+
   const resetDialog = () => {
     setUrl('');
+    setInputMode('url');
     setError(null);
-  };
+  }
+
+  const onTabChange = (tab: string) => {
+    setInputMode(tab as 'url' | 'file');
+    setError(null);
+  }
 
   const onOpenChange = (open: boolean) => {
     if (!open) resetDialog();
     props.onOpenChange(open);
   }
 
-  const onImport = async () => {
+  const onURLImport = async () => {
     if (!url.trim()) {
       setError('Please enter a manifest URL');
       return;
@@ -54,7 +95,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
     setFetching(true);
 
     try {
-      const parsed = await openReconstructionFromURL(url.trim());
+      const parsed = await loadReconstructionFromURL(url.trim());
       loadProject(parsed.sources, parsed.reconstruction);
       navigate('/reconstruction');
       props.onOpenChange(false);
@@ -85,23 +126,58 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
             </div>
           ) : (
             <>
-              <Label htmlFor="manifest-url">Manifest URL</Label>
-              <Input
-                id="reconstruction-url"
-                placeholder="https://example.org/iiif/manifest.json"
-                value={url}
-                onChange={(e) => {
-                  setUrl(e.target.value);
-                  setError(null);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter')
-                    onImport();
-                }}
-              />
-              
+              <Tabs
+                value={inputMode}
+                onValueChange={onTabChange}>
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="url">From URL</TabsTrigger>
+                  <TabsTrigger value="file">From JSON file</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="url" className="space-y-2 pt-4">
+                  <Label htmlFor="reconstruction-url">Manifest URL</Label>
+                  <Input
+                    id="reconstruction-url"
+                    placeholder="https://example.org/iiif/manifest.json"
+                    value={url}
+                    onChange={(e) => {
+                      setUrl(e.target.value);
+                      setError(null);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter')
+                        onURLImport();
+                    }}
+                  />
+                </TabsContent>
+
+                <TabsContent value="file" className="pt-4">
+                  <div
+                    {...getRootProps()}
+                    className={cn(
+                      'rounded border border-dashed p-6 text-center transition-colors',
+                      isDragActive ? 'border-sky-600/80 bg-sky-600/20' : 'border-sky-800/30 bg-sky-800/5'
+                    )}>
+                    <input {...getInputProps()} />
+
+                    <Button 
+                      type="button" 
+                      className="mt-3" 
+                      onClick={openFilePicker}>
+                      Choose file
+                    </Button>
+                    <p className={cn(
+                      'mt-3 text-sm',
+                      isDragActive ? 'text-sky-800/80' : 'text-muted-foreground'
+                    )}>
+                      {isDragActive ? 'Drop the JSON file here' : 'Or drag and drop a JSON file here'}
+                    </p>
+                  </div>
+                </TabsContent>
+              </Tabs>
+
               {error && (
-                <Alert 
+                <Alert
                   variant="destructive"
                   className="rounded">
                   <IconAlertCircle className="size-4" />
@@ -120,11 +196,13 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
             Cancel
           </Button>
               
-          <Button 
-            className="tracking-wide"
-            onClick={onImport}>
-            Import
-          </Button>
+          {inputMode === 'url' && (
+            <Button
+              className="tracking-wide"
+              onClick={onURLImport}>
+              Import
+            </Button>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>

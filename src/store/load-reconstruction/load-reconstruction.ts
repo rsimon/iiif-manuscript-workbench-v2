@@ -3,7 +3,8 @@ import {
   Cozy, 
   type CozyCanvas, 
   type CozyImageResource, 
-  type CozyManifest 
+  type CozyManifest, 
+  type CozyParseResult
 } from 'cozy-iiif';
 import type {
   PhysicalSize, 
@@ -196,9 +197,7 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
   };
 }
 
-export const openReconstructionFromURL = async (url: string) => {
-  const result = await Cozy.parseURL(url);
-
+const loadResult = (result: CozyParseResult) => {
   if (result.type === 'error')
     throw new Error(result.message);
 
@@ -207,3 +206,11 @@ export const openReconstructionFromURL = async (url: string) => {
 
   return parseReconstructionManifest(result.resource);
 }
+
+export const loadReconstructionFromURL = async (url: string) => {
+  const result = await Cozy.parseURL(url);
+  return loadResult(result);
+}
+
+export const loadReconstructionFromJSON = (json: any) =>
+  loadResult(Cozy.parse(json));
