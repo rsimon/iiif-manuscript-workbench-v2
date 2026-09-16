@@ -192,7 +192,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
           <Button
             variant="ghost"
             className="tracking-wide"
-            onClick={() => props.onOpenChange(false)}>
+            onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
               
