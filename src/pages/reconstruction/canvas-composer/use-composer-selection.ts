@@ -71,17 +71,9 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
             reconstruction,
             useComposerStore.getState().imagesByCanvasId
           );
-          const images = useComposerStore.getState().imagesByCanvasId.get(canvas.id) ?? [];
-          const selectedImage = hit ?? (images.length === 1 ? {
-            item,
-            image: images[0],
-            canChangeItem: canvas.type === 'original'
-              ? canvas.source.canvas.images.length === 1
-              : canvas.sources.find(source => source.canvas.id === images[0].sourceCanvasId)?.canvas.images.length === 1
-          } : undefined);
 
           setSelectedItems(current => {
-            setSelectedImage(selectedImage);
+            setSelectedImage(hit);
             return current.length === 1 && current[0].id === canvas.id ? current : [canvas];
           });
         }
