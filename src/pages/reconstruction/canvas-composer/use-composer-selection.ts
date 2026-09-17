@@ -64,7 +64,6 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
           setSelectedImage();
           setSelectedItems(current => [...current, canvas]);
         } else {
-          const { reconstruction } = useAppStore.getState();
           const hit = getImageAt(
             point,
             layout,
