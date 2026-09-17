@@ -1,10 +1,15 @@
 import { useEffect, useRef } from 'react';
 import type { Point, Viewer } from 'openseadragon';
-import type { EdgeHandleType } from './corner-handle';
 
 const HANDLE_SIZE_PX = 8;
 
-type EdgeDirection = 'ns' | 'ew';
+type EdgeDirection = 'NS' | 'EW';
+
+export type EdgeHandleType = 
+  | 'TOP'
+  | 'RIGHT'
+  | 'BOTTOM'
+  | 'LEFT';
 
 interface EdgeHandleProps {
 
@@ -27,28 +32,34 @@ interface EdgeHandleProps {
 }
 
 export const EdgeHandle = (props: EdgeHandleProps) => {
+  const { type, viewer } = props;
+
   const handleRef = useRef<SVGRectElement>(null);
 
   useEffect(() => {
     const onUpdateViewport = () => {
-      const zoom = props.viewer.viewport.getZoom(true);
-      const containerWidth = props.viewer.container.clientWidth;
+      const zoom = viewer.viewport.getZoom(true);
+      const containerWidth = viewer.container.clientWidth;
       if (containerWidth === 0) return;
 
       const size = HANDLE_SIZE_PX / (zoom * containerWidth);
-      const isHorizontal = props.type === 'TOP' || props.type === 'BOTTOM';
+
+      const isHorizontal = type === 'TOP' || type === 'BOTTOM';
+
       handleRef.current?.setAttribute('width', isHorizontal ? `${size * 3}` : `${size}`);
       handleRef.current?.setAttribute('height', isHorizontal ? `${size}` : `${size * 3}`);
+      handleRef.current?.setAttribute('rx', `${size / 4}`);
       handleRef.current?.setAttribute('transform', `translate(-${isHorizontal ? size * 1.5 : size / 2}, -${isHorizontal ? size / 2 : size * 1.5})`);
     };
 
-    props.viewer.addHandler('update-viewport', onUpdateViewport);
+    viewer.addHandler('update-viewport', onUpdateViewport);
+    
     onUpdateViewport();
 
     return () => {
       props.viewer.removeHandler('update-viewport', onUpdateViewport);
     };
-  }, [props.direction, props.viewer]);
+  }, [props.direction, viewer, type]);
 
   return (
     <rect
@@ -56,9 +67,9 @@ export const EdgeHandle = (props: EdgeHandleProps) => {
       x={props.point.x}
       y={props.point.y}
       style={{ cursor: `${props.direction}-resize` }}
-      fill="white"
-      stroke="oklch(70.5% 0.213 47.604)"
-      strokeWidth={2}
+      fill="black"
+      stroke="white"
+      strokeWidth={1.75}
       vectorEffect="non-scaling-stroke"
       onPointerDownCapture={props.onPointerDown}
       onPointerMoveCapture={props.onPointerMove}

@@ -2,7 +2,8 @@ import type { PointerEvent } from 'react';
 import { Point, Viewer } from 'openseadragon';
 import type { ReconstructionCanvas } from '@/types';
 import type {  ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../../reconstruction-types';
-import type { CornerHandleType, ResizeHandleType } from './corner-handle';
+import type { CornerHandleType } from './corner-handle';
+import type { EdgeHandleType } from './edge-handle';
 
 // Initial image state at drag start
 export interface InitialShape {
@@ -25,6 +26,8 @@ export interface InitialShape {
   }
 
 }
+
+export type ResizeHandleType = CornerHandleType | EdgeHandleType;
 
 export const HANDLE_TYPES: CornerHandleType[] = [
   'TOP_LEFT',

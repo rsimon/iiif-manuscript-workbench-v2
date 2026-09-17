@@ -6,7 +6,7 @@ import type { ComposerLayoutItem, DraggableImage } from '../../reconstruction-ty
 import { getDraggableImageKey } from '../../reconstruction-utils';
 import { useComposerStore } from '../composer-store';
 import { getIntersectingItems } from '../composer-utils';
-import { CornerHandle, type HandleType, type ResizeHandleType } from './corner-handle';
+import { CornerHandle } from './corner-handle';
 import { EdgeHandle } from './edge-handle';
 import { 
   cornersToSvgPoints, 
@@ -14,7 +14,8 @@ import {
   getPoint, 
   HANDLE_TYPES, 
   RESIZE_SIGNS, 
-  type InitialShape 
+  type InitialShape, 
+  type ResizeHandleType
 } from './image-bounds-editor-utils';
 
 interface ImageBoundsEditorProps {
@@ -22,6 +23,11 @@ interface ImageBoundsEditorProps {
   viewer: Viewer;
 
 }
+
+export type HandleType = 
+  | 'SHAPE'
+  | ResizeHandleType;
+
 
 export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const reconstruction = useAppStore(state => state.reconstruction);
@@ -485,6 +491,9 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
             corner={corner}
             type={HANDLE_TYPES[i]}
             viewer={props.viewer}
+            size={isCropping ? 10 : undefined}
+            fill={isCropping ? 'black' : undefined}
+            stroke={isCropping ? 'white' : undefined}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove(HANDLE_TYPES[i])}
             onPointerUp={onPointerUp}
@@ -495,7 +504,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
           <>
             <EdgeHandle
               point={new Point((corners[0].x + corners[1].x) / 2, corners[0].y)}
-              direction="ns"
+              direction="NS"
               type="TOP"
               viewer={props.viewer}
               onPointerDown={onPointerDown}
@@ -504,7 +513,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
               onPointerCancel={onPointerCancel} />
             <EdgeHandle
               point={new Point(corners[1].x, (corners[1].y + corners[2].y) / 2)}
-              direction="ew"
+              direction="EW"
               type="RIGHT"
               viewer={props.viewer}
               onPointerDown={onPointerDown}
@@ -513,7 +522,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
               onPointerCancel={onPointerCancel} />
             <EdgeHandle
               point={new Point((corners[2].x + corners[3].x) / 2, corners[2].y)}
-              direction="ns"
+              direction="NS"
               type="BOTTOM"
               viewer={props.viewer}
               onPointerDown={onPointerDown}
@@ -522,7 +531,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
               onPointerCancel={onPointerCancel} />
             <EdgeHandle
               point={new Point(corners[0].x, (corners[0].y + corners[3].y) / 2)}
-              direction="ew"
+              direction="EW"
               type="LEFT"
               viewer={props.viewer}
               onPointerDown={onPointerDown}
