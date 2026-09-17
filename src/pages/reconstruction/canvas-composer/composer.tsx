@@ -131,8 +131,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       const imagesForCanvas = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
       return imagesForCanvas.map(image => {
-        const crop = image.crop ?? { x: 0, y: 0, width: image.resource.width, height: image.resource.height };
-        const scale = image.width / crop.width;
+        const crop = image.crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
+        const scale = image.width / crop.w;
         const isSelected = selectedImage?.image &&
           getDraggableImageKey(selectedImage.image) === getDraggableImageKey(image);
 
@@ -144,7 +144,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           width: image.resource.width * scale / canvas.width,
           clip: isSelected && isCropping
             ? undefined
-            : new OpenSeadragon.Rect(crop.x, crop.y, crop.width, crop.height)
+            : new OpenSeadragon.Rect(crop.x, crop.y, crop.w, crop.h)
         };
       });
     });

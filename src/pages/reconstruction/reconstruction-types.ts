@@ -1,4 +1,4 @@
-import type { CozyImageResource } from 'cozy-iiif';
+import type { Bounds, CozyImageResource } from 'cozy-iiif';
 
 export interface ComposerLayout {
 
@@ -38,7 +38,7 @@ export interface DraggableImage {
 
   width: number; // px coordinates relative to reconstruction canvas
 
-  crop?: { x: number; y: number; width: number; height: number };
+  crop?: Bounds;
 
   index: number;
 

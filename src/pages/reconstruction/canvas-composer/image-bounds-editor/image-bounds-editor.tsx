@@ -234,10 +234,10 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const crop = initialImg.crop ?? {
       x: 0,
       y: 0,
-      width: initialImg.resource.width,
-      height: initialImg.resource.height
+      w: initialImg.resource.width,
+      h: initialImg.resource.height
     };
-    const aspect = crop.height / crop.width;
+    const aspect = crop.h / crop.w;
     const viewportHeight = initialPos.width * aspect;
 
     const intersecting = updateIntersectingItems([
@@ -310,19 +310,19 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const initialCrop = initialImage.crop ?? {
       x: 0,
       y: 0,
-      width: initialImage.resource.width,
-      height: initialImage.resource.height
+      w: initialImage.resource.width,
+      h: initialImage.resource.height
     };
-    const imageScale = initialImage.width / initialCrop.width;
+    const imageScale = initialImage.width / initialCrop.w;
     const viewportPerSourcePixel = imageScale / initialShape.current.canvas.width;
     const fullImageX = initialImage.x - initialCrop.x * imageScale;
     const fullImageY = initialImage.y - initialCrop.y * imageScale;
     const x = Math.max(0, Math.min(
-      initialImage.resource.width - initialCrop.width,
+      initialImage.resource.width - initialCrop.w,
       initialCrop.x + delta[0] / viewportPerSourcePixel
     ));
     const y = Math.max(0, Math.min(
-      initialImage.resource.height - initialCrop.height,
+      initialImage.resource.height - initialCrop.h,
       initialCrop.y + delta[1] / viewportPerSourcePixel
     ));
 
@@ -341,18 +341,18 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const initialCrop = initialImage.crop ?? {
       x: 0,
       y: 0,
-      width: initialImage.resource.width,
-      height: initialImage.resource.height
+      w: initialImage.resource.width,
+      h: initialImage.resource.height
     };
-    const imageScale = initialImage.width / initialCrop.width;
+    const imageScale = initialImage.width / initialCrop.w;
     const viewportPerSourcePixel = imageScale / initialShape.current.canvas.width;
     const signs = RESIZE_SIGNS[handle];
     const dx = delta[0] / viewportPerSourcePixel;
     const dy = delta[1] / viewportPerSourcePixel;
     const left = signs.h < 0 ? initialCrop.x + dx : initialCrop.x;
-    const right = signs.h > 0 ? initialCrop.x + initialCrop.width + dx : initialCrop.x + initialCrop.width;
+    const right = signs.h > 0 ? initialCrop.x + initialCrop.w + dx : initialCrop.x + initialCrop.w;
     const top = signs.v < 0 ? initialCrop.y + dy : initialCrop.y;
-    const bottom = signs.v > 0 ? initialCrop.y + initialCrop.height + dy : initialCrop.y + initialCrop.height;
+    const bottom = signs.v > 0 ? initialCrop.y + initialCrop.h + dy : initialCrop.y + initialCrop.h;
     const x = Math.max(0, Math.min(left, initialImage.resource.width - 1));
     const y = Math.max(0, Math.min(top, initialImage.resource.height - 1));
     const maxRight = initialImage.resource.width;
@@ -361,8 +361,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const nextCrop = {
       x,
       y,
-      width: Math.max(1, Math.min(maxRight - x, right - x)),
-      height: Math.max(1, Math.min(maxBottom - y, bottom - y))
+      w: Math.max(1, Math.min(maxRight - x, right - x)),
+      h: Math.max(1, Math.min(maxBottom - y, bottom - y))
     };
     const fullImageX = initialImage.x - initialCrop.x * imageScale;
     const fullImageY = initialImage.y - initialCrop.y * imageScale;
@@ -371,7 +371,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       ...initialImage,
       x: fullImageX + nextCrop.x * imageScale,
       y: fullImageY + nextCrop.y * imageScale,
-      width: nextCrop.width * imageScale,
+      width: nextCrop.w * imageScale,
       crop: nextCrop
     });
   }
@@ -391,10 +391,10 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const crop = initialImage.crop ?? {
       x: 0,
       y: 0,
-      width: initialImage.resource.width,
-      height: initialImage.resource.height
+      w: initialImage.resource.width,
+      h: initialImage.resource.height
     };
-    const aspect = crop.width / crop.height;
+    const aspect = crop.w / crop.h;
     const initialHeight = initialImage.width / aspect;
 
     const dWidthFromX = h * dx;

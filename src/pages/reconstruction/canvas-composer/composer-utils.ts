@@ -1,5 +1,5 @@
 import type { Point } from 'openseadragon';
-import type { CozyCanvas, CozyImageResource } from 'cozy-iiif';
+import type { Bounds, CozyCanvas, CozyImageResource } from 'cozy-iiif';
 import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
@@ -8,7 +8,7 @@ import { getDraggableImageKey } from '../reconstruction-utils';
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
 
-const parseRegionString = (region: string | undefined): { x: number; y: number; width: number; height: number } | undefined => {
+const parseRegionString = (region: string | undefined): Bounds | undefined => {
   if (!region) return;
 
   const normalized = region.startsWith('xywh=') ? region.slice('xywh='.length) : region;
@@ -18,12 +18,12 @@ const parseRegionString = (region: string | undefined): { x: number; y: number; 
   return {
     x: Number(match[1]),
     y: Number(match[2]),
-    width: Number(match[3]),
-    height: Number(match[4])
+    w: Number(match[3]),
+    h: Number(match[4])
   };
 };
 
-const getRegionFromSelector = (selector: unknown): { x: number; y: number; width: number; height: number } | undefined => {
+const getRegionFromSelector = (selector: unknown): Bounds | undefined => {
   if (!selector || typeof selector !== 'object' || Array.isArray(selector)) return;
 
   const candidate = selector as {
@@ -35,7 +35,7 @@ const getRegionFromSelector = (selector: unknown): { x: number; y: number; width
   if (candidate.region && typeof candidate.region === 'object') {
     const { x, y, width, height } = candidate.region;
     if ([x, y, width, height].every(value => Number.isFinite(value))) {
-      return { x, y, width, height };
+      return { x, y, w: width, h: height };
     }
   }
 
@@ -46,8 +46,8 @@ const getRegionFromSelector = (selector: unknown): { x: number; y: number; width
 export const getFullCrop = (image: CozyImageResource) => ({
   x: 0,
   y: 0,
-  width: image.width,
-  height: image.height
+  w: image.width,
+  h: image.height
 });
 
 const getCropFromSource = (image: CozyImageResource) => {
@@ -103,7 +103,7 @@ export const getFillSize = (
   const { width: canvasWidth, height: canvasHeight } = canvas;
 
   const crop = image.crop ?? getFullCrop(image.resource);
-  const aspect = crop.height / crop.width;
+  const aspect = crop.h / crop.w;
   const width = Math.min(canvasWidth, canvasHeight / aspect);
   const height = width * aspect;
 
@@ -177,7 +177,7 @@ export const getImageAt = (
   const hit = images.filter(image => {
     // Image size is in pixel!
     const crop = image.crop ?? getFullCrop(image.resource);
-    const aspect = crop.height / crop.width;
+    const aspect = crop.h / crop.w;
 
     const viewportX = item.x + image.x / rc.width;
     const viewportY = item.y + image.y / rc.width;
@@ -190,8 +190,8 @@ export const getImageAt = (
   }).sort((a, b) => {
     const cropA = a.crop ?? getFullCrop(a.resource);
     const cropB = b.crop ?? getFullCrop(b.resource);
-    const areaA = a.width * a.width * cropA.height / cropA.width;
-    const areaB = b.width * b.width * cropB.height / cropB.width;
+    const areaA = a.width * a.width * cropA.h / cropA.w;
+    const areaB = b.width * b.width * cropB.h / cropB.w;
     return areaA - areaB;
   })[0];
 
@@ -322,7 +322,7 @@ const toFragmentTarget = (canvas: CozyCanvas, bounds?: { x: number; y: number; w
 const withCropFragment = (image: DraggableImage): CozyImageResource['source'] => {
   const source = image.resource.source;
   const crop = image.crop;
-  if (!crop || (crop.x === 0 && crop.y === 0 && crop.width === image.resource.width && crop.height === image.resource.height))
+  if (!crop || (crop.x === 0 && crop.y === 0 && crop.w === image.resource.width && crop.h === image.resource.height))
     return source;
 
   const id = typeof source.id === 'string' ? source.id.replace(/#xywh=.*$/, '') : source.id;
@@ -332,7 +332,7 @@ const withCropFragment = (image: DraggableImage): CozyImageResource['source'] =>
     id,
     selector: {
       type: 'ImageApiSelector',
-      region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.width)},${Math.round(crop.height)}`
+      region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.w)},${Math.round(crop.h)}`
     }
   } as typeof source & {
     selector: {
@@ -385,7 +385,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
     touched = true;
 
     const crop = draggable.crop ?? getFullCrop(resource);
-    const h = draggable.width * crop.height / crop.width;
+    const h = draggable.width * crop.h / crop.w;
 
     return [{
       ...canvasSourcePaintAnnotations[index],
@@ -401,7 +401,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
       touched = true;
 
       const crop = draggable.crop ?? getFullCrop(draggable.resource);
-      const h = draggable.width * crop.height / crop.width;
+      const h = draggable.width * crop.h / crop.w;
 
       return {
         id: `${canvasId}/annotation/${crypto.randomUUID()}`,

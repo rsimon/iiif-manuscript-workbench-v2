@@ -102,11 +102,11 @@ const ImageSelectionSummary = (props: ImageSelectionSummaryProps) => {
   const crop = image.crop ?? {
     x: 0,
     y: 0,
-    width: image.resource.width,
-    height: image.resource.height
+    w: image.resource.width,
+    h: image.resource.height
   };
 
-  const aspectRatio = crop.width / crop.height;
+  const aspectRatio = crop.w / crop.h;
   const height = image.width / aspectRatio;
 
   return (
