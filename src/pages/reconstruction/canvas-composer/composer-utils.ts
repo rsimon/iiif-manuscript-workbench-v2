@@ -8,6 +8,41 @@ import { getDraggableImageKey } from '../reconstruction-utils';
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
 
+const parseRegionString = (region: string | undefined): { x: number; y: number; width: number; height: number } | undefined => {
+  if (!region) return;
+
+  const normalized = region.startsWith('xywh=') ? region.slice('xywh='.length) : region;
+  const match = normalized.match(/^(\d+),(\d+),(\d+),(\d+)$/);
+  if (!match) return;
+
+  return {
+    x: Number(match[1]),
+    y: Number(match[2]),
+    width: Number(match[3]),
+    height: Number(match[4])
+  };
+};
+
+const getRegionFromSelector = (selector: unknown): { x: number; y: number; width: number; height: number } | undefined => {
+  if (!selector || typeof selector !== 'object' || Array.isArray(selector)) return;
+
+  const candidate = selector as {
+    type?: string;
+    value?: string;
+    region?: string | { x: number; y: number; width: number; height: number };
+  };
+
+  if (candidate.region && typeof candidate.region === 'object') {
+    const { x, y, width, height } = candidate.region;
+    if ([x, y, width, height].every(value => Number.isFinite(value))) {
+      return { x, y, width, height };
+    }
+  }
+
+  const regionValue = candidate.region ?? candidate.value;
+  return parseRegionString(typeof regionValue === 'string' ? regionValue : undefined);
+};
+
 export const getFullCrop = (image: CozyImageResource) => ({
   x: 0,
   y: 0,
@@ -16,16 +51,11 @@ export const getFullCrop = (image: CozyImageResource) => ({
 });
 
 const getCropFromSource = (image: CozyImageResource) => {
-  const id = (image.source as { id?: string }).id;
-  const match = id?.match(/#xywh=(\d+),(\d+),(\d+),(\d+)$/);
-  if (!match) return getFullCrop(image);
+  const source = image.source as { selector?: unknown };
+  const region = getRegionFromSelector(source.selector);
+  if (region) return region;
 
-  return {
-    x: Number(match[1]),
-    y: Number(match[2]),
-    width: Number(match[3]),
-    height: Number(match[4])
-  };
+  return getFullCrop(image);
 };
 
 export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => {
@@ -295,8 +325,23 @@ const withCropFragment = (image: DraggableImage): CozyImageResource['source'] =>
   if (!crop || (crop.x === 0 && crop.y === 0 && crop.width === image.resource.width && crop.height === image.resource.height))
     return source;
 
-  const id = (source.id ?? '').replace(/#xywh=.*$/, '');
-  return { ...source, id: `${id}#xywh=${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.width)},${Math.round(crop.height)}` };
+  const id = typeof source.id === 'string' ? source.id.replace(/#xywh=.*$/, '') : source.id;
+
+  const nextSource = {
+    ...source,
+    id,
+    selector: {
+      type: 'ImageApiSelector',
+      region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.width)},${Math.round(crop.height)}`
+    }
+  } as typeof source & {
+    selector: {
+      type: 'ImageApiSelector';
+      region: string;
+    };
+  };
+
+  return nextSource;
 };
 
 // Applies composer edits onto one source canvas

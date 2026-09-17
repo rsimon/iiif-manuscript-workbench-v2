@@ -47,22 +47,44 @@ const normalizeFragmentTarget = (target: unknown) => {
 const toRegionBody = (body: unknown, baseURI: string) => {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
 
-  const image = body as { id?: unknown; [key: string]: unknown };
+  const image = body as { id?: unknown; selector?: unknown; [key: string]: unknown };
+
+  if (image.type === 'SpecificResource' && image.source && typeof image.source === 'object') {
+    const source = image.source as { id?: unknown; selector?: unknown; [key: string]: unknown };
+    const selector = source.selector ?? image.selector;
+    if (selector && typeof selector === 'object' && !Array.isArray(selector)) {
+      const region = (selector as { region?: string }).region;
+      if (typeof region === 'string' && /^\d+,\d+,\d+,\d+$/.test(region)) {
+        return {
+          id: `${baseURI}/specific-resource/${crypto.randomUUID()}`,
+          type: 'SpecificResource',
+          source: {
+            ...source,
+            id: typeof source.id === 'string' ? source.id : image.id
+          },
+          selector: {
+            type: 'ImageApiSelector',
+            region
+          }
+        };
+      }
+    }
+  }
+
   if (typeof image.id !== 'string') return body;
 
-  const match = image.id.match(/#xywh=([\d.]+),([\d.]+),([\d.]+),([\d.]+)$/);
-  if (!match) return body;
+  const selector = (image as { selector?: unknown }).selector;
+  if (!selector || typeof selector !== 'object' || Array.isArray(selector)) return body;
 
-  const region = [match[1], match[2], match[3], match[4]]
-    .map(value => Math.round(Number(value)))
-    .join(',');
+  const region = (selector as { region?: string }).region;
+  if (typeof region !== 'string' || !/^\d+,\d+,\d+,\d+$/.test(region)) return body;
 
   return {
     id: `${baseURI}/specific-resource/${crypto.randomUUID()}`,
     type: 'SpecificResource',
     source: {
       ...image,
-      id: image.id.replace(/#xywh=.*$/, '')
+      id: image.id
     },
     selector: {
       type: 'ImageApiSelector',

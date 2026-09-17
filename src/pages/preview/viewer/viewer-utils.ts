@@ -13,15 +13,38 @@ const getCanvasImages = (canvas: ReconstructionCanvas) =>
 const PLACEHOLDER_HEIGHT = 1650 / 1200;
 
 export const getImageCrop = (image: CozyImageResource) => {
-  const id = image.source.id;
-  const match = id?.match(/#xywh=(\d+),(\d+),(\d+),(\d+)$/);
+  const selector = (image.source as { selector?: unknown }).selector;
 
-  return match ? {
-    x: Number(match[1]),
-    y: Number(match[2]),
-    width: Number(match[3]),
-    height: Number(match[4])
-  } : {
+  if (selector && typeof selector === 'object' && !Array.isArray(selector)) {
+    const candidate = selector as { region?: string | { x: number; y: number; width: number; height: number }; value?: string };
+
+    if (candidate.region && typeof candidate.region === 'object') {
+      const { x, y, width, height } = candidate.region;
+      if ([x, y, width, height].every(value => Number.isFinite(value))) {
+        return { x, y, width, height };
+      }
+    }
+
+    const region = typeof candidate.region === 'string'
+      ? candidate.region
+      : typeof candidate.value === 'string'
+        ? candidate.value
+        : undefined;
+
+    if (region) {
+      const match = region.replace(/^xywh=/, '').match(/^(\d+),(\d+),(\d+),(\d+)$/);
+      if (match) {
+        return {
+          x: Number(match[1]),
+          y: Number(match[2]),
+          width: Number(match[3]),
+          height: Number(match[4])
+        };
+      }
+    }
+  }
+
+  return {
     x: 0,
     y: 0,
     width: image.width,
