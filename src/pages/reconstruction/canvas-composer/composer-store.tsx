@@ -29,6 +29,8 @@ export interface ComposerState {
 
   isUserEdit: boolean;
 
+  isCropping: boolean;
+
   setViewer(viewer?: Viewer): void;
 
   setLayout(layout: ComposerLayout): void;
@@ -36,6 +38,8 @@ export interface ComposerState {
   setSelectedImage(selectedImage?: DraggableImageSelection): void;
 
   setIsUserEdit(isDraggingImage: boolean): void;
+
+  setIsCropping(isCropping: boolean): void;
 
   updateImage(canvasId: string, updated: DraggableImage): void;
 
@@ -59,6 +63,8 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
 
   isUserEdit: false,
 
+  isCropping: false,
+
   setViewer: viewer => set({ viewer }),
 
   setLayout: layout => set({ layout }),
@@ -66,6 +72,8 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   setSelectedImage: selectedImage => set({ selectedImage }),
 
   setIsUserEdit: isUserEdit => set({ isUserEdit }),
+
+  setIsCropping: isCropping => set({ isCropping }),
 
   updateImage: (canvasId, updated) => set(({ imagesByCanvasId, selectedImage }) => {
     const onThisCanvas = imagesByCanvasId.get(canvasId);

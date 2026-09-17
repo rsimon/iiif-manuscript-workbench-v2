@@ -1,5 +1,5 @@
 import type { ButtonProps } from '@base-ui/react';
-import { IconArrowBackUp, IconArrowForwardUp, IconMaximize, IconStackPop, IconStackPush } from '@tabler/icons-react';
+import { IconArrowBackUp, IconArrowForwardUp, IconCrop, IconMaximize, IconStackPop, IconStackPush } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 import { Separator } from '@/shadcn/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
@@ -33,6 +33,8 @@ export const ComposerToolbar = () => {
 
   const updateImage = useComposerStore(state => state.updateImage);
   const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
+  const isCropping = useComposerStore(state => state.isCropping);
+  const setIsCropping = useComposerStore(state => state.setIsCropping);
 
   const reconstruction = useAppStore(state => state.reconstruction);
 
@@ -54,10 +56,23 @@ export const ComposerToolbar = () => {
     requestAnimationFrame(() => setIsUserEdit(false));
   }
 
+  const onToggleCrop = () => {
+    if (!selectedImage) return;
+    setIsCropping(!isCropping);
+  };
+
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
       <div className="bg-white flex items-center gap-1 min-w-20 rounded-full p-1 pointer-events-auto
         ring-1 ring-black/5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.10)]">
+        <ComposerToolbarButton
+          disabled={!selectedImage}
+          tooltip="Crop image"
+          onClick={onToggleCrop}
+          aria-pressed={isCropping}>
+          <IconCrop className="size-4.5" />
+        </ComposerToolbarButton>
+
         <ComposerToolbarButton
           disabled
           tooltip="Move image up">

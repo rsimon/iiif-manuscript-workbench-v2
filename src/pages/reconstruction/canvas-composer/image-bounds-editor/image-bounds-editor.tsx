@@ -7,6 +7,7 @@ import { getDraggableImageKey } from '../../reconstruction-utils';
 import { useComposerStore } from '../composer-store';
 import { getIntersectingItems } from '../composer-utils';
 import { CornerHandle, type HandleType, type ResizeHandleType } from './corner-handle';
+import { EdgeHandle } from './edge-handle';
 import { 
   cornersToSvgPoints, 
   getImageCorners, 
@@ -31,6 +32,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const updateImage = useComposerStore(state => state.updateImage);
   const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
   const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
+  const isCropping = useComposerStore(state => state.isCropping);
+  const setIsCropping = useComposerStore(state => state.setIsCropping);
 
   const setSelectedCanvas = useReconstructionStore(state => state.setSelection);
 
@@ -121,8 +124,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
 
     if (!selectedImage) return;
 
-    const target = evt.target as Element;
-    target.setPointerCapture(evt.pointerId);
+    evt.currentTarget.setPointerCapture(evt.pointerId);
 
     const { image, item } = selectedImage;
 
@@ -150,7 +152,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onPointerMove = (handle: HandleType) => (evt: React.PointerEvent) => {
     evt.stopPropagation();
 
-    if (!origin.current || !evt.buttons) return;
+    if (!origin.current) return;
 
     const pt = getPoint(evt, props.viewer);
     if (!pt) return;
@@ -159,7 +161,10 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const delta = [pt.x - origin.current.x, pt.y - origin.current.y];
 
     if (handle === 'SHAPE') {
-      onMoveImage(delta);
+      if (isCropping) onMoveCrop(delta);
+      else onMoveImage(delta);
+    } else if (isCropping) {
+      onCropImage(handle, delta);
     } else {
       onResizeImage(handle, delta);
     }
@@ -168,8 +173,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onPointerUp = (evt: React.PointerEvent) => {
     evt.stopPropagation();
 
-    const target = evt.target as Element;
-    target.releasePointerCapture(evt.pointerId);
+    if (evt.currentTarget.hasPointerCapture(evt.pointerId))
+      evt.currentTarget.releasePointerCapture(evt.pointerId);
 
     const shape = initialShape.current;
 
@@ -203,6 +208,12 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     setIsUserEdit(false);
   }
 
+  const onDoubleClick = (evt: React.MouseEvent) => {
+    evt.preventDefault();
+    evt.stopPropagation();
+    setIsCropping(!isCropping);
+  }
+
   const onMoveImage = (delta: number[]) => {
     if (!selectedImage || !initialShape.current) return;
 
@@ -214,7 +225,13 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const viewportX = initialPos.x + delta[0];
     const viewportY = initialPos.y + delta[1];
     
-    const aspect = initialImg.resource.height / initialImg.resource.width;
+    const crop = initialImg.crop ?? {
+      x: 0,
+      y: 0,
+      width: initialImg.resource.width,
+      height: initialImg.resource.height
+    };
+    const aspect = crop.height / crop.width;
     const viewportHeight = initialPos.width * aspect;
 
     const intersecting = updateIntersectingItems([
@@ -280,6 +297,79 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     }
   }
 
+  const onMoveCrop = (delta: number[]) => {
+    if (!selectedImage || !initialShape.current) return;
+
+    const initialImage = initialShape.current.image;
+    const initialCrop = initialImage.crop ?? {
+      x: 0,
+      y: 0,
+      width: initialImage.resource.width,
+      height: initialImage.resource.height
+    };
+    const imageScale = initialImage.width / initialCrop.width;
+    const viewportPerSourcePixel = imageScale / initialShape.current.canvas.width;
+    const fullImageX = initialImage.x - initialCrop.x * imageScale;
+    const fullImageY = initialImage.y - initialCrop.y * imageScale;
+    const x = Math.max(0, Math.min(
+      initialImage.resource.width - initialCrop.width,
+      initialCrop.x + delta[0] / viewportPerSourcePixel
+    ));
+    const y = Math.max(0, Math.min(
+      initialImage.resource.height - initialCrop.height,
+      initialCrop.y + delta[1] / viewportPerSourcePixel
+    ));
+
+    updateImage(initialShape.current.item.reconstructionCanvasId, {
+      ...initialImage,
+      x: fullImageX + x * imageScale,
+      y: fullImageY + y * imageScale,
+      crop: { ...initialCrop, x, y }
+    });
+  }
+
+  const onCropImage = (handle: ResizeHandleType, delta: number[]) => {
+    if (!selectedImage || !initialShape.current) return;
+
+    const initialImage = initialShape.current.image;
+    const initialCrop = initialImage.crop ?? {
+      x: 0,
+      y: 0,
+      width: initialImage.resource.width,
+      height: initialImage.resource.height
+    };
+    const imageScale = initialImage.width / initialCrop.width;
+    const viewportPerSourcePixel = imageScale / initialShape.current.canvas.width;
+    const signs = RESIZE_SIGNS[handle];
+    const dx = delta[0] / viewportPerSourcePixel;
+    const dy = delta[1] / viewportPerSourcePixel;
+    const left = signs.h < 0 ? initialCrop.x + dx : initialCrop.x;
+    const right = signs.h > 0 ? initialCrop.x + initialCrop.width + dx : initialCrop.x + initialCrop.width;
+    const top = signs.v < 0 ? initialCrop.y + dy : initialCrop.y;
+    const bottom = signs.v > 0 ? initialCrop.y + initialCrop.height + dy : initialCrop.y + initialCrop.height;
+    const x = Math.max(0, Math.min(left, initialImage.resource.width - 1));
+    const y = Math.max(0, Math.min(top, initialImage.resource.height - 1));
+    const maxRight = initialImage.resource.width;
+    const maxBottom = initialImage.resource.height;
+
+    const nextCrop = {
+      x,
+      y,
+      width: Math.max(1, Math.min(maxRight - x, right - x)),
+      height: Math.max(1, Math.min(maxBottom - y, bottom - y))
+    };
+    const fullImageX = initialImage.x - initialCrop.x * imageScale;
+    const fullImageY = initialImage.y - initialCrop.y * imageScale;
+
+    updateImage(initialShape.current.item.reconstructionCanvasId, {
+      ...initialImage,
+      x: fullImageX + nextCrop.x * imageScale,
+      y: fullImageY + nextCrop.y * imageScale,
+      width: nextCrop.width * imageScale,
+      crop: nextCrop
+    });
+  }
+
   const onResizeImage = (handle: ResizeHandleType, delta: number[]) => {
     if (!selectedImage || !initialShape.current) return;
 
@@ -292,7 +382,13 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
 
     const initialImage = initialShape.current.image;
 
-    const aspect = initialImage.resource.width / initialImage.resource.height;
+    const crop = initialImage.crop ?? {
+      x: 0,
+      y: 0,
+      width: initialImage.resource.width,
+      height: initialImage.resource.height
+    };
+    const aspect = crop.width / crop.height;
     const initialHeight = initialImage.width / aspect;
 
     const dWidthFromX = h * dx;
@@ -332,6 +428,14 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   return selectedImage ? (
     <>
       <g>
+        {isCropping && (
+          <path
+            className="pointer-events-none"
+            d={`M -10000 -10000 H 10000 V 10000 H -10000 Z M ${corners[0].x} ${corners[0].y} H ${corners[1].x} V ${corners[2].y} H ${corners[3].x} Z`}
+            fill="oklch(0% 0 0 / 0.45)"
+            fillRule="evenodd" />
+        )}
+
         {intersectingItems.length > 0 && (
           <polygon
             className="pointer-events-none"
@@ -343,13 +447,15 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         )}
 
         <polygon
-          className="cursor-grab"
+          className={isCropping ? 'cursor-move' : 'cursor-grab'}
           points={cornersToSvgPoints(corners)}
           fill={isValidDestination ? 'transparent' : 'oklch(57.7% 0.245 27.325 / 0.3)'}
           stroke={isValidDestination ? 'oklch(70.5% 0.213 47.604)' : 'oklch(57.7% 0.245 27.325)'}
           strokeWidth={isValidDestination ? 2.5 : 1.5}
           vectorEffect="non-scaling-stroke"
           strokeDasharray={isValidDestination ?  '5 2' : undefined}
+          fillOpacity={isCropping ? 0.18 : undefined}
+          onDoubleClickCapture={onDoubleClick}
           onPointerDownCapture={onPointerDown}
           onPointerMoveCapture={onPointerMove('SHAPE')}
           onPointerUpCapture={onPointerUp}
@@ -383,7 +489,48 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
             onPointerMove={onPointerMove(HANDLE_TYPES[i])}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerCancel} />
-        ))} 
+        ))}
+
+        {isCropping && (
+          <>
+            <EdgeHandle
+              point={new Point((corners[0].x + corners[1].x) / 2, corners[0].y)}
+              direction="ns"
+              type="TOP"
+              viewer={props.viewer}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove('TOP')}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel} />
+            <EdgeHandle
+              point={new Point(corners[1].x, (corners[1].y + corners[2].y) / 2)}
+              direction="ew"
+              type="RIGHT"
+              viewer={props.viewer}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove('RIGHT')}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel} />
+            <EdgeHandle
+              point={new Point((corners[2].x + corners[3].x) / 2, corners[2].y)}
+              direction="ns"
+              type="BOTTOM"
+              viewer={props.viewer}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove('BOTTOM')}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel} />
+            <EdgeHandle
+              point={new Point(corners[0].x, (corners[0].y + corners[3].y) / 2)}
+              direction="ew"
+              type="LEFT"
+              viewer={props.viewer}
+              onPointerDown={onPointerDown}
+              onPointerMove={onPointerMove('LEFT')}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel} />
+          </>
+        )}
       </g>
     </>
   ) : null;

@@ -36,6 +36,41 @@ export const createManifest = (
   }
 }
 
+const normalizeFragmentTarget = (target: unknown) => {
+  if (typeof target !== 'string') return target;
+
+  return target.replace(/#xywh=([\d.]+),([\d.]+),([\d.]+),([\d.]+)$/, (_, x, y, w, h) =>
+    `#xywh=${Math.round(Number(x))},${Math.round(Number(y))},${Math.round(Number(w))},${Math.round(Number(h))}`
+  );
+};
+
+const toRegionBody = (body: unknown, baseURI: string) => {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
+
+  const image = body as { id?: unknown; [key: string]: unknown };
+  if (typeof image.id !== 'string') return body;
+
+  const match = image.id.match(/#xywh=([\d.]+),([\d.]+),([\d.]+),([\d.]+)$/);
+  if (!match) return body;
+
+  const region = [match[1], match[2], match[3], match[4]]
+    .map(value => Math.round(Number(value)))
+    .join(',');
+
+  return {
+    id: `${baseURI}/specific-resource/${crypto.randomUUID()}`,
+    type: 'SpecificResource',
+    source: {
+      ...image,
+      id: image.id.replace(/#xywh=.*$/, '')
+    },
+    selector: {
+      type: 'ImageApiSelector',
+      region
+    }
+  };
+};
+
 const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
   const { width, height } = r;
 
@@ -51,6 +86,16 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
 
   if (r.type === 'original') return {
     ...r.source.canvas.source,
+    items: r.source.canvas.source.items?.map(page => ({
+      ...page,
+      items: page.items?.map(annotation => ({
+        ...annotation,
+        body: Array.isArray(annotation.body)
+          ? annotation.body.map(body => toRegionBody(body, baseURI))
+          : toRegionBody(annotation.body, baseURI),
+        target: normalizeFragmentTarget(annotation.target)
+      }))
+    })),
     width,
     height,
     label: { en: [r.label] },
@@ -73,9 +118,9 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
         id: `${canvasId}/annotation/${crypto.randomUUID()}`,
         type: 'Annotation',
         motivation: 'painting',
-        body: image.source,
+        body: toRegionBody(image.source, baseURI),
         target: image.target 
-          ? `${canvasId}#xywh=${Math.ceil(image.target.x)},${Math.ceil(image.target.y)},${Math.ceil(image.target.w)},${Math.ceil(image.target.h)}`
+          ? `${canvasId}#xywh=${Math.round(image.target.x)},${Math.round(image.target.y)},${Math.round(image.target.w)},${Math.round(image.target.h)}`
           : canvasId
       })))
     }]

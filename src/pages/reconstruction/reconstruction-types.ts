@@ -38,6 +38,8 @@ export interface DraggableImage {
 
   width: number; // px coordinates relative to reconstruction canvas
 
+  crop?: { x: number; y: number; width: number; height: number };
+
   index: number;
 
 }

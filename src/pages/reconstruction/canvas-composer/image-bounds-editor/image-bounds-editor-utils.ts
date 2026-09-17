@@ -57,7 +57,14 @@ export const RESIZE_SIGNS: Record<ResizeHandleType, { h: number; v: number }> = 
 export const getImageCorners = (selected: DraggableImageSelection, canvasWidth: number, ox?: number, oy?: number, ow?: number): Point[] => {
   const { image, item } = selected;
 
-  const aspect = image.resource.width / image.resource.height;
+  const crop = image.crop ?? {
+    x: 0,
+    y: 0,
+    width: image.resource.width,
+    height: image.resource.height
+  };
+
+  const aspect = crop.width / crop.height;
 
   const x = item.x + (ox ?? image.x) / canvasWidth;
   const y = item.y + (oy ?? image.y) / canvasWidth;

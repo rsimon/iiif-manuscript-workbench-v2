@@ -98,7 +98,13 @@ interface ImageSelectionSummaryProps {
 const ImageSelectionSummary = (props: ImageSelectionSummaryProps) => {
   const { image } = props.selection;
 
-  const aspectRatio = image.resource.width / image.resource.height;
+  const crop = image.crop ?? {
+    x: 0,
+    y: 0,
+    width: image.resource.width,
+    height: image.resource.height
+  };
+  const aspectRatio = crop.width / crop.height;
   const height = image.width / aspectRatio;
 
   return (
