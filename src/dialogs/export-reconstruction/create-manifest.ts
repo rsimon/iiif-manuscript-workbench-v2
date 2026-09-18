@@ -42,7 +42,7 @@ const normalizeFragmentTarget = (target: unknown) => {
   return target.replace(/#xywh=([\d.]+),([\d.]+),([\d.]+),([\d.]+)$/, (_, x, y, w, h) =>
     `#xywh=${Math.round(Number(x))},${Math.round(Number(y))},${Math.round(Number(w))},${Math.round(Number(h))}`
   );
-};
+}
 
 const toRegionBody = (body: unknown, baseURI: string) => {
   if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
@@ -106,45 +106,48 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
     }
   } : {};
 
-  if (r.type === 'original') return {
-    ...r.source.canvas.source,
-    items: r.source.canvas.source.items?.map(page => ({
-      ...page,
-      items: page.items?.map(annotation => ({
-        ...annotation,
-        body: Array.isArray(annotation.body)
-          ? annotation.body.map(body => toRegionBody(body, baseURI))
-          : toRegionBody(annotation.body, baseURI),
-        target: normalizeFragmentTarget(annotation.target)
-      }))
-    })),
-    width,
-    height,
-    label: { en: [r.label] },
-    ...physdim
-  };
+  if (r.type === 'original') {
+    return {
+      ...r.source.canvas.source,
+      items: r.source.canvas.source.items?.map(page => ({
+        ...page,
+        items: page.items?.map(annotation => ({
+          ...annotation,
+          body: Array.isArray(annotation.body)
+            ? annotation.body.map(body => toRegionBody(body, baseURI))
+            : toRegionBody(annotation.body, baseURI),
+          target: normalizeFragmentTarget(annotation.target)
+        }))
+      })),
+      width,
+      height,
+      label: { en: [r.label] },
+      ...physdim
+    };
 
-  const canvasId = `${baseURI}/canvas/${crypto.randomUUID()}`;
+  } else {
+    const canvasId = `${baseURI}/canvas/${crypto.randomUUID()}`;
 
-  return {
-    id: canvasId,
-    type: 'Canvas',
-    label: { en: [ r.label ] },
-    width,
-    height,
-    ...physdim,
-    items: r.sources.length === 0 ? [] :[{
-      id: `${canvasId}/page/1`,
-      type: 'AnnotationPage',
-      items: r.sources.flatMap(sc => sc.canvas.images.map(image => ({
-        id: `${canvasId}/annotation/${crypto.randomUUID()}`,
-        type: 'Annotation',
-        motivation: 'painting',
-        body: toRegionBody(image.source, baseURI),
-        target: image.target 
-          ? `${canvasId}#xywh=${Math.round(image.target.x)},${Math.round(image.target.y)},${Math.round(image.target.w)},${Math.round(image.target.h)}`
-          : canvasId
-      })))
-    }]
-  };
+    return {
+      id: canvasId,
+      type: 'Canvas',
+      label: { en: [ r.label ] },
+      width,
+      height,
+      ...physdim,
+      items: r.sources.length === 0 ? [] :[{
+        id: `${canvasId}/page/1`,
+        type: 'AnnotationPage',
+        items: r.sources.flatMap(sc => sc.canvas.images.map(image => ({
+          id: `${canvasId}/annotation/${crypto.randomUUID()}`,
+          type: 'Annotation',
+          motivation: 'painting',
+          body: toRegionBody(image.source, baseURI),
+          target: image.target 
+            ? `${canvasId}#xywh=${Math.round(image.target.x)},${Math.round(image.target.y)},${Math.round(image.target.w)},${Math.round(image.target.h)}`
+            : canvasId
+        })))
+      }]
+    };
+  }
 }

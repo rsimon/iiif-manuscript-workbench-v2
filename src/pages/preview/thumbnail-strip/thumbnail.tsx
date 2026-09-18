@@ -1,7 +1,7 @@
 import type { CozyImageResource } from 'cozy-iiif';
 import { cn } from '@/shadcn/utils';
 import type { ReconstructionCanvas } from '@/types';
-import { getImageCrop } from '../viewer/viewer-utils';
+import { getImageCrop } from '../preview-utils';
 
 const THUMBNAIL_SIZING = 'w-full h-auto @[160px]:w-auto @[160px]:max-w-[50%] @[160px]:min-w-0 @[160px]:flex-1';
 

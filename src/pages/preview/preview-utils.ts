@@ -50,7 +50,7 @@ export const getImageCrop = (image: CozyImageResource) => {
     width: image.width,
     height: image.height
   };
-};
+}
 
 // Canvas height in OSD world units
 export const getCanvasHeight = (canvas?: ReconstructionCanvas) => {

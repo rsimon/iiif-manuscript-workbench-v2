@@ -6,7 +6,7 @@ import { usePreviewStore } from '../preview-store';
 import { CanvasIndicator } from './canvas-indicator';
 import { ViewerControls } from './viewer-controls';
 import { ViewerToolbar } from './viewer-toolbar';
-import { addPage, getCanvasHeight } from './viewer-utils';
+import { addPage, getCanvasHeight } from '../preview-utils';
 
 interface ViewerProps {
 
