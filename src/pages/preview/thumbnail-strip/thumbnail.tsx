@@ -63,7 +63,7 @@ interface PrimitiveImageThumbnailProps {
 
 const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
   const crop = getImageCrop(props.image);
-  const isCropped = crop.x !== 0 || crop.y !== 0 || crop.width !== props.image.width || crop.height !== props.image.height;
+  const isCropped = crop.x !== 0 || crop.y !== 0 || crop.w !== props.image.width || crop.h !== props.image.height;
 
   if (isCropped) {
     return (
@@ -74,10 +74,10 @@ const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
           src={props.image.getImageURL(props.minSize || 320)}
           className="absolute max-w-none"
           style={{
-            left: `${-(crop.x / crop.width) * 100}%`,
-            top: `${-(crop.y / crop.height) * 100}%`,
-            width: `${(props.image.width / crop.width) * 100}%`,
-            height: `${(props.image.height / crop.height) * 100}%`
+            left: `${-(crop.x / crop.w) * 100}%`,
+            top: `${-(crop.y / crop.h) * 100}%`,
+            width: `${(props.image.width / crop.w) * 100}%`,
+            height: `${(props.image.height / crop.h) * 100}%`
           }}
           alt={props.label} />
       </div>
@@ -121,7 +121,7 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
       h: canvasHeight
     };
     const crop = getImageCrop(image);
-    const isCropped = crop.x !== 0 || crop.y !== 0 || crop.width !== image.width || crop.height !== image.height;
+    const isCropped = crop.x !== 0 || crop.y !== 0 || crop.w !== image.width || crop.h !== image.height;
 
     return (
       <div
@@ -138,10 +138,10 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
           alt={`${label}: image ${idx + 1}`}
           className="absolute max-w-none"
           style={isCropped ? {
-            left: `${-(crop.x / crop.width) * 100}%`,
-            top: `${-(crop.y / crop.height) * 100}%`,
-            width: `${(image.width / crop.width) * 100}%`,
-            height: `${(image.height / crop.height) * 100}%`
+            left: `${-(crop.x / crop.w) * 100}%`,
+            top: `${-(crop.y / crop.h) * 100}%`,
+            width: `${(image.width / crop.w) * 100}%`,
+            height: `${(image.height / crop.h) * 100}%`
           } : {
             left: 0,
             top: 0,

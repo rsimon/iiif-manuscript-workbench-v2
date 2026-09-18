@@ -1,6 +1,6 @@
 import type { ReconstructionCanvas } from '@/types';
 import OpenSeadragon, { type Viewer } from 'openseadragon';
-import type { CozyImageResource } from 'cozy-iiif';
+import type { Bounds, CozyImageResource } from 'cozy-iiif';
 
 const getCanvasImages = (canvas: ReconstructionCanvas) =>
   canvas.type === 'original'
@@ -9,7 +9,7 @@ const getCanvasImages = (canvas: ReconstructionCanvas) =>
 
 const PLACEHOLDER_HEIGHT = 1650 / 1200;
 
-export const getImageCrop = (image: CozyImageResource) => {
+export const getImageCrop = (image: CozyImageResource): Bounds=> {
   const selector = (image.source as { selector?: unknown }).selector;
 
   if (selector && typeof selector === 'object' && !Array.isArray(selector)) {
@@ -18,7 +18,7 @@ export const getImageCrop = (image: CozyImageResource) => {
     if (candidate.region && typeof candidate.region === 'object') {
       const { x, y, width, height } = candidate.region;
       if ([x, y, width, height].every(value => Number.isFinite(value))) {
-        return { x, y, width, height };
+        return { x, y, w: width, h: height };
       }
     }
 
@@ -34,8 +34,8 @@ export const getImageCrop = (image: CozyImageResource) => {
         return {
           x: Number(match[1]),
           y: Number(match[2]),
-          width: Number(match[3]),
-          height: Number(match[4])
+          w: Number(match[3]),
+          h: Number(match[4])
         };
       }
     }
@@ -44,8 +44,8 @@ export const getImageCrop = (image: CozyImageResource) => {
   return {
     x: 0,
     y: 0,
-    width: image.width,
-    height: image.height
+    w: image.width,
+    h: image.height
   };
 }
 
@@ -74,7 +74,7 @@ export const addPage = (viewer: Viewer, canvas: ReconstructionCanvas, xOffset: n
 
   return Promise.all(items.map(({ image, target }) => new Promise<void>(resolve => {
     const crop = image ? getImageCrop(image) : undefined;
-    const scale = crop ? target.w / crop.width : undefined;
+    const scale = crop ? target.w / crop.w : undefined;
 
     viewer.addTiledImage({
       tileSource: image
@@ -83,7 +83,7 @@ export const addPage = (viewer: Viewer, canvas: ReconstructionCanvas, xOffset: n
       x: xOffset + (target.x - (crop?.x ?? 0) * (scale ?? 1)) / canvasWidth,
       y: yOffset + (target.y - (crop?.y ?? 0) * (scale ?? 1)) / canvasWidth,
       width: image ? image.width * (scale ?? 1) / canvasWidth : target.w / canvasWidth,
-      clip: crop ? new OpenSeadragon.Rect(crop.x, crop.y, crop.width, crop.height) : undefined,
+      clip: crop ? new OpenSeadragon.Rect(crop.x, crop.y, crop.w, crop.h) : undefined,
       success: () => resolve()
     });
   }))).then(() => {});
