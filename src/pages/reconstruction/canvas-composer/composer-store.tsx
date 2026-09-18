@@ -10,6 +10,8 @@ import type { ComposerLayout, DraggableImage, DraggableImageSelection } from '..
 import { applyEdits, findSourceCanvasById, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
 
+export type EditMode = 'RESIZE' | 'CROP';
+
 export interface ComposerState {
 
   viewer?: Viewer;
@@ -27,9 +29,9 @@ export interface ComposerState {
 
   selectedImage?: DraggableImageSelection;
 
-  isUserEdit: boolean;
+  editMode: EditMode;
 
-  isCropping: boolean;
+  isUserEdit: boolean;
 
   setViewer(viewer?: Viewer): void;
 
@@ -37,9 +39,9 @@ export interface ComposerState {
 
   setSelectedImage(selectedImage?: DraggableImageSelection): void;
 
-  setIsUserEdit(isDraggingImage: boolean): void;
+  setEditMode(mode: EditMode): void;
 
-  setIsCropping(isCropping: boolean): void;
+  setIsUserEdit(isDraggingImage: boolean): void;
 
   updateImage(canvasId: string, updated: DraggableImage): void;
 
@@ -61,19 +63,19 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
 
   selectedImage: undefined,
 
-  isUserEdit: false,
+  editMode: 'RESIZE',
 
-  isCropping: false,
+  isUserEdit: false,
 
   setViewer: viewer => set({ viewer }),
 
   setLayout: layout => set({ layout }),
 
-  setSelectedImage: selectedImage => set({ selectedImage }),
+  setSelectedImage: selectedImage => set({ selectedImage, editMode: 'RESIZE' }),
+
+  setEditMode: editMode => set({ editMode }),
 
   setIsUserEdit: isUserEdit => set({ isUserEdit }),
-
-  setIsCropping: isCropping => set({ isCropping }),
 
   updateImage: (canvasId, updated) => set(({ imagesByCanvasId, selectedImage }) => {
     const onThisCanvas = imagesByCanvasId.get(canvasId);
