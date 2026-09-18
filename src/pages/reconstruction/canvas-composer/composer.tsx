@@ -33,7 +33,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   const layout = useComposerStore(state => state.layout);
   const viewer = useComposerStore(state => state.viewer);
   const selectedImage = useComposerStore(state => state.selectedImage);
-  const isCropping = useComposerStore(state => state.isCropping);
+  const editMode = useComposerStore(state => state.editMode);
   const setViewer = useComposerStore(state => state.setViewer);
 
   useComposerSelection(viewer, layout);
@@ -142,7 +142,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           x: item.x + (image.x - crop.x * scale) / canvas.width,
           y: item.y + (image.y - crop.y * scale) / canvas.width,
           width: image.resource.width * scale / canvas.width,
-          clip: isSelected && isCropping
+          clip: isSelected && editMode === 'CROP'
             ? undefined
             : new OpenSeadragon.Rect(crop.x, crop.y, crop.w, crop.h)
         };
@@ -190,7 +190,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           }
         });
       });
-  }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, isCropping]);
+  }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, editMode]);
 
   return (
     <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px]

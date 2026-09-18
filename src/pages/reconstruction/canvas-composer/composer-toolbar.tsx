@@ -33,8 +33,9 @@ export const ComposerToolbar = () => {
 
   const updateImage = useComposerStore(state => state.updateImage);
   const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
-  const isCropping = useComposerStore(state => state.isCropping);
-  const setIsCropping = useComposerStore(state => state.setIsCropping);
+
+  const editMode = useComposerStore(state => state.editMode);
+  const setEditMode = useComposerStore(state => state.setEditMode);
 
   const reconstruction = useAppStore(state => state.reconstruction);
 
@@ -58,7 +59,7 @@ export const ComposerToolbar = () => {
 
   const onToggleCrop = () => {
     if (!selectedImage) return;
-    setIsCropping(!isCropping);
+    setEditMode(editMode === 'CROP' ? 'RESIZE' : 'CROP');
   };
 
   return (
@@ -69,7 +70,7 @@ export const ComposerToolbar = () => {
           disabled={!selectedImage}
           tooltip="Crop image"
           onClick={onToggleCrop}
-          aria-pressed={isCropping}>
+          aria-pressed={editMode === 'CROP'}>
           <IconCrop className="size-4.5" />
         </ComposerToolbarButton>
 

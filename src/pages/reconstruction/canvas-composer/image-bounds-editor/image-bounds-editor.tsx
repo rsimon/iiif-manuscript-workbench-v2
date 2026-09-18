@@ -38,8 +38,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const updateImage = useComposerStore(state => state.updateImage);
   const moveImageToCanvas = useComposerStore(state => state.moveImageToCanvas);
   const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
-  const isCropping = useComposerStore(state => state.isCropping);
-  const setIsCropping = useComposerStore(state => state.setIsCropping);
+  const editMode = useComposerStore(state => state.editMode);
+  const setEditMode = useComposerStore(state => state.setEditMode);
 
   const setSelectedCanvas = useReconstructionStore(state => state.setSelection);
 
@@ -167,9 +167,9 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const delta = [pt.x - origin.current.x, pt.y - origin.current.y];
 
     if (handle === 'SHAPE') {
-      if (isCropping) onMoveCrop(delta);
+      if (editMode === 'CROP') onMoveCrop(delta);
       else onMoveImage(delta);
-    } else if (isCropping) {
+    } else if (editMode === 'CROP') {
       onCropImage(handle, delta);
     } else {
       onResizeImage(handle, delta);
@@ -217,7 +217,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onDoubleClick = (evt: React.MouseEvent) => {
     evt.preventDefault();
     evt.stopPropagation();
-    setIsCropping(!isCropping);
+    setEditMode(editMode === 'CROP' ? 'RESIZE' : 'CROP');
   }
 
   const onMoveImage = (delta: number[]) => {
@@ -434,7 +434,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   return selectedImage ? (
     <>
       <g>
-        {isCropping && (
+        {editMode === 'CROP' && (
           <path
             className="pointer-events-none"
             d={`M -10000 -10000 H 10000 V 10000 H -10000 Z M ${corners[0].x} ${corners[0].y} H ${corners[1].x} V ${corners[2].y} H ${corners[3].x} Z`}
@@ -453,14 +453,14 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         )}
 
         <polygon
-          className={isCropping ? 'cursor-move' : 'cursor-grab'}
+          className={editMode === 'CROP' ? 'cursor-move' : 'cursor-grab'}
           points={cornersToSvgPoints(corners)}
           fill={isValidDestination ? 'transparent' : 'oklch(57.7% 0.245 27.325 / 0.3)'}
           stroke={isValidDestination ? 'oklch(70.5% 0.213 47.604)' : 'oklch(57.7% 0.245 27.325)'}
           strokeWidth={isValidDestination ? 2.5 : 1.5}
           vectorEffect="non-scaling-stroke"
           strokeDasharray={isValidDestination ?  '5 2' : undefined}
-          fillOpacity={isCropping ? 0.18 : undefined}
+          fillOpacity={editMode === 'CROP' ? 0.18 : undefined}
           onDoubleClickCapture={onDoubleClick}
           onPointerDownCapture={onPointerDown}
           onPointerMoveCapture={onPointerMove('SHAPE')}
@@ -491,16 +491,16 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
             corner={corner}
             type={HANDLE_TYPES[i]}
             viewer={props.viewer}
-            size={isCropping ? 10 : undefined}
-            fill={isCropping ? 'black' : undefined}
-            stroke={isCropping ? 'white' : undefined}
+            size={editMode === 'CROP' ? 10 : undefined}
+            fill={editMode === 'CROP' ? 'black' : undefined}
+            stroke={editMode === 'CROP' ? 'white' : undefined}
             onPointerDown={onPointerDown}
             onPointerMove={onPointerMove(HANDLE_TYPES[i])}
             onPointerUp={onPointerUp}
             onPointerCancel={onPointerCancel} />
         ))}
 
-        {isCropping && (
+        {editMode === 'CROP' && (
           <>
             <EdgeHandle
               point={new Point((corners[0].x + corners[1].x) / 2, corners[0].y)}
