@@ -2,9 +2,6 @@ import type { ReconstructionCanvas } from '@/types';
 import OpenSeadragon, { type Viewer } from 'openseadragon';
 import type { CozyImageResource } from 'cozy-iiif';
 
-const getCanvasDimensions = (canvas: ReconstructionCanvas) =>
-  canvas.type === 'original' ? canvas.source.canvas : canvas;
-
 const getCanvasImages = (canvas: ReconstructionCanvas) =>
   canvas.type === 'original'
     ? canvas.source.canvas.images
@@ -57,12 +54,12 @@ export const getCanvasHeight = (canvas?: ReconstructionCanvas) => {
   if (!canvas) return undefined;
   if (getCanvasImages(canvas).length === 0) return PLACEHOLDER_HEIGHT;
 
-  const { width, height } = getCanvasDimensions(canvas);
+  const { width, height } = canvas;
   return height / width;
 }
 
 export const addPage = (viewer: Viewer, canvas: ReconstructionCanvas, xOffset: number, yOffset: number) => {
-  const { width: canvasWidth, height: canvasHeight } = getCanvasDimensions(canvas);
+  const { width: canvasWidth, height: canvasHeight } = canvas;
 
   const images = getCanvasImages(canvas);
 
