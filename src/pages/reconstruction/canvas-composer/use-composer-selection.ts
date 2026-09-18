@@ -64,17 +64,16 @@ export const useComposerSelection = (viewer: Viewer | undefined, layout: Compose
           setSelectedImage();
           setSelectedItems(current => [...current, canvas]);
         } else {
+          const hit = getImageAt(
+            point,
+            layout,
+            reconstruction,
+            useComposerStore.getState().imagesByCanvasId
+          );
+
           setSelectedItems(current => {
-            if (current.length === 1 && current[0].id === canvas.id) {
-              // Same selected canvas, clicked again -> select image
-              const { imagesByCanvasId } = useComposerStore.getState();
-              const hit = getImageAt(point, layout, reconstruction, imagesByCanvasId);
-              setSelectedImage(hit);
-              return current;
-            } else {
-              setSelectedImage();
-              return [canvas];
-            }
+            setSelectedImage(hit);
+            return current.length === 1 && current[0].id === canvas.id ? current : [canvas];
           });
         }
       } else if (!metaKey) {

@@ -1,11 +1,12 @@
 import type { ButtonProps } from '@base-ui/react';
-import { IconArrowBackUp, IconArrowForwardUp, IconMaximize, IconStackPop, IconStackPush } from '@tabler/icons-react';
+import { IconArrowBackUp, IconArrowForwardUp, IconCrop, IconMaximize, IconStackPop, IconStackPush } from '@tabler/icons-react';
 import { Button } from '@/shadcn/button';
 import { Separator } from '@/shadcn/separator';
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { useAppStore } from '@/store/app-store';
 import { useComposerStore } from './composer-store';
 import { getFillSize, isSelectionFullSize } from './composer-utils';
+import { ToolbarToggle } from '@/components/toolbar-toggle';
 
 const ComposerToolbarButton = (props: ButtonProps & { tooltip: string }) => {
   const { children, ...rest } = props;
@@ -34,6 +35,9 @@ export const ComposerToolbar = () => {
   const updateImage = useComposerStore(state => state.updateImage);
   const setIsUserEdit = useComposerStore(state => state.setIsUserEdit);
 
+  const editMode = useComposerStore(state => state.editMode);
+  const setEditMode = useComposerStore(state => state.setEditMode);
+
   const reconstruction = useAppStore(state => state.reconstruction);
 
   const isFullSize = selectedImage ? isSelectionFullSize(selectedImage, reconstruction) : false;
@@ -54,6 +58,11 @@ export const ComposerToolbar = () => {
     requestAnimationFrame(() => setIsUserEdit(false));
   }
 
+  const onToggleCrop = () => {
+    if (!selectedImage) return;
+    setEditMode(editMode === 'CROP' ? 'RESIZE' : 'CROP');
+  };
+
   return (
     <div className="absolute bottom-8 w-full flex justify-center z-50 pointer-events-none">
       <div className="bg-white flex items-center gap-1 min-w-20 rounded-full p-1 pointer-events-auto
@@ -69,6 +78,14 @@ export const ComposerToolbar = () => {
           tooltip="Move image down">
           <IconStackPush className="size-4.5" />
         </ComposerToolbarButton>
+
+        <ToolbarToggle
+          disabled={!selectedImage}
+          tooltip="Crop image"
+          onClick={onToggleCrop}
+          aria-pressed={editMode === 'CROP'}>
+          <IconCrop className="size-5" strokeWidth={1.75} />
+        </ToolbarToggle>
 
         <ComposerToolbarButton
           disabled={!selectedImage || isFullSize}

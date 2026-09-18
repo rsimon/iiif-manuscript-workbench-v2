@@ -98,7 +98,15 @@ interface ImageSelectionSummaryProps {
 const ImageSelectionSummary = (props: ImageSelectionSummaryProps) => {
   const { image } = props.selection;
 
-  const aspectRatio = image.resource.width / image.resource.height;
+  // TODO crop should be shown (and editable!) in summary
+  const crop = image.crop ?? {
+    x: 0,
+    y: 0,
+    w: image.resource.width,
+    h: image.resource.height
+  };
+
+  const aspectRatio = crop.w / crop.h;
   const height = image.width / aspectRatio;
 
   return (

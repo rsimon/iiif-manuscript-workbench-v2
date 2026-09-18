@@ -11,27 +11,19 @@ export type CornerHandleType =
   | 'BOTTOM_RIGHT'
   | 'BOTTOM_LEFT';
 
-export type EdgeHandleType = 
-  | 'TOP'
-  | 'RIGHT'
-  | 'BOTTOM'
-  | 'LEFT';
-
-export type ResizeHandleType =
-  | CornerHandleType
-  | EdgeHandleType;
-
-export type HandleType = 
-  | 'SHAPE'
-  | ResizeHandleType;
-
 interface CornerHandleProps {
 
   corner: Point;
 
   direction: HandleDirection;
 
+  fill?: string;
+
   invalid?: boolean;
+
+  size?: number;
+
+  stroke?: string;
 
   type: CornerHandleType;
 
@@ -60,7 +52,7 @@ export const CornerHandle = (props: CornerHandleProps) => {
       const containerWidth = viewer.container.clientWidth;
       if (containerWidth === 0) return;
 
-      const s = HANDLE_SIZE_PX / (zoom * containerWidth);
+      const s = (props.size || HANDLE_SIZE_PX) / (zoom * containerWidth);
 
       handleRef.current?.setAttribute('width', `${s}`);
       handleRef.current?.setAttribute('height', `${s}`);
@@ -74,19 +66,17 @@ export const CornerHandle = (props: CornerHandleProps) => {
     return () => {
       viewer.removeHandler('update-viewport', onUpdateViewport);
     };
-  }, [viewer]);
+  }, [viewer, props.size]);
 
   return (
     <rect
       ref={handleRef}
       x={corner.x}
       y={corner.y}
-      style={{
-        cursor: `${props.direction.toLowerCase()}-resize`
-      }}
-      fill="white"
-      stroke={props.invalid ? 'oklch(57.7% 0.245 27.325)' : 'oklch(70.5% 0.213 47.604)'}
-      strokeWidth={2}
+      style={{ cursor: `${props.direction.toLowerCase()}-resize` }}
+      fill={props.fill || 'white'}
+      stroke={props.stroke || (props.invalid ? 'oklch(57.7% 0.245 27.325)' : 'oklch(70.5% 0.213 47.604)')}
+      strokeWidth={1.75}
       vectorEffect="non-scaling-stroke"
       onPointerDownCapture={props.onPointerDown}
       onPointerMoveCapture={props.onPointerMove}
