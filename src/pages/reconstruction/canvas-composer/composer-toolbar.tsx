@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { useAppStore } from '@/store/app-store';
 import { useComposerStore } from './composer-store';
 import { getFillSize, isSelectionFullSize } from './composer-utils';
+import { ToolbarToggle } from '@/components/toolbar-toggle';
 
 const ComposerToolbarButton = (props: ButtonProps & { tooltip: string }) => {
   const { children, ...rest } = props;
@@ -67,14 +68,6 @@ export const ComposerToolbar = () => {
       <div className="bg-white flex items-center gap-1 min-w-20 rounded-full p-1 pointer-events-auto
         ring-1 ring-black/5 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_2px_6px_rgba(0,0,0,0.06),0_8px_24px_rgba(0,0,0,0.10)]">
         <ComposerToolbarButton
-          disabled={!selectedImage}
-          tooltip="Crop image"
-          onClick={onToggleCrop}
-          aria-pressed={editMode === 'CROP'}>
-          <IconCrop className="size-4.5" />
-        </ComposerToolbarButton>
-
-        <ComposerToolbarButton
           disabled
           tooltip="Move image up">
           <IconStackPop className="size-4.5" />
@@ -85,6 +78,14 @@ export const ComposerToolbar = () => {
           tooltip="Move image down">
           <IconStackPush className="size-4.5" />
         </ComposerToolbarButton>
+
+        <ToolbarToggle
+          disabled={!selectedImage}
+          tooltip="Crop image"
+          onClick={onToggleCrop}
+          aria-pressed={editMode === 'CROP'}>
+          <IconCrop className="size-5" strokeWidth={1.75} />
+        </ToolbarToggle>
 
         <ComposerToolbarButton
           disabled={!selectedImage || isFullSize}
