@@ -63,28 +63,24 @@ interface PrimitiveImageThumbnailProps {
 
 const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
   const crop = getImageCrop(props.image);
+
   const isCropped = crop.x !== 0 || crop.y !== 0 || crop.w !== props.image.width || crop.h !== props.image.height;
-
-  if (isCropped) {
-    return (
-      <div
-        className={cn(THUMBNAIL_SIZING, 'relative overflow-hidden rounded ring ring-foreground/10 shadow-xs', props.className)}
-        style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}>
-        <img
-          src={props.image.getImageURL(props.minSize || 320)}
-          className="absolute max-w-none"
-          style={{
-            left: `${-(crop.x / crop.w) * 100}%`,
-            top: `${-(crop.y / crop.h) * 100}%`,
-            width: `${(props.image.width / crop.w) * 100}%`,
-            height: `${(props.image.height / crop.h) * 100}%`
-          }}
-          alt={props.label} />
-      </div>
-    );
-  }
-
-  return (
+  return isCropped ? (
+    <div
+      className={cn(THUMBNAIL_SIZING, 'relative overflow-hidden rounded ring ring-foreground/10 shadow-xs', props.className)}
+      style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}>
+      <img
+        src={props.image.getImageURL(props.minSize || 320)}
+        className="absolute max-w-none"
+        style={{
+          left: `${-(crop.x / crop.w) * 100}%`,
+          top: `${-(crop.y / crop.h) * 100}%`,
+          width: `${(props.image.width / crop.w) * 100}%`,
+          height: `${(props.image.height / crop.h) * 100}%`
+        }}
+        alt={props.label} />
+    </div>
+  ) : (
     <img
       src={props.image.getImageURL(props.minSize || 320)}
       className={cn(THUMBNAIL_SIZING, 'rounded ring ring-foreground/10 shadow-xs object-cover', props.className)}
@@ -120,6 +116,7 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
       w: canvasWidth,
       h: canvasHeight
     };
+    
     const crop = getImageCrop(image);
     const isCropped = crop.x !== 0 || crop.y !== 0 || crop.w !== image.width || crop.h !== image.height;
 
