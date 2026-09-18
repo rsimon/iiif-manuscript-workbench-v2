@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
+import { IconCheck, IconDimensions, IconPlus, IconRulerMeasure } from '@tabler/icons-react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
+import { ToolbarToggle } from '@/components/toolbar-toggle';
 import { ViewerPaginationControl } from '@/components/viewer-pagination-control';
 import { PhysicalDimensionsDialog, useMeasurement } from '@/dialogs/physical-dimensions';
 import { Button } from '@/shadcn/button';
 import { Separator } from '@/shadcn/separator';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
-import { IconCheck, IconDimensions, IconPlus, IconRulerMeasure } from '@tabler/icons-react';
-import { ToolbarToggle } from '@/components/toolbar-toggle';
 
 interface SourcePreviewToolbarProps {
 
