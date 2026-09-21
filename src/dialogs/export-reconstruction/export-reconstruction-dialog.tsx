@@ -31,7 +31,6 @@ interface ExportReconstructionDialogProps {
 }
 
 export const ExportReconstructionDialog = (props: ExportReconstructionDialogProps) => {
-
   const { open, onOpenChange } = props;
 
   const sources = useAppStore(state => state.sources);
@@ -43,19 +42,24 @@ export const ExportReconstructionDialog = (props: ExportReconstructionDialogProp
   const [attribution, setAttribution] = useState('');
   const [copied, setCopied] = useState(false);
 
-  const generatedManifest = useMemo(() => createManifest(
-    label, 
-    description, 
-    attribution,
-    sources,
-    reconstruction,
-    baseURI
-  ), [label, description, attribution, sources, reconstruction, baseURI]);
+  const generatedManifest = useMemo(() => {
+    if (!open) return;
+    
+    return createManifest(
+      label, 
+      description, 
+      attribution,
+      sources,
+      reconstruction,
+      baseURI);
+  }, [label, description, attribution, sources, reconstruction, baseURI, open]);
 
-  const manifestJson = 
-    JSON.stringify(generatedManifest, null, 2);
+  const manifestJson = generatedManifest ? 
+    JSON.stringify(generatedManifest, null, 2) : undefined;
 
   const onCopy = () => {
+    if (!manifestJson) return;
+
     navigator.clipboard.writeText(manifestJson).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
@@ -63,6 +67,8 @@ export const ExportReconstructionDialog = (props: ExportReconstructionDialogProp
   }
 
   const onDownload = () => {
+    if (!manifestJson) return;
+
     const blob = new Blob([manifestJson], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
 

@@ -32,6 +32,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
   const layout = useComposerStore(state => state.layout);
   const viewer = useComposerStore(state => state.viewer);
+  const selectedImage = useComposerStore(state => state.selectedImage);
+  const editMode = useComposerStore(state => state.editMode);
   const setViewer = useComposerStore(state => state.setViewer);
 
   useComposerSelection(viewer, layout);
@@ -128,13 +130,24 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
       const imagesForCanvas = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
-      return imagesForCanvas.map(image => ({
-        key: getDraggableImageKey(image),
-        tileSource: image.tileSource,
-        x: item.x + image.x / canvas.width,
-        y: item.y + image.y / canvas.width,
-        width: image.width / canvas.width
-      }));
+      return imagesForCanvas.map(image => {
+        const clip = image.crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
+        const scale = image.width / clip.w;
+
+        const isSelected = selectedImage?.image &&
+          getDraggableImageKey(selectedImage.image) === getDraggableImageKey(image);
+
+        return {
+          key: getDraggableImageKey(image),
+          tileSource: image.tileSource,
+          x: item.x + (image.x - clip.x * scale) / canvas.width,
+          y: item.y + (image.y - clip.y * scale) / canvas.width,
+          width: image.resource.width * scale / canvas.width,
+          clip: isSelected && editMode === 'CROP'
+            ? undefined
+            : new OpenSeadragon.Rect(clip.x, clip.y, clip.w, clip.h)
+        };
+      });
     });
 
     const toKeep = new Set(placements.map(p => p.key));
@@ -148,11 +161,12 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     });
 
     // 2. Move/resize existing images
-    placements.forEach(({ key, x, y, width }) => {
+    placements.forEach(({ key, x, y, width, clip }) => {
       const existing = tiledImages.get(key);
       if (existing) {
         existing.setPosition(new OpenSeadragon.Point(x, y), isUserEdit);
         existing.setWidth(width, isUserEdit);
+        existing.setClip(clip ?? null);
       }
     });
 
@@ -162,12 +176,12 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     // runs again, and will cause duplicates otherwise.
     placements
       .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
-      .forEach(({ key, tileSource, x, y, width }) => {
+      .forEach(({ key, tileSource, x, y, width, clip }) => {
         pendingTiledImageKeys.add(key);
 
         viewer.addTiledImage({
           tileSource,
-          x, y, width,
+          x, y, width, clip,
           // @types/openseadragon mistypes this as (event: Event) => void;
           // OSD actually calls it with { item: TiledImage }.
           success: (evt: Event) => {
@@ -177,7 +191,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           }
         });
       });
-  }, [viewer, layout, images, visibleIds, reconstructionById]);
+  }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, editMode]);
 
   return (
     <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px]

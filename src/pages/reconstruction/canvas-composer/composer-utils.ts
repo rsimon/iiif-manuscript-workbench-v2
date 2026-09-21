@@ -1,5 +1,5 @@
 import type { Point } from 'openseadragon';
-import type { CozyCanvas } from 'cozy-iiif';
+import type { CozyCanvas, CozyImageResource } from 'cozy-iiif';
 import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
@@ -7,6 +7,13 @@ import { getDraggableImageKey } from '../reconstruction-utils';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
+
+export const getImageBounds = (image: CozyImageResource) => ({
+  x: 0,
+  y: 0,
+  w: image.width,
+  h: image.height
+});
 
 export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => {
   const sources = r.type === 'original' ? [r.source] : r.sources;
@@ -37,6 +44,7 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
           x,
           y,
           width,
+          crop: image.selector,
           index: idx
         } as DraggableImage
       })
@@ -51,7 +59,8 @@ export const getFillSize = (
 ): { x: number; y: number; width: number } => {
   const { width: canvasWidth, height: canvasHeight } = canvas;
 
-  const aspect = image.resource.height / image.resource.width;
+  const bounds = image.crop ?? getImageBounds(image.resource);
+  const aspect = bounds.h / bounds.w;
   const width = Math.min(canvasWidth, canvasHeight / aspect);
   const height = width * aspect;
 
@@ -124,7 +133,8 @@ export const getImageAt = (
 
   const hit = images.filter(image => {
     // Image size is in pixel!
-    const aspect = image.resource.height / image.resource.width;
+    const bounds = image.crop ?? getImageBounds(image.resource);
+    const aspect = bounds.h / bounds.w;
 
     const viewportX = item.x + image.x / rc.width;
     const viewportY = item.y + image.y / rc.width;
@@ -135,8 +145,10 @@ export const getImageAt = (
 
     return point.x >= viewportX && point.x <= viewportR && point.y >= viewportY && point.y <= viewportB;
   }).sort((a, b) => {
-    const areaA = a.width * a.width * a.resource.height / a.resource.width;
-    const areaB = b.width * b.width * b.resource.height / b.resource.height;
+    const boundsA = a.crop ?? getImageBounds(a.resource);
+    const boundsB = b.crop ?? getImageBounds(b.resource);
+    const areaA = a.width * a.width * boundsA.h / boundsA.w;
+    const areaB = b.width * b.width * boundsB.h / boundsB.w;
     return areaA - areaB;
   })[0];
 
@@ -256,8 +268,50 @@ export const applyEdits = (
 
 const toFragmentTarget = (canvas: CozyCanvas, bounds?: { x: number; y: number; w: number; h: number }) => {
   if (!bounds) return canvas.id;
-  const isFullSize = bounds.x === 0 && bounds.y === 0 && bounds.w === canvas.width && bounds.h === canvas.height;
-  return isFullSize ? canvas.id : `${canvas.id}#xywh=${bounds.x},${bounds.y},${bounds.w},${bounds.h}`;
+  const x = Math.round(bounds.x);
+  const y = Math.round(bounds.y);
+  const w = Math.round(bounds.w);
+  const h = Math.round(bounds.h);
+  const isFullSize = x === 0 && y === 0 && w === canvas.width && h === canvas.height;
+  return isFullSize ? canvas.id : `${canvas.id}#xywh=${x},${y},${w},${h}`;
+}
+
+const toAnnotationBodyItem = (image: DraggableImage) => {
+  if (!image.crop && (image.resource.source.type === 'Image'))
+    return image.resource.source;
+
+  // No crop, but image resource is (unnecessarily) a SpecificResource
+  if (!image.crop)
+    return (image.resource.source as any).source;
+
+  const { crop } = image;
+  const { source } = image.resource;
+  const isFullSizeCrop = crop.x === 0 && crop.y === 0 && crop.w === image.resource.width && crop.h === image.resource.height;
+  
+  // Cropped, but fullsize - normalize to flat, uncropped Image resource
+  if (isFullSizeCrop)
+    return (image.resource.source as any).source;
+
+  // Cropped image
+  const id = typeof source.id === 'string' ? source.id.replace(/#xywh=.*$/, '') : source.id;
+
+  return source.type === 'Image' ? {
+    type: 'SpecificResource' as const,
+    source: {
+      ...source,
+      id
+    },
+    selector: {
+      type: 'ImageApiSelector' as const,
+      region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.w)},${Math.round(crop.h)}`
+    }
+  } : {
+    ...source,
+    selector: {
+      type: 'ImageApiSelector' as const,
+      region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.w)},${Math.round(crop.h)}`
+    }
+  };
 }
 
 // Applies composer edits onto one source canvas
@@ -294,15 +348,18 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
 
     const current = currentImagesByKey.get(key);
 
-    const unchanged = !!current && current.x === draggable.x && current.y === draggable.y && current.width === draggable.width;
+    const unchanged = !!current && current.x === draggable.x && current.y === draggable.y && current.width === draggable.width &&
+      JSON.stringify(current.crop) === JSON.stringify(draggable.crop);
     if (unchanged) return [canvasSourcePaintAnnotations[index]];
 
     touched = true;
 
-    const h = draggable.width * resource.height / resource.width;
+    const bounds = draggable.crop ?? getImageBounds(resource);
+    const h = draggable.width * bounds.h / bounds.w;
 
     return [{
       ...canvasSourcePaintAnnotations[index],
+      body: toAnnotationBodyItem(draggable),
       target: toFragmentTarget(source.canvas, { x: draggable.x, y: draggable.y, w: draggable.width, h })
     }];
   });
@@ -313,13 +370,14 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
     .map(([, draggable]) => {
       touched = true;
 
-      const h = draggable.width * draggable.resource.height / draggable.resource.width;
+      const bounds = draggable.crop ?? getImageBounds(draggable.resource);
+      const h = draggable.width * bounds.h / bounds.w;
 
       return {
         id: `${canvasId}/annotation/${crypto.randomUUID()}`,
         type: 'Annotation',
         motivation: 'painting',
-        body: draggable.resource.source,
+        body: toAnnotationBodyItem(draggable),
         target: toFragmentTarget(source.canvas, { x: draggable.x, y: draggable.y, w: draggable.width, h })
       };
     });
