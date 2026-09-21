@@ -33,6 +33,8 @@ interface ImagePlacement {
 
   width: number;
 
+  index: number;
+
   clip?: OpenSeadragon.Rect;
 
   opacity: number;
@@ -153,12 +155,14 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       return imagesForCanvas.flatMap(image => {
         const crop = image.crop;
         const bounds = crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
+        
         const isCropped = !!crop && (
           crop.x !== 0 ||
           crop.y !== 0 ||
           crop.w !== image.resource.width ||
           crop.h !== image.resource.height
         );
+
         const scale = image.width / bounds.w;
 
         const isSelected = selectedImage?.image &&
@@ -170,6 +174,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           x: item.x + (image.x - bounds.x * scale) / canvas.width,
           y: item.y + (image.y - bounds.y * scale) / canvas.width,
           width: image.resource.width * scale / canvas.width,
+          index: 0,
           clip: isCropped ? new OpenSeadragon.Rect(bounds.x, bounds.y, bounds.w, bounds.h) : undefined,
           opacity: 1
         };
@@ -186,7 +191,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           placement
         ];
       });
-    });
+    }).map((placement, index) => ({ ...placement, index }));
 
     const toKeep = new Set(placements.map(p => p.key));
 
@@ -209,26 +214,17 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       }
     });
 
-    const syncWorldOrder = () => {
-      placements
-        .map(({ key }) => tiledImages.get(key))
-        .filter((tiledImage): tiledImage is TiledImage => !!tiledImage)
-        .forEach((tiledImage, index) => {
-          viewer.world.setItemIndex(tiledImage, index);
-        });
-    };
-
     // 3. Add images that don't exist yet and AREN'T IN THE PROCESS OF BEING ADDED!
     // In the initial phase, an image can be loading, but not yet in `tiledImages`:
     // Once `useVisibleCanvases` picks up the initial viewport change, this effect
     // runs again, and will cause duplicates otherwise.
     placements
       .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
-      .forEach(({ key, tileSource, x, y, width, clip, opacity }) => {
+      .forEach(({ key, tileSource, x, y, width, index, clip, opacity }) => {
         pendingTiledImageKeys.add(key);
 
         viewer.addTiledImage({
-          tileSource,
+          tileSource, index,
           x, y, width, clip, opacity,
           // @types/openseadragon mistypes this as (event: Event) => void;
           // OSD actually calls it with { item: TiledImage }.
@@ -236,12 +232,9 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
             const { item: tiledImage } = evt as unknown as { item: TiledImage };
             pendingTiledImageKeys.delete(key);
             tiledImages.set(key, tiledImage);
-            syncWorldOrder();
           }
         });
       });
-
-    syncWorldOrder();
   }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, editMode]);
 
   return (
