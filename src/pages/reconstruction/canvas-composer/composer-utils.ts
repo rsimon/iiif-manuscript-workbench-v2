@@ -404,7 +404,5 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
     ]
   };
 
-  console.log('next raw canvas', nextRawCanvas);
-
   return { ...source, canvas: parseCanvas(nextRawCanvas) };
 }
