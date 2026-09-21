@@ -20,6 +20,7 @@ export const OSD_ANIMATION_TIME = 0.5;
 const INITIAL_VISIBLE_ITEMS = 8;
 
 const CROP_BACKGROUND_SUFFIX = ':crop-background';
+const CROP_BACKGROUND_OPACITY = 0.3;
 
 interface ImagePlacement {
 
@@ -150,7 +151,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     const currentVisibleIds = computeVisibleIds(viewer, layout);
     const visibleItems = layout.items.filter(item => currentVisibleIds.has(item.reconstructionCanvasId));
 
-    const imagePlacements: ImagePlacement[] = visibleItems.flatMap(item => {
+    const placements: ImagePlacement[] = visibleItems.flatMap(item => {
       const canvas = reconstructionById.get(item.reconstructionCanvasId);
       if (!canvas) return [];
 
@@ -189,28 +190,14 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
             ...placement,
             key: `${placement.key}${CROP_BACKGROUND_SUFFIX}`,
             clip: undefined,
-            opacity: 0.2
+            opacity: CROP_BACKGROUND_OPACITY
           },
           placement
         ];
       });
     });
 
-    const cropBackground = imagePlacements.find(({ key }) => key.endsWith(CROP_BACKGROUND_SUFFIX));
-    const cropForeground = cropBackground && imagePlacements.find(({ key }) =>
-      key === cropBackground.key.slice(0, -CROP_BACKGROUND_SUFFIX.length));
-
-    const placements = cropBackground && cropForeground
-      ? [
-          ...imagePlacements.filter(placement => placement !== cropBackground && placement !== cropForeground),
-          cropBackground,
-          cropForeground
-        ]
-      : imagePlacements;
-
-    const indexedPlacements: IndexedImagePlacement[] = placements.map((placement, index) => ({ ...placement, index }));
-
-    const toKeep = new Set(indexedPlacements.map(p => p.key));
+    const toKeep = new Set(placements.map(p => p.key));
 
     // 1. Remove images no longer present/visible
     [...tiledImages.entries()].forEach(([key, tiledImage]) => {
@@ -221,7 +208,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     });
 
     // 2. Move/resize existing images
-    indexedPlacements.forEach(({ key, x, y, width, clip, opacity }) => {
+    placements.forEach(({ key, x, y, width, clip, opacity }) => {
       const existing = tiledImages.get(key);
       if (existing) {
         existing.setPosition(new OpenSeadragon.Point(x, y), isUserEdit);
@@ -231,24 +218,39 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       }
     });
 
+    const moveCropToFront = () => {
+      if (!selectedImage || editMode !== 'CROP') return;
+      
+      const maxIdx = viewer.world.getItemCount() - 1;
+      const selectedKey = getDraggableImageKey(selectedImage.image);
+
+      const foreground = tiledImages.get(selectedKey);
+      const background = tiledImages.get(`${selectedKey}${CROP_BACKGROUND_SUFFIX}`);
+
+      if (background && foreground) {
+        viewer.world.setItemIndex(background, maxIdx);
+        viewer.world.setItemIndex(foreground, maxIdx);
+      } 
+    }
+
     // 3. Add images that don't exist yet and AREN'T IN THE PROCESS OF BEING ADDED!
     // In the initial phase, an image can be loading, but not yet in `tiledImages`:
     // Once `useVisibleCanvases` picks up the initial viewport change, this effect
     // runs again, and will cause duplicates otherwise.
-    indexedPlacements
+    placements
       .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
-      .forEach(({ key, tileSource, x, y, width, index, clip, opacity }) => {
+      .forEach(({ key, tileSource, x, y, width, clip, opacity }) => {
         pendingTiledImageKeys.add(key);
 
         viewer.addTiledImage({
-          tileSource, index,
-          x, y, width, clip, opacity,
+          tileSource, x, y, width, clip, opacity,
           // @types/openseadragon mistypes this as (event: Event) => void;
           // OSD actually calls it with { item: TiledImage }.
           success: (evt: Event) => {
             const { item: tiledImage } = evt as unknown as { item: TiledImage };
             pendingTiledImageKeys.delete(key);
             tiledImages.set(key, tiledImage);
+            moveCropToFront();
           }
         });
       });
