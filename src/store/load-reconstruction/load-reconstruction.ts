@@ -68,7 +68,7 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
     throw new Error('Not a reconstruction');
 
   // Fetch source manifests
-  const sourceManifestURLs = field.value.en?.filter(Boolean) as string[];
+  const sourceManifestURLs = field.value.en?.filter(Boolean).flatMap(str => str.split(',')) as string[];
   const sources = await sourceManifestURLs.reduce<Promise<SourceManifest[]>>((p, url) => p.then(sources => {
     return Cozy.parseURL(url).then(result => {
       if (result.type !== 'manifest')
