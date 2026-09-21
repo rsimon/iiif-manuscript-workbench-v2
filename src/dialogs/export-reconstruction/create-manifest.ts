@@ -50,8 +50,8 @@ const toRegionBody = (body: unknown, baseURI: string) => {
   const image = body as { id?: unknown; selector?: unknown; [key: string]: unknown };
 
   if (image.type === 'SpecificResource' && image.source && typeof image.source === 'object') {
-    const source = image.source as { id?: unknown; selector?: unknown; [key: string]: unknown };
-    const selector = source.selector ?? image.selector;
+    const source = image.source as { id?: unknown; [key: string]: unknown };
+    const selector = image.selector;
     if (selector && typeof selector === 'object' && !Array.isArray(selector)) {
       const region = (selector as { region?: string }).region;
       if (typeof region === 'string' && /^\d+,\d+,\d+,\d+$/.test(region)) {
@@ -73,7 +73,7 @@ const toRegionBody = (body: unknown, baseURI: string) => {
 
   if (typeof image.id !== 'string') return body;
 
-  const selector = (image as { selector?: unknown }).selector;
+  const { selector, ...source } = image;
   if (!selector || typeof selector !== 'object' || Array.isArray(selector)) return body;
 
   const region = (selector as { region?: string }).region;
@@ -83,7 +83,7 @@ const toRegionBody = (body: unknown, baseURI: string) => {
     id: `${baseURI}/specific-resource/${crypto.randomUUID()}`,
     type: 'SpecificResource',
     source: {
-      ...image,
+      ...source,
       id: image.id
     },
     selector: {

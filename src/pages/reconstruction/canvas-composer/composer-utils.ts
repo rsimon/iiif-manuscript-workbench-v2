@@ -1,5 +1,5 @@
 import type { Point } from 'openseadragon';
-import type { Bounds, CozyCanvas, CozyImageResource } from 'cozy-iiif';
+import type { CozyCanvas, CozyImageResource } from 'cozy-iiif';
 import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
@@ -8,55 +8,12 @@ import { getDraggableImageKey } from '../reconstruction-utils';
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
 
-const parseRegionString = (region: string | undefined): Bounds | undefined => {
-  if (!region) return;
-
-  const normalized = region.startsWith('xywh=') ? region.slice('xywh='.length) : region;
-  const match = normalized.match(/^(\d+),(\d+),(\d+),(\d+)$/);
-  if (!match) return;
-
-  return {
-    x: Number(match[1]),
-    y: Number(match[2]),
-    w: Number(match[3]),
-    h: Number(match[4])
-  };
-};
-
-const getRegionFromSelector = (selector: unknown): Bounds | undefined => {
-  if (!selector || typeof selector !== 'object' || Array.isArray(selector)) return;
-
-  const candidate = selector as {
-    type?: string;
-    value?: string;
-    region?: string | { x: number; y: number; width: number; height: number };
-  };
-
-  if (candidate.region && typeof candidate.region === 'object') {
-    const { x, y, width, height } = candidate.region;
-    if ([x, y, width, height].every(value => Number.isFinite(value))) {
-      return { x, y, w: width, h: height };
-    }
-  }
-
-  const regionValue = candidate.region ?? candidate.value;
-  return parseRegionString(typeof regionValue === 'string' ? regionValue : undefined);
-};
-
-export const getFullCrop = (image: CozyImageResource) => ({
+export const getImageBounds = (image: CozyImageResource) => ({
   x: 0,
   y: 0,
   w: image.width,
   h: image.height
 });
-
-const getCropFromSource = (image: CozyImageResource) => {
-  const source = image.source as { selector?: unknown };
-  const region = getRegionFromSelector(source.selector);
-  if (region) return region;
-
-  return getFullCrop(image);
-};
 
 export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => {
   const sources = r.type === 'original' ? [r.source] : r.sources;
@@ -87,7 +44,7 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
           x,
           y,
           width,
-          crop: getCropFromSource(image),
+          crop: image.selector,
           index: idx
         } as DraggableImage
       })
@@ -102,8 +59,8 @@ export const getFillSize = (
 ): { x: number; y: number; width: number } => {
   const { width: canvasWidth, height: canvasHeight } = canvas;
 
-  const crop = image.crop ?? getFullCrop(image.resource);
-  const aspect = crop.h / crop.w;
+  const bounds = image.crop ?? getImageBounds(image.resource);
+  const aspect = bounds.h / bounds.w;
   const width = Math.min(canvasWidth, canvasHeight / aspect);
   const height = width * aspect;
 
@@ -176,8 +133,8 @@ export const getImageAt = (
 
   const hit = images.filter(image => {
     // Image size is in pixel!
-    const crop = image.crop ?? getFullCrop(image.resource);
-    const aspect = crop.h / crop.w;
+    const bounds = image.crop ?? getImageBounds(image.resource);
+    const aspect = bounds.h / bounds.w;
 
     const viewportX = item.x + image.x / rc.width;
     const viewportY = item.y + image.y / rc.width;
@@ -188,10 +145,10 @@ export const getImageAt = (
 
     return point.x >= viewportX && point.x <= viewportR && point.y >= viewportY && point.y <= viewportB;
   }).sort((a, b) => {
-    const cropA = a.crop ?? getFullCrop(a.resource);
-    const cropB = b.crop ?? getFullCrop(b.resource);
-    const areaA = a.width * a.width * cropA.h / cropA.w;
-    const areaB = b.width * b.width * cropB.h / cropB.w;
+    const boundsA = a.crop ?? getImageBounds(a.resource);
+    const boundsB = b.crop ?? getImageBounds(b.resource);
+    const areaA = a.width * a.width * boundsA.h / boundsA.w;
+    const areaB = b.width * b.width * boundsB.h / boundsB.w;
     return areaA - areaB;
   })[0];
 
@@ -319,7 +276,7 @@ const toFragmentTarget = (canvas: CozyCanvas, bounds?: { x: number; y: number; w
   return isFullSize ? canvas.id : `${canvas.id}#xywh=${x},${y},${w},${h}`;
 }
 
-const withCropFragment = (image: DraggableImage): CozyImageResource['source'] => {
+const withCropFragment = (image: DraggableImage) => {
   const source = image.resource.source;
   const crop = image.crop;
   if (!crop || (crop.x === 0 && crop.y === 0 && crop.w === image.resource.width && crop.h === image.resource.height))
@@ -327,21 +284,17 @@ const withCropFragment = (image: DraggableImage): CozyImageResource['source'] =>
 
   const id = typeof source.id === 'string' ? source.id.replace(/#xywh=.*$/, '') : source.id;
 
-  const nextSource = {
-    ...source,
-    id,
+  return {
+    type: 'SpecificResource' as const,
+    source: {
+      ...source,
+      id
+    },
     selector: {
-      type: 'ImageApiSelector',
+      type: 'ImageApiSelector' as const,
       region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.w)},${Math.round(crop.h)}`
     }
-  } as typeof source & {
-    selector: {
-      type: 'ImageApiSelector';
-      region: string;
-    };
   };
-
-  return nextSource;
 };
 
 // Applies composer edits onto one source canvas
@@ -384,8 +337,8 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
 
     touched = true;
 
-    const crop = draggable.crop ?? getFullCrop(resource);
-    const h = draggable.width * crop.h / crop.w;
+    const bounds = draggable.crop ?? getImageBounds(resource);
+    const h = draggable.width * bounds.h / bounds.w;
 
     return [{
       ...canvasSourcePaintAnnotations[index],
@@ -400,8 +353,8 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
     .map(([, draggable]) => {
       touched = true;
 
-      const crop = draggable.crop ?? getFullCrop(draggable.resource);
-      const h = draggable.width * crop.h / crop.w;
+      const bounds = draggable.crop ?? getImageBounds(draggable.resource);
+      const h = draggable.width * bounds.h / bounds.w;
 
       return {
         id: `${canvasId}/annotation/${crypto.randomUUID()}`,
