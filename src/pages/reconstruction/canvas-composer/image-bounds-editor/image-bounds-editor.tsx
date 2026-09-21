@@ -158,7 +158,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onPointerMove = (handle: HandleType) => (evt: React.PointerEvent) => {
     evt.stopPropagation();
 
-    if (!origin.current) return;
+    if (!origin.current || !evt.buttons) return;
 
     const pt = getPoint(evt, props.viewer);
     if (!pt) return;
@@ -167,8 +167,10 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const delta = [pt.x - origin.current.x, pt.y - origin.current.y];
 
     if (handle === 'SHAPE') {
-      if (editMode === 'CROP') onMoveCrop(delta);
-      else onMoveImage(delta);
+      if (editMode === 'CROP') 
+        onMoveCrop(delta);
+      else 
+        onMoveImage(delta);
     } else if (editMode === 'CROP') {
       onCropImage(handle, delta);
     } else {
@@ -179,8 +181,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const onPointerUp = (evt: React.PointerEvent) => {
     evt.stopPropagation();
 
-    if (evt.currentTarget.hasPointerCapture(evt.pointerId))
-      evt.currentTarget.releasePointerCapture(evt.pointerId);
+    const target = evt.target as Element;
+    target.releasePointerCapture(evt.pointerId);
 
     const shape = initialShape.current;
 
@@ -313,14 +315,19 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       w: initialImage.resource.width,
       h: initialImage.resource.height
     };
+
     const imageScale = initialImage.width / initialCrop.w;
+
     const viewportPerSourcePixel = imageScale / initialShape.current.canvas.width;
+
     const fullImageX = initialImage.x - initialCrop.x * imageScale;
     const fullImageY = initialImage.y - initialCrop.y * imageScale;
+
     const x = Math.max(0, Math.min(
       initialImage.resource.width - initialCrop.w,
       initialCrop.x + delta[0] / viewportPerSourcePixel
     ));
+
     const y = Math.max(0, Math.min(
       initialImage.resource.height - initialCrop.h,
       initialCrop.y + delta[1] / viewportPerSourcePixel
@@ -344,15 +351,21 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       w: initialImage.resource.width,
       h: initialImage.resource.height
     };
+
     const imageScale = initialImage.width / initialCrop.w;
+
     const viewportPerSourcePixel = imageScale / initialShape.current.canvas.width;
-    const signs = RESIZE_SIGNS[handle];
+
     const dx = delta[0] / viewportPerSourcePixel;
     const dy = delta[1] / viewportPerSourcePixel;
+
+    const signs = RESIZE_SIGNS[handle];
+
     const left = signs.h < 0 ? initialCrop.x + dx : initialCrop.x;
     const right = signs.h > 0 ? initialCrop.x + initialCrop.w + dx : initialCrop.x + initialCrop.w;
     const top = signs.v < 0 ? initialCrop.y + dy : initialCrop.y;
     const bottom = signs.v > 0 ? initialCrop.y + initialCrop.h + dy : initialCrop.y + initialCrop.h;
+    
     const x = Math.max(0, Math.min(left, initialImage.resource.width - 1));
     const y = Math.max(0, Math.min(top, initialImage.resource.height - 1));
     const maxRight = initialImage.resource.width;
@@ -364,6 +377,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       w: Math.max(1, Math.min(maxRight - x, right - x)),
       h: Math.max(1, Math.min(maxBottom - y, bottom - y))
     };
+
     const fullImageX = initialImage.x - initialCrop.x * imageScale;
     const fullImageY = initialImage.y - initialCrop.y * imageScale;
 
@@ -394,6 +408,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       w: initialImage.resource.width,
       h: initialImage.resource.height
     };
+    
     const aspect = crop.w / crop.h;
     const initialHeight = initialImage.width / aspect;
 
