@@ -18,6 +18,7 @@ export const OSD_ANIMATION_TIME = 0.5;
 
 // Bit of a temporary hack: number of layout items in the the initial view
 const INITIAL_VISIBLE_ITEMS = 8;
+
 const CROP_BACKGROUND_SUFFIX = ':crop-background';
 
 interface ImagePlacement {
@@ -35,8 +36,6 @@ interface ImagePlacement {
   clip?: OpenSeadragon.Rect;
 
   opacity: number;
-
-  foregroundKey?: string;
 
 }
 
@@ -152,8 +151,15 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       const imagesForCanvas = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
       return imagesForCanvas.flatMap(image => {
-        const clip = image.crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
-        const scale = image.width / clip.w;
+        const crop = image.crop;
+        const bounds = crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
+        const isCropped = !!crop && (
+          crop.x !== 0 ||
+          crop.y !== 0 ||
+          crop.w !== image.resource.width ||
+          crop.h !== image.resource.height
+        );
+        const scale = image.width / bounds.w;
 
         const isSelected = selectedImage?.image &&
           getDraggableImageKey(selectedImage.image) === getDraggableImageKey(image);
@@ -161,22 +167,21 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
         const placement = {
           key: getDraggableImageKey(image),
           tileSource: image.tileSource,
-          x: item.x + (image.x - clip.x * scale) / canvas.width,
-          y: item.y + (image.y - clip.y * scale) / canvas.width,
+          x: item.x + (image.x - bounds.x * scale) / canvas.width,
+          y: item.y + (image.y - bounds.y * scale) / canvas.width,
           width: image.resource.width * scale / canvas.width,
-          clip: new OpenSeadragon.Rect(clip.x, clip.y, clip.w, clip.h),
+          clip: isCropped ? new OpenSeadragon.Rect(bounds.x, bounds.y, bounds.w, bounds.h) : undefined,
           opacity: 1
         };
 
-        if (!isSelected || editMode !== 'CROP') return [placement];
+        if (!isSelected || editMode !== 'CROP' || !isCropped) return [placement];
 
         return [
           {
             ...placement,
             key: `${placement.key}${CROP_BACKGROUND_SUFFIX}`,
             clip: undefined,
-            opacity: 0.2,
-            foregroundKey: placement.key
+            opacity: 0.2
           },
           placement
         ];
@@ -204,13 +209,13 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       }
     });
 
-    const keepCropLayersTogether = (foregroundKey: string) => {
-      const foreground = tiledImages.get(foregroundKey);
-      const background = tiledImages.get(`${foregroundKey}${CROP_BACKGROUND_SUFFIX}`);
-      if (!foreground || !background) return;
-
-      const foregroundIndex = viewer.world.getIndexOfItem(foreground);
-      viewer.world.setItemIndex(background, Math.max(0, foregroundIndex - 1));
+    const syncWorldOrder = () => {
+      placements
+        .map(({ key }) => tiledImages.get(key))
+        .filter((tiledImage): tiledImage is TiledImage => !!tiledImage)
+        .forEach((tiledImage, index) => {
+          viewer.world.setItemIndex(tiledImage, index);
+        });
     };
 
     // 3. Add images that don't exist yet and AREN'T IN THE PROCESS OF BEING ADDED!
@@ -219,7 +224,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     // runs again, and will cause duplicates otherwise.
     placements
       .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
-      .forEach(({ key, tileSource, x, y, width, clip, opacity, foregroundKey }) => {
+      .forEach(({ key, tileSource, x, y, width, clip, opacity }) => {
         pendingTiledImageKeys.add(key);
 
         viewer.addTiledImage({
@@ -231,14 +236,12 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
             const { item: tiledImage } = evt as unknown as { item: TiledImage };
             pendingTiledImageKeys.delete(key);
             tiledImages.set(key, tiledImage);
-            if (foregroundKey) keepCropLayersTogether(foregroundKey);
+            syncWorldOrder();
           }
         });
       });
 
-    placements.forEach(({ foregroundKey }) => {
-      if (foregroundKey) keepCropLayersTogether(foregroundKey);
-    });
+    syncWorldOrder();
   }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, editMode]);
 
   return (
