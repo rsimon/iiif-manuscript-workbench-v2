@@ -40,12 +40,6 @@ interface ImagePlacement {
 
 }
 
-interface IndexedImagePlacement extends ImagePlacement {
-
-  index: number;
-
-}
-
 interface CanvasComposerProps {
 
   isSidebarOpen: boolean;
