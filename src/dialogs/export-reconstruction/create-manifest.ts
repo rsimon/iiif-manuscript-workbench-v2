@@ -44,55 +44,6 @@ const normalizeFragmentTarget = (target: unknown) => {
   );
 }
 
-const toRegionBody = (body: unknown, baseURI: string) => {
-  if (!body || typeof body !== 'object' || Array.isArray(body)) return body;
-
-  const image = body as { id?: unknown; selector?: unknown; [key: string]: unknown };
-
-  if (image.type === 'SpecificResource' && image.source && typeof image.source === 'object') {
-    const source = image.source as { id?: unknown; [key: string]: unknown };
-    const selector = image.selector;
-    if (selector && typeof selector === 'object' && !Array.isArray(selector)) {
-      const region = (selector as { region?: string }).region;
-      if (typeof region === 'string' && /^\d+,\d+,\d+,\d+$/.test(region)) {
-        return {
-          id: `${baseURI}/specific-resource/${crypto.randomUUID()}`,
-          type: 'SpecificResource',
-          source: {
-            ...source,
-            id: typeof source.id === 'string' ? source.id : image.id
-          },
-          selector: {
-            type: 'ImageApiSelector',
-            region
-          }
-        };
-      }
-    }
-  }
-
-  if (typeof image.id !== 'string') return body;
-
-  const { selector, ...source } = image;
-  if (!selector || typeof selector !== 'object' || Array.isArray(selector)) return body;
-
-  const region = (selector as { region?: string }).region;
-  if (typeof region !== 'string' || !/^\d+,\d+,\d+,\d+$/.test(region)) return body;
-
-  return {
-    id: `${baseURI}/specific-resource/${crypto.randomUUID()}`,
-    type: 'SpecificResource',
-    source: {
-      ...source,
-      id: image.id
-    },
-    selector: {
-      type: 'ImageApiSelector',
-      region
-    }
-  };
-};
-
 const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
   const { width, height } = r;
 
@@ -113,9 +64,6 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
         ...page,
         items: page.items?.map(annotation => ({
           ...annotation,
-          body: Array.isArray(annotation.body)
-            ? annotation.body.map(body => toRegionBody(body, baseURI))
-            : toRegionBody(annotation.body, baseURI),
           target: normalizeFragmentTarget(annotation.target)
         }))
       })),
@@ -142,7 +90,7 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
           id: `${canvasId}/annotation/${crypto.randomUUID()}`,
           type: 'Annotation',
           motivation: 'painting',
-          body: toRegionBody(image.source, baseURI),
+          body: (image.source as any).body,
           target: image.target 
             ? `${canvasId}#xywh=${Math.round(image.target.x)},${Math.round(image.target.y)},${Math.round(image.target.w)},${Math.round(image.target.h)}`
             : canvasId
