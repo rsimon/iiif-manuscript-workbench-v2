@@ -18,6 +18,27 @@ export const OSD_ANIMATION_TIME = 0.5;
 
 // Bit of a temporary hack: number of layout items in the the initial view
 const INITIAL_VISIBLE_ITEMS = 8;
+const CROP_BACKGROUND_SUFFIX = ':crop-background';
+
+interface ImagePlacement {
+
+  key: string;
+
+  tileSource: object | string;
+
+  x: number;
+
+  y: number;
+
+  width: number;
+
+  clip?: OpenSeadragon.Rect;
+
+  opacity: number;
+
+  foregroundKey?: string;
+
+}
 
 interface CanvasComposerProps {
 
@@ -124,29 +145,41 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     const currentVisibleIds = computeVisibleIds(viewer, layout);
     const visibleItems = layout.items.filter(item => currentVisibleIds.has(item.reconstructionCanvasId));
 
-    const placements = visibleItems.flatMap(item => {
+    const placements: ImagePlacement[] = visibleItems.flatMap(item => {
       const canvas = reconstructionById.get(item.reconstructionCanvasId);
       if (!canvas) return [];
 
       const imagesForCanvas = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
-      return imagesForCanvas.map(image => {
+      return imagesForCanvas.flatMap(image => {
         const clip = image.crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
         const scale = image.width / clip.w;
 
         const isSelected = selectedImage?.image &&
           getDraggableImageKey(selectedImage.image) === getDraggableImageKey(image);
 
-        return {
+        const placement = {
           key: getDraggableImageKey(image),
           tileSource: image.tileSource,
           x: item.x + (image.x - clip.x * scale) / canvas.width,
           y: item.y + (image.y - clip.y * scale) / canvas.width,
           width: image.resource.width * scale / canvas.width,
-          clip: isSelected && editMode === 'CROP'
-            ? undefined
-            : new OpenSeadragon.Rect(clip.x, clip.y, clip.w, clip.h)
+          clip: new OpenSeadragon.Rect(clip.x, clip.y, clip.w, clip.h),
+          opacity: 1
         };
+
+        if (!isSelected || editMode !== 'CROP') return [placement];
+
+        return [
+          {
+            ...placement,
+            key: `${placement.key}${CROP_BACKGROUND_SUFFIX}`,
+            clip: undefined,
+            opacity: 0.2,
+            foregroundKey: placement.key
+          },
+          placement
+        ];
       });
     });
 
@@ -161,14 +194,24 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     });
 
     // 2. Move/resize existing images
-    placements.forEach(({ key, x, y, width, clip }) => {
+    placements.forEach(({ key, x, y, width, clip, opacity }) => {
       const existing = tiledImages.get(key);
       if (existing) {
         existing.setPosition(new OpenSeadragon.Point(x, y), isUserEdit);
         existing.setWidth(width, isUserEdit);
         existing.setClip(clip ?? null);
+        existing.setOpacity(opacity);
       }
     });
+
+    const keepCropLayersTogether = (foregroundKey: string) => {
+      const foreground = tiledImages.get(foregroundKey);
+      const background = tiledImages.get(`${foregroundKey}${CROP_BACKGROUND_SUFFIX}`);
+      if (!foreground || !background) return;
+
+      const foregroundIndex = viewer.world.getIndexOfItem(foreground);
+      viewer.world.setItemIndex(background, Math.max(0, foregroundIndex - 1));
+    };
 
     // 3. Add images that don't exist yet and AREN'T IN THE PROCESS OF BEING ADDED!
     // In the initial phase, an image can be loading, but not yet in `tiledImages`:
@@ -176,21 +219,26 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     // runs again, and will cause duplicates otherwise.
     placements
       .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
-      .forEach(({ key, tileSource, x, y, width, clip }) => {
+      .forEach(({ key, tileSource, x, y, width, clip, opacity, foregroundKey }) => {
         pendingTiledImageKeys.add(key);
 
         viewer.addTiledImage({
           tileSource,
-          x, y, width, clip,
+          x, y, width, clip, opacity,
           // @types/openseadragon mistypes this as (event: Event) => void;
           // OSD actually calls it with { item: TiledImage }.
           success: (evt: Event) => {
             const { item: tiledImage } = evt as unknown as { item: TiledImage };
             pendingTiledImageKeys.delete(key);
             tiledImages.set(key, tiledImage);
+            if (foregroundKey) keepCropLayersTogether(foregroundKey);
           }
         });
       });
+
+    placements.forEach(({ foregroundKey }) => {
+      if (foregroundKey) keepCropLayersTogether(foregroundKey);
+    });
   }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, editMode]);
 
   return (
