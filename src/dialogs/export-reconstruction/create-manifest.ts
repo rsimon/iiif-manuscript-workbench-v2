@@ -76,6 +76,8 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
   } else {
     const canvasId = `${baseURI}/canvas/${crypto.randomUUID()}`;
 
+    console.log('serializing composite', r);
+
     return {
       id: canvasId,
       type: 'Canvas',
@@ -90,7 +92,7 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
           id: `${canvasId}/annotation/${crypto.randomUUID()}`,
           type: 'Annotation',
           motivation: 'painting',
-          body: (image.source as any).body,
+          body: image.source,
           target: image.target 
             ? `${canvasId}#xywh=${Math.round(image.target.x)},${Math.round(image.target.y)},${Math.round(image.target.w)},${Math.round(image.target.h)}`
             : canvasId
