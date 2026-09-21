@@ -131,20 +131,21 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       const imagesForCanvas = imagesByCanvasId.get(item.reconstructionCanvasId) ?? [];
 
       return imagesForCanvas.map(image => {
-        const crop = image.crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
-        const scale = image.width / crop.w;
+        const clip = image.crop ?? { x: 0, y: 0, w: image.resource.width, h: image.resource.height };
+        const scale = image.width / clip.w;
+
         const isSelected = selectedImage?.image &&
           getDraggableImageKey(selectedImage.image) === getDraggableImageKey(image);
 
         return {
           key: getDraggableImageKey(image),
           tileSource: image.tileSource,
-          x: item.x + (image.x - crop.x * scale) / canvas.width,
-          y: item.y + (image.y - crop.y * scale) / canvas.width,
+          x: item.x + (image.x - clip.x * scale) / canvas.width,
+          y: item.y + (image.y - clip.y * scale) / canvas.width,
           width: image.resource.width * scale / canvas.width,
           clip: isSelected && editMode === 'CROP'
             ? undefined
-            : new OpenSeadragon.Rect(crop.x, crop.y, crop.w, crop.h)
+            : new OpenSeadragon.Rect(clip.x, clip.y, clip.w, clip.h)
         };
       });
     });
@@ -206,10 +207,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
             <ViewerSvgOverlay
               viewer={viewer}
               topLayer={(
-                <>
-                  <ImageBoundsEditor
-                    viewer={viewer}/>
-                </>
+                <ImageBoundsEditor
+                  viewer={viewer}/>
               )}/>
           </>
         )}
