@@ -10,6 +10,8 @@ import type { ComposerLayout, DraggableImage, DraggableImageSelection } from '..
 import { applyEdits, findSourceCanvasById, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
 
+export type EditMode = 'RESIZE' | 'CROP';
+
 export interface ComposerState {
 
   viewer?: Viewer;
@@ -27,6 +29,8 @@ export interface ComposerState {
 
   selectedImage?: DraggableImageSelection;
 
+  editMode: EditMode;
+
   isUserEdit: boolean;
 
   setViewer(viewer?: Viewer): void;
@@ -34,6 +38,8 @@ export interface ComposerState {
   setLayout(layout: ComposerLayout): void;
 
   setSelectedImage(selectedImage?: DraggableImageSelection): void;
+
+  setEditMode(mode: EditMode): void;
 
   setIsUserEdit(isDraggingImage: boolean): void;
 
@@ -57,13 +63,17 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
 
   selectedImage: undefined,
 
+  editMode: 'RESIZE',
+
   isUserEdit: false,
 
   setViewer: viewer => set({ viewer }),
 
   setLayout: layout => set({ layout }),
 
-  setSelectedImage: selectedImage => set({ selectedImage }),
+  setSelectedImage: selectedImage => set({ selectedImage, editMode: 'RESIZE' }),
+
+  setEditMode: editMode => set({ editMode }),
 
   setIsUserEdit: isUserEdit => set({ isUserEdit }),
 

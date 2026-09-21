@@ -1,35 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Toggle as TogglePrimitive } from '@base-ui/react';
+import { IconCheck, IconDimensions, IconPlus, IconRulerMeasure } from '@tabler/icons-react';
 import type { CozyCanvas, CozyManifest } from 'cozy-iiif';
+import { ToolbarToggle } from '@/components/toolbar-toggle';
 import { ViewerPaginationControl } from '@/components/viewer-pagination-control';
 import { PhysicalDimensionsDialog, useMeasurement } from '@/dialogs/physical-dimensions';
 import { Button } from '@/shadcn/button';
-import { Toggle } from '@/shadcn/toggle';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/shadcn/tooltip';
 import { Separator } from '@/shadcn/separator';
 import { useAppStore } from '@/store/app-store';
 import { useSourcesStore } from '../sources-store';
-import { IconCheck, IconDimensions, IconPlus, IconRulerMeasure } from '@tabler/icons-react';
-
-const SourcePreviewToolbarToggle = (props: TogglePrimitive.Props & { tooltip: string }) => {
-  const { children, ...rest } = props;
-
-  return (
-    <Tooltip>
-      <TooltipTrigger
-        render={
-          <Toggle
-            className="rounded-full disabled:text-muted-foreground/80"
-            {...rest}>
-            {children}
-          </Toggle>
-        }/>
-      <TooltipContent>
-        {props.tooltip}
-      </TooltipContent>
-    </Tooltip>
-  )
-}
 
 interface SourcePreviewToolbarProps {
 
@@ -132,13 +110,13 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
           )}
         </PhysicalDimensionsDialog>
 
-        <SourcePreviewToolbarToggle
+        <ToolbarToggle
           disabled={!size || showDimensionsDialog}
           tooltip="Measure"
           pressed={isTapeMeasurePressed}
           onPressedChange={onPressTapeMeasure}>
           <IconRulerMeasure className="size-4.5" />
-        </SourcePreviewToolbarToggle>
+        </ToolbarToggle>
 
         <Separator orientation="vertical" />
 

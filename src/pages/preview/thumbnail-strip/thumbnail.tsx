@@ -1,6 +1,7 @@
 import type { CozyImageResource } from 'cozy-iiif';
 import { cn } from '@/shadcn/utils';
 import type { ReconstructionCanvas } from '@/types';
+import { getImageCrop } from '../preview-utils';
 
 const THUMBNAIL_SIZING = 'w-full h-auto @[160px]:w-auto @[160px]:max-w-[50%] @[160px]:min-w-0 @[160px]:flex-1';
 
@@ -61,8 +62,25 @@ interface PrimitiveImageThumbnailProps {
 }
 
 const PrimitiveImageThumbnail = (props: PrimitiveImageThumbnailProps) => {
+  const crop = getImageCrop(props.image);
 
-  return (
+  const isCropped = crop.x !== 0 || crop.y !== 0 || crop.w !== props.image.width || crop.h !== props.image.height;
+  return isCropped ? (
+    <div
+      className={cn(THUMBNAIL_SIZING, 'relative overflow-hidden rounded ring ring-foreground/10 shadow-xs', props.className)}
+      style={{ aspectRatio: `${props.canvasWidth} / ${props.canvasHeight}` }}>
+      <img
+        src={props.image.getImageURL(props.minSize || 320)}
+        className="absolute max-w-none"
+        style={{
+          left: `${-(crop.x / crop.w) * 100}%`,
+          top: `${-(crop.y / crop.h) * 100}%`,
+          width: `${(props.image.width / crop.w) * 100}%`,
+          height: `${(props.image.height / crop.h) * 100}%`
+        }}
+        alt={props.label} />
+    </div>
+  ) : (
     <img
       src={props.image.getImageURL(props.minSize || 320)}
       className={cn(THUMBNAIL_SIZING, 'rounded ring ring-foreground/10 shadow-xs object-cover', props.className)}
@@ -98,19 +116,36 @@ const CompositeImageThumbnail = (props: CompositeImageThumbnailProps) => {
       w: canvasWidth,
       h: canvasHeight
     };
+    
+    const crop = getImageCrop(image);
+    const isCropped = crop.x !== 0 || crop.y !== 0 || crop.w !== image.width || crop.h !== image.height;
 
     return (
-      <img
+      <div
         key={idx}
-        src={image.getImageURL(minSize)}
-        alt={`${label}: image ${idx + 1}`}
-        className="absolute object-fit"
+        className="absolute overflow-hidden"
         style={{
           left: `${(target.x / canvasWidth) * 100}%`,
           top: `${(target.y / canvasHeight) * 100}%`,
           width: `${(target.w / canvasWidth) * 100}%`,
           height: `${(target.h / canvasHeight) * 100}%`,
-        }} />
+        }}>
+        <img
+          src={image.getImageURL(minSize)}
+          alt={`${label}: image ${idx + 1}`}
+          className="absolute max-w-none"
+          style={isCropped ? {
+            left: `${-(crop.x / crop.w) * 100}%`,
+            top: `${-(crop.y / crop.h) * 100}%`,
+            width: `${(image.width / crop.w) * 100}%`,
+            height: `${(image.height / crop.h) * 100}%`
+          } : {
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%'
+          }} />
+      </div>
     )
   }
 
