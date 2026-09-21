@@ -293,6 +293,8 @@ const toCroppedBody = (image: DraggableImage) => {
     const id = typeof source.id === 'string' ? source.id.replace(/#xywh=.*$/, '') : source.id;
 
     // TODO what if `source` is already a specific resource
+    console.log('Creating a cropped body...', source);
+
     return {
       type: 'SpecificResource' as const,
       source: {
