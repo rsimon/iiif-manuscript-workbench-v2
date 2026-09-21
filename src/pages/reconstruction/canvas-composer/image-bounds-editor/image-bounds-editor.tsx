@@ -449,14 +449,6 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   return selectedImage ? (
     <>
       <g>
-        {editMode === 'CROP' && (
-          <path
-            className="pointer-events-none"
-            d={`M -10000 -10000 H 10000 V 10000 H -10000 Z M ${corners[0].x} ${corners[0].y} H ${corners[1].x} V ${corners[2].y} H ${corners[3].x} Z`}
-            fill="oklch(0% 0 0 / 0.45)"
-            fillRule="evenodd" />
-        )}
-
         {intersectingItems.length > 0 && (
           <polygon
             className="pointer-events-none"
