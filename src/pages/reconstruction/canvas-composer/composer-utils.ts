@@ -276,37 +276,42 @@ const toFragmentTarget = (canvas: CozyCanvas, bounds?: { x: number; y: number; w
   return isFullSize ? canvas.id : `${canvas.id}#xywh=${x},${y},${w},${h}`;
 }
 
-const toCroppedBody = (image: DraggableImage) => {
-  if (!image.crop) return; // Should never happen
+const toAnnotationBodyItem = (image: DraggableImage) => {
+  if (!image.crop && (image.resource.source.type === 'Image'))
+    return image.resource.source;
+
+  // No crop, but image resource is (unnecessarily) a SpecificResource
+  if (!image.crop)
+    return (image.resource.source as any).source;
 
   const { crop } = image;
-  const { source} = image.resource;
+  const { source } = image.resource;
   const isFullSizeCrop = crop.x === 0 && crop.y === 0 && crop.w === image.resource.width && crop.h === image.resource.height;
   
-  if (isFullSizeCrop) {
-    // Remove crop in serialized canvas
-    const body = {...image.resource.source};
-    if ('selector' in body)
-      delete body.selector;
-    return body;
-  } else {
-    const id = typeof source.id === 'string' ? source.id.replace(/#xywh=.*$/, '') : source.id;
+  // Cropped, but fullsize - normalize to flat, uncropped Image resource
+  if (isFullSizeCrop)
+    return (image.resource.source as any).source;
 
-    // TODO what if `source` is already a specific resource
-    console.log('Creating a cropped body...', source);
+  // Cropped image
+  const id = typeof source.id === 'string' ? source.id.replace(/#xywh=.*$/, '') : source.id;
 
-    return {
-      type: 'SpecificResource' as const,
-      source: {
-        ...source,
-        id
-      },
-      selector: {
-        type: 'ImageApiSelector' as const,
-        region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.w)},${Math.round(crop.h)}`
-      }
-    };
-  }
+  return source.type === 'Image' ? {
+    type: 'SpecificResource' as const,
+    source: {
+      ...source,
+      id
+    },
+    selector: {
+      type: 'ImageApiSelector' as const,
+      region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.w)},${Math.round(crop.h)}`
+    }
+  } : {
+    ...source,
+    selector: {
+      type: 'ImageApiSelector' as const,
+      region: `${Math.round(crop.x)},${Math.round(crop.y)},${Math.round(crop.w)},${Math.round(crop.h)}`
+    }
+  };
 }
 
 // Applies composer edits onto one source canvas
@@ -354,7 +359,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
 
     return [{
       ...canvasSourcePaintAnnotations[index],
-      body: draggable.crop ? toCroppedBody(draggable) : draggable.resource.source,
+      body: toAnnotationBodyItem(draggable),
       target: toFragmentTarget(source.canvas, { x: draggable.x, y: draggable.y, w: draggable.width, h })
     }];
   });
@@ -372,7 +377,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
         id: `${canvasId}/annotation/${crypto.randomUUID()}`,
         type: 'Annotation',
         motivation: 'painting',
-        body: draggable.crop ? toCroppedBody(draggable) : draggable.resource.source,
+        body: toAnnotationBodyItem(draggable),
         target: toFragmentTarget(source.canvas, { x: draggable.x, y: draggable.y, w: draggable.width, h })
       };
     });
@@ -398,6 +403,8 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
       }
     ]
   };
+
+  console.log('next raw canvas', nextRawCanvas);
 
   return { ...source, canvas: parseCanvas(nextRawCanvas) };
 }
