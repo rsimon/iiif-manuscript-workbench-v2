@@ -33,11 +33,15 @@ interface ImagePlacement {
 
   width: number;
 
-  index: number;
-
   clip?: OpenSeadragon.Rect;
 
   opacity: number;
+
+}
+
+interface IndexedImagePlacement extends ImagePlacement {
+
+  index: number;
 
 }
 
@@ -146,7 +150,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     const currentVisibleIds = computeVisibleIds(viewer, layout);
     const visibleItems = layout.items.filter(item => currentVisibleIds.has(item.reconstructionCanvasId));
 
-    const placements: ImagePlacement[] = visibleItems.flatMap(item => {
+    const imagePlacements: ImagePlacement[] = visibleItems.flatMap(item => {
       const canvas = reconstructionById.get(item.reconstructionCanvasId);
       if (!canvas) return [];
 
@@ -174,7 +178,6 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           x: item.x + (image.x - bounds.x * scale) / canvas.width,
           y: item.y + (image.y - bounds.y * scale) / canvas.width,
           width: image.resource.width * scale / canvas.width,
-          index: 0,
           clip: isCropped ? new OpenSeadragon.Rect(bounds.x, bounds.y, bounds.w, bounds.h) : undefined,
           opacity: 1
         };
@@ -191,9 +194,23 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           placement
         ];
       });
-    }).map((placement, index) => ({ ...placement, index }));
+    });
 
-    const toKeep = new Set(placements.map(p => p.key));
+    const cropBackground = imagePlacements.find(({ key }) => key.endsWith(CROP_BACKGROUND_SUFFIX));
+    const cropForeground = cropBackground && imagePlacements.find(({ key }) =>
+      key === cropBackground.key.slice(0, -CROP_BACKGROUND_SUFFIX.length));
+
+    const placements = cropBackground && cropForeground
+      ? [
+          ...imagePlacements.filter(placement => placement !== cropBackground && placement !== cropForeground),
+          cropBackground,
+          cropForeground
+        ]
+      : imagePlacements;
+
+    const indexedPlacements: IndexedImagePlacement[] = placements.map((placement, index) => ({ ...placement, index }));
+
+    const toKeep = new Set(indexedPlacements.map(p => p.key));
 
     // 1. Remove images no longer present/visible
     [...tiledImages.entries()].forEach(([key, tiledImage]) => {
@@ -204,7 +221,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     });
 
     // 2. Move/resize existing images
-    placements.forEach(({ key, x, y, width, clip, opacity }) => {
+    indexedPlacements.forEach(({ key, x, y, width, clip, opacity }) => {
       const existing = tiledImages.get(key);
       if (existing) {
         existing.setPosition(new OpenSeadragon.Point(x, y), isUserEdit);
@@ -218,7 +235,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     // In the initial phase, an image can be loading, but not yet in `tiledImages`:
     // Once `useVisibleCanvases` picks up the initial viewport change, this effect
     // runs again, and will cause duplicates otherwise.
-    placements
+    indexedPlacements
       .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
       .forEach(({ key, tileSource, x, y, width, index, clip, opacity }) => {
         pendingTiledImageKeys.add(key);
