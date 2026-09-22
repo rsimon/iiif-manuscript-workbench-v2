@@ -76,7 +76,7 @@ export const appendEmptyCanvas = (
     ...reconstruction,
     {
       type: 'composite',
-      id: `${baseURI}/${crypto.randomUUID()}`,
+      id: `${baseURI}/canvas/${crypto.randomUUID()}`,
       label: getEmptyCanvasLabel(reconstruction),
       sources: [],
       width, 

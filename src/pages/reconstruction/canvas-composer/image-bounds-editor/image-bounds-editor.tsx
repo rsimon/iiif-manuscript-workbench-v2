@@ -62,7 +62,21 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const hasChangedItem = intersectingItems.every(r => 
       r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
 
-    return !hasChangedItem || selectedImage.canChangeItem;
+    if (hasChangedItem) {
+      if (!selectedImage.canChangeItem) return false;
+
+      const { imagesByCanvasId } = useComposerStore.getState();
+
+      const doesNotContainsThisSourceCanvas = intersectingItems.every(r => {
+        const sourceCanvasIds = new Set(
+          (imagesByCanvasId.get(r.reconstructionCanvasId) || []).map(d => d.sourceCanvasId));
+        return !sourceCanvasIds.has(selectedImage.image.sourceCanvasId);
+      });
+
+      return doesNotContainsThisSourceCanvas;
+    } else {
+      return true;
+    }
   }, [intersectingItems, selectedImage]);
 
   useEffect(() => {
@@ -239,6 +253,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       w: initialImg.resource.width,
       h: initialImg.resource.height
     };
+
     const aspect = crop.h / crop.w;
     const viewportHeight = initialPos.width * aspect;
 
@@ -256,6 +271,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const hasChangedDestination = destination && 
       destination.reconstructionCanvasId !== initialItem.reconstructionCanvasId;
 
+    // TODO adding same source canvas twice should be invalid
     const isValidDestination = destination && 
       (!hasChangedDestination || selectedImage.canChangeItem);
       
@@ -282,6 +298,8 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         initialItem.reconstructionCanvasId,
         destination.reconstructionCanvasId,
         targetImage);
+
+      console.log('change success', success);
 
       if (success) {
         initialShape.current = {
