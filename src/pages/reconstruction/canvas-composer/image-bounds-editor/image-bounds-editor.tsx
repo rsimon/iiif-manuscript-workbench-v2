@@ -3,7 +3,7 @@ import { Point, Viewer } from 'openseadragon';
 import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../../reconstruction-store';
 import type { ComposerLayoutItem, DraggableImage } from '../../reconstruction-types';
-import { getDraggableImageKey } from '../../reconstruction-utils';
+import { getDraggableImageIdentity } from '../../reconstruction-utils';
 import { useComposerStore } from '../composer-store';
 import { getIntersectingItems } from '../composer-utils';
 import { CornerHandle } from './corner-handle';
@@ -54,7 +54,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   // Stable identity for the current selection - unlike `selectedImage` itself,
   // this does NOT change on every drag-driven position update, so it's safe
   // to use as an effect dependency for resetting drag state on (re)selection.
-  const selectionKey = selectedImage ? getDraggableImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image) : undefined;
+  const selectionKey = selectedImage ? getDraggableImageIdentity(selectedImage.image) : undefined;
 
   const isValidDestination = useMemo(() => {
     if (intersectingItems.length === 0 || !selectedImage) return false;
