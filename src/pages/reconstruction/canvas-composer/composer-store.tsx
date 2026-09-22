@@ -153,10 +153,10 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
 
 // Debounced upwards sync to root app state
 const scheduleAppStoreSync = pDebounce(() => {
-  const { baseURI, reconstruction, updateReconstruction } = useAppStore.getState();
+  const { reconstruction, updateReconstruction } = useAppStore.getState();
   const { imagesByCanvasId } = useComposerStore.getState();
 
-  const next = applyEdits(reconstruction, imagesByCanvasId, baseURI);
+  const next = applyEdits(reconstruction, imagesByCanvasId);
   const changed = next.length !== reconstruction.length || next.some((r, i) => r !== reconstruction[i]);
   if (!changed) return;
 

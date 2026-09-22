@@ -186,8 +186,7 @@ export const findSourceCanvasById = (
 // Applies composer edits back into an app-level reconstruction
 export const applyEdits = (
   reconstruction: ReconstructionCanvas[],
-  imagesByCanvasId: Map<string, DraggableImage[]>,
-  baseURI: string
+  imagesByCanvasId: Map<string, DraggableImage[]>
 ): ReconstructionCanvas[] => {
   const sourceCanvases = new Map<string, SourceCanvas>();
   const currentImagesBySourceCanvasId = new Map<string, DraggableImage[]>();
