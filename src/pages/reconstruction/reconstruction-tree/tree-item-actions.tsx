@@ -7,6 +7,7 @@ import {
   IconArrowDown,
   IconArrowUp,
   IconCircleMinus,
+  IconCopyPlus,
   IconDots,
   IconPencil
 } from '@tabler/icons-react';
@@ -58,6 +59,10 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
         <DropdownMenuItem
           onClick={props.onRenameCanvas}>
           <IconPencil /> Rename canvas
+        </DropdownMenuItem>
+
+        <DropdownMenuItem disabled>
+          <IconCopyPlus /> Duplicate canvas
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
