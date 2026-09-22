@@ -221,6 +221,7 @@ export const applyEdits = (
         .filter(source => !!source);
 
       const applySourceEdits = (source: SourceCanvas) => applyEditsToSource(
+        r,
         source,
         composerImages,
         currentImagesBySourceCanvasId.get(source.canvas.id) ?? []
@@ -315,16 +316,21 @@ const toAnnotationBodyItem = (image: DraggableImage) => {
 }
 
 // Applies composer edits onto one source canvas
-const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage[], currentImages: DraggableImage[]): SourceCanvas => {
+const applyEditsToSource = (
+  canvas: ReconstructionCanvas,
+  source: SourceCanvas, 
+  composerImages: DraggableImage[], 
+  currentImages: DraggableImage[]
+): SourceCanvas => {
   const canvasId = source.canvas.id;
 
   const composerImagesByKey = new Map(composerImages
     .filter(img => img.sourceCanvasId === canvasId)
-    .map(img => [getDraggableImageKey(img), img] as const));
+    .map(img => [getDraggableImageKey(canvas.id, img), img] as const));
 
   const currentImagesByKey = new Map(currentImages
     .filter(img => img.sourceCanvasId === canvasId)
-    .map(img => [getDraggableImageKey(img), img] as const));
+    .map(img => [getDraggableImageKey(canvas.id, img), img] as const));
 
   // Shorthands to original source canvas elements
   const canvasSource = source.canvas.source;
@@ -337,7 +343,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
 
   // Existing images: keep unchanged, patch the target, or drop
   const keptPaintAnnotations = source.canvas.images.flatMap((resource, index) => {
-    const key = getDraggableImageKey({ sourceCanvasId: canvasId, index } as DraggableImage);
+    const key = getDraggableImageKey(canvas.id, { sourceCanvasId: canvasId, index } as DraggableImage);
     seenKeys.add(key);
 
     const draggable = composerImagesByKey.get(key);

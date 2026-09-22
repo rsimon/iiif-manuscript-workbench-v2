@@ -30,10 +30,10 @@ interface ReconstructionTreeItemProps {
 }
 
 export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps) => {
-
-  const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
+  const duplicateCanvas = useAppStore(state => state.duplicateCanvas);
   const moveCanvas = useAppStore(state => state.moveCanvas);
-
+  const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
+  
   const index = useAppStore(state => state.reconstruction.findIndex(r => r.id === props.item.id));
   const total = useAppStore(state => state.reconstruction.length);
 
@@ -61,7 +61,8 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
           <IconPencil /> Rename canvas
         </DropdownMenuItem>
 
-        <DropdownMenuItem disabled>
+        <DropdownMenuItem
+          onClick={() => duplicateCanvas(props.item.id)}>
           <IconCopyPlus /> Duplicate canvas
         </DropdownMenuItem>
 

@@ -78,22 +78,12 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
     });
   }), Promise.resolve([]));
 
-  // Based on a CozyCanvas from the imported project manifest WITH A SINGLE IMAGE, this 
-  // function regenerates the (single) `SourceCanvas` object, by linking the CozyCanvas to its
-  // original source manifest, and injecting the physical size (if any)
-  const regenerateSourceCanvas = (canvas: CozyCanvas, physicalSize?: PhysicalSize): SourceCanvas | undefined => 
-    sources.reduce<SourceCanvas | undefined>((found, source) => {
-      if (found) return found;
-      const match = source.manifest.canvases.find(c => c.id === canvas.id);
-      return match ? { sourceManifestId: source.manifest.id, canvas, physicalSize } : found;
-    }, undefined);
-
   // Based on a CozyCanvas from the imported project manifest, WITH MULTIPLE IMAGES,
   // this function creates the list of `SourceCanvas` objects, by:
   // - Identfying which source canvases the images belong to
   // - Re-grouping them accordingly
   // - Regenerating the SourceCanvas list, with images and targets 
-  const regenerateCompositeSources = (canvas: CozyCanvas): SourceCanvas[] => {
+  const regenerateSourceCanvases = (canvas: CozyCanvas): SourceCanvas[] => {
     const getIdentifier = (img: CozyImageResource) =>
       img.type === 'static' ? img.url : img.serviceUrl;
 
@@ -157,7 +147,7 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
         label: canvas.getLabel(),
         height: canvas.height,
         width: canvas.width,
-        source: regenerateSourceCanvas(canvas, physicalSize),
+        source: regenerateSourceCanvases(canvas)[0],
         physicalSize
       }
     } else {
@@ -167,7 +157,7 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
         label: canvas.getLabel(),
         height: canvas.height,
         width: canvas.width,
-        sources: regenerateCompositeSources(canvas),
+        sources: regenerateSourceCanvases(canvas),
         physicalSize: parsePhysicalSize(canvas)
       }
     }

@@ -31,6 +31,7 @@ interface AppStore {
   addCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
   addCanvasesToReconstruction: (sources: { sourceId: string, canvas: CozyCanvas}[]) => void;
   appendEmptyCanvas: (width?: number, height?: number) => void;
+  duplicateCanvas: (canvasId: string) => void;
   mergeCanvases: (toMerge: ReconstructionCanvas[]) => void;
   moveCanvas: (canvasId: string, direction: MoveDirection) => void;
   removeCanvasFromReconstruction: (canvasId: string) => void;
@@ -75,7 +76,7 @@ export const useAppStore = create<AppStore>()(
 
       removeAllSources: () => set({ sources: [] }),
 
-      addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction, sizes }) => {
+      addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction, sizes, baseURI }) => {
         // Don't re-add
         if (reconstruction.find(r => r.id === canvas.id)) return {};
 
@@ -84,7 +85,10 @@ export const useAppStore = create<AppStore>()(
             ...reconstruction, 
             {
               type: 'original',
-              id: canvas.id,
+              // Even 'original' canvases get a new ID assigned, so we a) can 
+              // easily support duplicate imports, b) are not sloppy regarding
+              // the semantics of the ID (we are creating a derivative after all!)
+              id: `${baseURI}/${crypto.randomUUID()}`,
               label: canvas.getLabel(),
               width: canvas.width,
               height: canvas.height,
@@ -98,7 +102,7 @@ export const useAppStore = create<AppStore>()(
         };
       }),
 
-      addCanvasesToReconstruction: sources => set(({ reconstruction, sizes }) => {
+      addCanvasesToReconstruction: sources => set(({ reconstruction, sizes, baseURI }) => {
         const toAdd = sources.filter(s => !reconstruction.some(r => r.id === s.canvas.id));
         if (toAdd.length === 0) return {};
 
@@ -107,7 +111,7 @@ export const useAppStore = create<AppStore>()(
             ...reconstruction,
             ...toAdd.map(s => ({
               type: 'original' as const,
-              id: s.canvas.id,
+              id: `${baseURI}/${crypto.randomUUID()}`,
               label: s.canvas.getLabel(),
               width: s.canvas.width,
               height: s.canvas.height,
@@ -124,6 +128,24 @@ export const useAppStore = create<AppStore>()(
       appendEmptyCanvas: (fallbackWidth = 2000, fallbackHeight = 3000) => set(({ baseURI, reconstruction }) => ({
         reconstruction: appendEmptyCanvas(reconstruction, baseURI, fallbackWidth, fallbackHeight)
       })),
+
+      duplicateCanvas: canvasId => set(({ reconstruction, baseURI }) => {
+        const index = reconstruction.findIndex(c => c.id === canvasId);
+        if (index === -1) return {};
+
+        const toDuplicate = reconstruction[index];
+
+        const duplicate: ReconstructionCanvas = {
+          ...toDuplicate,
+          id: `${baseURI}/${crypto.randomUUID()}`,
+          label: `${toDuplicate.label} (copy)`
+        };
+
+        const updatedReconstruction = [...reconstruction];
+        updatedReconstruction.splice(index + 1, 0, duplicate);
+
+        return { reconstruction: updatedReconstruction };
+      }),
 
       mergeCanvases: toMerge => set(({ baseURI, reconstruction  }) => ({
         reconstruction: mergeInto(toMerge, reconstruction, baseURI)

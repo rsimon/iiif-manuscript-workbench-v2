@@ -5,7 +5,7 @@ import pDebounce from 'p-debounce';
 import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
-import { getDraggableImageKey } from '../reconstruction-utils';
+import { getDraggableImageIdentity, getDraggableImageKey } from '../reconstruction-utils';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
 import { applyEdits, findSourceCanvasById, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
@@ -81,9 +81,9 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
     const onThisCanvas = imagesByCanvasId.get(canvasId);
     if (!onThisCanvas) return {};
 
-    const key = getDraggableImageKey(updated);
+    const key = getDraggableImageKey(canvasId, updated);
 
-    const prevImage = onThisCanvas.find(img => getDraggableImageKey(img) === key);
+    const prevImage = onThisCanvas.find(img => getDraggableImageKey(canvasId, img) === key);
     if (!prevImage) return {};
 
     const nextImages = onThisCanvas.map(img => img === prevImage ? updated : img);
@@ -93,7 +93,7 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
 
     const updatedSelectedImage =
       selectedImage?.item.reconstructionCanvasId === canvasId &&
-      getDraggableImageKey(selectedImage.image) === key
+      getDraggableImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image) === key
         ? { ...selectedImage, image: updated }
         : undefined;
 
@@ -109,11 +109,12 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   moveImageToCanvas: (fromId, toId, image) => {
     const { imagesByCanvasId, layout, selectedImage } = get();
 
-    const key = getDraggableImageKey(image);
+    const fromKey = getDraggableImageKey(fromId, image);
+    const toKey = getDraggableImageKey(toId, image);
 
     // Make sure the from/to info is valid
-    const isValidSource = imagesByCanvasId.get(fromId)?.some(i => getDraggableImageKey(i) === key);
-    const isValidTarget = imagesByCanvasId.get(toId)?.every(i => getDraggableImageKey(i) !== key);
+    const isValidSource = imagesByCanvasId.get(fromId)?.some(i => getDraggableImageKey(fromId, i) === fromKey);
+    const isValidTarget = imagesByCanvasId.get(toId)?.every(i => getDraggableImageKey(toId, i) !== toKey);
 
     if (!isValidSource || !isValidTarget) return false;
 
@@ -126,14 +127,14 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
     // All good - now update the imagesByCanvas map and schedule the app store sync
     const updatedImagesByCanvasId = new Map(imagesByCanvasId);
 
-    const nextFrom = (updatedImagesByCanvasId.get(fromId) || []).filter(i => getDraggableImageKey(i) !== key);
+    const nextFrom = (updatedImagesByCanvasId.get(fromId) || []).filter(i => getDraggableImageKey(fromId,i) !== fromKey);
     const nextTo = [...(updatedImagesByCanvasId.get(toId) || []), image];
 
     updatedImagesByCanvasId.set(fromId, nextFrom);
     updatedImagesByCanvasId.set(toId, nextTo);
 
     const updatedSelectedImage =
-      selectedImage && getDraggableImageKey(selectedImage.image) === key ? {
+      selectedImage && getDraggableImageKey(fromId, selectedImage.image) === fromKey ? {
         image,
         canChangeItem: selectedImage.canChangeItem,
         item: layout.items.find(i => i.reconstructionCanvasId === toId)!
@@ -212,18 +213,18 @@ useAppStore.subscribe((state, prevState) => {
   let selectedImage = prevSelectedImage;
 
   if (prevSelectedImage && (layoutChanged || imagesChanged)) {
-    const key = getDraggableImageKey(prevSelectedImage.image);
+    const identity = getDraggableImageIdentity(prevSelectedImage.image);
     const prevCanvasId = prevSelectedImage.item.reconstructionCanvasId;
 
     // Did association between selected image and canvas change
     // because the canvas was modified (original -> composite)?
     const associationUnchanged = imagesByCanvasId.get(prevCanvasId)
-      ?.some(img => getDraggableImageKey(img) === key);
+      ?.some(img => getDraggableImageIdentity(img) === identity);
 
     const nextCanvasId = associationUnchanged
       ? prevCanvasId
       : [...imagesByCanvasId.entries()]
-        .find(([, images]) => images.some(img => getDraggableImageKey(img) === key))?.[0];
+        .find(([_, images]) => images.some(img => getDraggableImageIdentity(img) === identity))?.[0];
 
     const item = nextCanvasId ? layout.items.find(i => i.reconstructionCanvasId === nextCanvasId) : undefined;
 

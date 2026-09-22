@@ -165,10 +165,10 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
         const scale = image.width / bounds.w;
 
         const isSelected = selectedImage?.image &&
-          getDraggableImageKey(selectedImage.image) === getDraggableImageKey(image);
+          getDraggableImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image) === getDraggableImageKey(canvas.id, image);
 
         const placement = {
-          key: getDraggableImageKey(image),
+          key: getDraggableImageKey(canvas.id, image),
           tileSource: image.tileSource,
           x: item.x + (image.x - bounds.x * scale) / canvas.width,
           y: item.y + (image.y - bounds.y * scale) / canvas.width,
@@ -216,7 +216,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       if (!selectedImage || editMode !== 'CROP') return;
       
       const maxIdx = viewer.world.getItemCount() - 1;
-      const selectedKey = getDraggableImageKey(selectedImage.image);
+      const selectedKey = getDraggableImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image);
 
       const foreground = tiledImages.get(selectedKey);
       const background = tiledImages.get(`${selectedKey}${CROP_BACKGROUND_SUFFIX}`);
