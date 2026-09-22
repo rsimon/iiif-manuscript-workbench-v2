@@ -235,7 +235,7 @@ export const applyEdits = (
 
         return {
           type: 'composite',
-          id: `${baseURI}/${crypto.randomUUID()}`,
+          id: `${baseURI}/canvas/${crypto.randomUUID()}`,
           label: r.label,
           sources: sources.map(applySourceEdits),
           width: r.width,
@@ -250,7 +250,7 @@ export const applyEdits = (
           const source = nextSources[0];
           return {
             type: 'original',
-            id: source.canvas.id,
+            id: `${baseURI}/canvas/${crypto.randomUUID()}`,
             label: r.label,
             source,
             width: r.width,

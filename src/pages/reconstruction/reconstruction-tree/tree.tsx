@@ -151,6 +151,8 @@ export const ReconstructionTree = () => {
     );
   }, [canvases, onChange, extractChild, mergeInto, reorderRoot]);
 
+  console.log('canvases', canvases);
+
   return (
     <div className="flex flex-col h-full bg-neutral-100">
       <ReconstructionTreeToolbar />

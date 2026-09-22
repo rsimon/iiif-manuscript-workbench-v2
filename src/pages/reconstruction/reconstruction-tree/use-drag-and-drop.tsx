@@ -45,7 +45,7 @@ export const useDragAndDrop = () => {
           const source = remaining[0];
           const original: OriginalCanvas = {
             type: 'original',
-            id: source.canvas.id,
+            id: `${baseURI}/canvas/${crypto.randomUUID()}`,
             label: c.label,
             width: c.width,
             height: c.height,
@@ -82,7 +82,7 @@ export const useDragAndDrop = () => {
   
     const original: OriginalCanvas = {
       type: 'original',
-      id: source.canvas.id,
+      id: `${baseURI}/canvas/${crypto.randomUUID()}`,
       label: source.canvas.getLabel(),
       width: source.canvas.width,
       height: source.canvas.height,
@@ -116,7 +116,7 @@ export const useDragAndDrop = () => {
 
       return {
         type: 'composite' as const,
-        id: `${baseURI}/${crypto.randomUUID()}`,
+        id: `${baseURI}/canvas/${crypto.randomUUID()}`,
         label: `Canvas ${idx + 1}`,
         sources: [c.source, dragged],
         width: c.width,

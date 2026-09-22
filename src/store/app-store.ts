@@ -88,7 +88,7 @@ export const useAppStore = create<AppStore>()(
               // Even 'original' canvases get a new ID assigned, so we a) can 
               // easily support duplicate imports, b) are not sloppy regarding
               // the semantics of the ID (we are creating a derivative after all!)
-              id: `${baseURI}/${crypto.randomUUID()}`,
+              id: `${baseURI}/canvas/${crypto.randomUUID()}`,
               label: canvas.getLabel(),
               width: canvas.width,
               height: canvas.height,
@@ -111,7 +111,7 @@ export const useAppStore = create<AppStore>()(
             ...reconstruction,
             ...toAdd.map(s => ({
               type: 'original' as const,
-              id: `${baseURI}/${crypto.randomUUID()}`,
+              id: `${baseURI}/canvas/${crypto.randomUUID()}`,
               label: s.canvas.getLabel(),
               width: s.canvas.width,
               height: s.canvas.height,
