@@ -92,7 +92,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
         isSelected ? 'border-primary ring-1 ring-primary bg-primary/5' : undefined,
         isDragging ? 'opacity-40' : undefined
       )}
-      style={{ viewTransitionName: viewTransitionName(item.id) }}>
+      style={{ viewTransitionName: `${viewTransitionName(item.id)}:${index}` }}>
       <div
         className="group"
         onClick={onSelect}>
@@ -218,7 +218,7 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
         'flex items-stretch -ml-1 rounded-sm border bg-muted',
         isDragging ? 'opacity-40' : undefined
       )}
-      style={{ viewTransitionName: viewTransitionName(compositeId) }}>
+      style={{ viewTransitionName: `${viewTransitionName(compositeId)}:${source.canvas.id}`}}>
       <div
         ref={handleRef}
         aria-hidden="true"
