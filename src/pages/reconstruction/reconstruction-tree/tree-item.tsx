@@ -218,7 +218,7 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
         'flex items-stretch -ml-1 rounded-sm border bg-muted',
         isDragging ? 'opacity-40' : undefined
       )}
-      style={{ viewTransitionName: viewTransitionName(source.canvas.id)}}>
+      style={{ viewTransitionName: viewTransitionName(source.canvas.id) }}>
       <div
         ref={handleRef}
         aria-hidden="true"
