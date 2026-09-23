@@ -104,7 +104,7 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
           sourceCanvas.images.some(sourceImage => getIdentifier(sourceImage) === imageId));
 
         return sourceCanvas
-          ? { sourceManifestId: sourceManifest.manifest.id, canvas: sourceCanvas }
+          ? { sourceManifestId: sourceManifest.manifest.id, canvas: sourceCanvas, instanceId: crypto.randomUUID() }
           : undefined;
       }, undefined);
 

@@ -93,6 +93,7 @@ export const useAppStore = create<AppStore>()(
               width: canvas.width,
               height: canvas.height,
               source: {
+                instanceId: crypto.randomUUID(),
                 sourceManifestId: sourceId,
                 canvas,
                 physicalSize: sizes.get(canvas.id)
@@ -116,6 +117,7 @@ export const useAppStore = create<AppStore>()(
               width: s.canvas.width,
               height: s.canvas.height,
               source: {
+                instanceId: crypto.randomUUID(),
                 sourceManifestId: s.sourceId,
                 canvas: s.canvas,
                 physicalSize: sizes.get(s.canvas.id)
@@ -138,8 +140,24 @@ export const useAppStore = create<AppStore>()(
         const duplicate: ReconstructionCanvas = {
           ...toDuplicate,
           id: `${baseURI}/${crypto.randomUUID()}`,
-          label: `${toDuplicate.label} (copy)`
+          label: `${toDuplicate.label} (copy)`,
         };
+
+        // Duplicates need new instance IDs for their source
+        // canvases, so view transitions keep working!
+        if (duplicate.type === 'original') {
+          duplicate.source = {
+            ...duplicate.source,
+            instanceId: crypto.randomUUID()
+          }
+        } else {
+          duplicate.sources = {
+            ...duplicate.sources.map(s => ({
+              ...s,
+              instanceId: crypto.randomUUID()
+            }))
+          }
+        }
 
         const updatedReconstruction = [...reconstruction];
         updatedReconstruction.splice(index + 1, 0, duplicate);

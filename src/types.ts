@@ -12,6 +12,8 @@ export interface SourceManifest {
 
 export interface SourceCanvas {
 
+  instanceId: string;
+
   sourceManifestId: string;
 
   canvas: CozyCanvas;
