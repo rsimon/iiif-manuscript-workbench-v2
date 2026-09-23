@@ -122,7 +122,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   const checkDestination = (shape: InitialShape, intersecting: ComposerLayoutItem[]) => {
     if (!selectedImage) return { hasChangedDestination: false };
 
-    const { item, image } = shape;
+    const { item } = shape;
 
     const destination = intersecting.find(i => 
       i.reconstructionCanvasId === item.reconstructionCanvasId) 
@@ -134,20 +134,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     const isValidDestination = destination && 
       (!hasChangedDestination || selectedImage.canChangeItem);
 
-    if (hasChangedDestination && isValidDestination) {
-      const { imagesByCanvasId } = useComposerStore.getState();
-
-      const imagesAtDestination = imagesByCanvasId.get(destination.reconstructionCanvasId) || [];
-
-      // We don't currently support adding the same source canvas twice!
-      const isConflict = imagesAtDestination.some(d => d.sourceCanvasId === image.sourceCanvasId);
-
-      setIsValidDestination(!isConflict);
-      return { hasChangedDestination, destination, isValidDestination: !isConflict };
-    } else {
-      setIsValidDestination(isValidDestination);
-      return { hasChangedDestination, destination, isValidDestination };
-    }
+    return { hasChangedDestination, destination, isValidDestination };
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
