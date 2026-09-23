@@ -3,7 +3,7 @@ import type { CozyCanvas, CozyImageResource } from 'cozy-iiif';
 import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
-import { getDraggableImageKey } from '../reconstruction-utils';
+import { getCanvasImageKey } from '../reconstruction-utils';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -325,11 +325,11 @@ const applyEditsToSource = (
 
   const composerImagesByKey = new Map(composerImages
     .filter(img => img.sourceCanvasId === canvasId)
-    .map(img => [getDraggableImageKey(canvas.id, img), img] as const));
+    .map(img => [getCanvasImageKey(canvas.id, img), img] as const));
 
   const currentImagesByKey = new Map(currentImages
     .filter(img => img.sourceCanvasId === canvasId)
-    .map(img => [getDraggableImageKey(canvas.id, img), img] as const));
+    .map(img => [getCanvasImageKey(canvas.id, img), img] as const));
 
   // Shorthands to original source canvas elements
   const canvasSource = source.canvas.source;
@@ -342,7 +342,7 @@ const applyEditsToSource = (
 
   // Existing images: keep unchanged, patch the target, or drop
   const keptPaintAnnotations = source.canvas.images.flatMap((resource, index) => {
-    const key = getDraggableImageKey(canvas.id, { sourceCanvasId: canvasId, index } as DraggableImage);
+    const key = getCanvasImageKey(canvas.id, { sourceCanvasId: canvasId, index } as DraggableImage);
     seenKeys.add(key);
 
     const draggable = composerImagesByKey.get(key);

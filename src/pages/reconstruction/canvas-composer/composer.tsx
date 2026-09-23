@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
-import { getDraggableImageKey } from '../reconstruction-utils';
+import { getCanvasImageKey } from '../reconstruction-utils';
 import { ComposerSelectionControl } from './composer-selection-control';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
@@ -139,7 +139,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
     const { tiledImages, pendingTiledImageKeys, isUserEdit, imagesByCanvasId } = useComposerStore.getState();
 
-    const selectedKey = selectedImage ? getDraggableImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image) : undefined;
+    const selectedKey = selectedImage ? getCanvasImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image) : undefined;
 
     // Recompute directly - after `layout` change, `visibleIds` is stale. Otherwise, user
     // edits that change canvas IDs ('original' -> 'composite' canvas and vice versa) will
@@ -167,7 +167,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
         const scale = image.width / bounds.w;
 
         const placement = {
-          key: getDraggableImageKey(canvas.id, image),
+          key: getCanvasImageKey(canvas.id, image),
           tileSource: image.tileSource,
           x: item.x + (image.x - bounds.x * scale) / canvas.width,
           y: item.y + (image.y - bounds.y * scale) / canvas.width,
@@ -176,7 +176,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           opacity: 1
         };
 
-        const isSelected = getDraggableImageKey(canvas.id, image) === selectedKey;
+        const isSelected = getCanvasImageKey(canvas.id, image) === selectedKey;
 
         if (!isSelected || editMode !== 'CROP' || !isCropped) return [placement];
 
@@ -203,7 +203,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
     const prevSelection = previousSelectedImageRef.current;
     const previousSelectionKey = prevSelection ? 
-      getDraggableImageKey(prevSelection.item.reconstructionCanvasId, prevSelection.image) : undefined;
+      getCanvasImageKey(prevSelection.item.reconstructionCanvasId, prevSelection.image) : undefined;
 
     const isEmptyOp = () => {
       if (toAdd.length !== 1 || toRemove.length !== 1) return false;
@@ -249,7 +249,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       if (!selectedImage || editMode !== 'CROP') return;
       
       const maxIdx = viewer.world.getItemCount() - 1;
-      const selectedKey = getDraggableImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image);
+      const selectedKey = getCanvasImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image);
 
       const foreground = tiledImages.get(selectedKey);
       const background = tiledImages.get(`${selectedKey}${CROP_BACKGROUND_SUFFIX}`);
