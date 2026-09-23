@@ -5,7 +5,7 @@ import pDebounce from 'p-debounce';
 import { withViewTransition } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
 import type { ReconstructionCanvas } from '@/types';
-import { getDraggableImageIdentity, getCanvasImageKey } from '../reconstruction-utils';
+import { getImageKey, getCanvasImageKey } from '../reconstruction-utils';
 import type { ComposerLayout, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
 import { applyEdits, findSourceCanvasById, toDraggableImages } from './composer-utils';
 import { TwoColumnLayout } from './layout';
@@ -213,18 +213,18 @@ useAppStore.subscribe((state, prevState) => {
   let selectedImage = prevSelectedImage;
 
   if (prevSelectedImage && (layoutChanged || imagesChanged)) {
-    const identity = getDraggableImageIdentity(prevSelectedImage.image);
+    const key = getImageKey(prevSelectedImage.image);
     const prevCanvasId = prevSelectedImage.item.reconstructionCanvasId;
 
     // Did association between selected image and canvas change
     // because the canvas was modified (original -> composite)?
     const associationUnchanged = imagesByCanvasId.get(prevCanvasId)
-      ?.some(img => getDraggableImageIdentity(img) === identity);
+      ?.some(img => getImageKey(img) === key);
 
     const nextCanvasId = associationUnchanged
       ? prevCanvasId
       : [...imagesByCanvasId.entries()]
-        .find(([_, images]) => images.some(img => getDraggableImageIdentity(img) === identity))?.[0];
+        .find(([_, images]) => images.some(img => getImageKey(img) === key))?.[0];
 
     const item = nextCanvasId ? layout.items.find(i => i.reconstructionCanvasId === nextCanvasId) : undefined;
 
