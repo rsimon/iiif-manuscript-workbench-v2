@@ -109,7 +109,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
           </div>
 
           {item.type === 'original' ? (
-            <div className="grow flex justify-between pr-1.5 items-start">
+            <div className="grow flex justify-between pr-1.5 items-start overflow-hidden">
               <TreeItemContent 
                 editable
                 source={item.source}
@@ -258,13 +258,13 @@ const TreeItemContent = (props: TreeItemContentProps) => {
   const sources = useAppStore(state => state.sources);
 
   return (
-    <div className="w-full flex gap-2 min-w-0 px-2 py-2">
+    <div className="w-full flex gap-2 min-w-0 px-2 py-2 overflow-hidden">
       <LazyThumbnail
         src={source.canvas.getThumbnailURL(80)}
         alt={`${label} preview image`}
-        className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/20" />
+        className="w-9 h-11 shrink-0 rounded-xs shadow-xs object-cover ring-1 ring-foreground/20" />
 
-      <div className="flex flex-col gap-0.5 justify-start items-start min-w-0">
+      <div className="flex flex-col gap-0.5 justify-start items-stretch min-w-0 overflow-hidden">
         {props.editable ? (
           <EditableCanvasLabel
             value={label}
@@ -272,9 +272,9 @@ const TreeItemContent = (props: TreeItemContentProps) => {
             onIsEditingChange={props.onIsEditingChange}
             onCommit={props.onCommmitEdit} />
         ) : (
-          <span className="min-w-0 truncate text-sm">
-            {label}
-          </span>
+          <div className="truncate text-sm min-w-0">
+            {label} 
+          </div>
         )}
 
         <span className="text-muted-foreground text-xs">

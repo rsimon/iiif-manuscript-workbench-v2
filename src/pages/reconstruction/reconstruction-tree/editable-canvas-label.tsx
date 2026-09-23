@@ -72,11 +72,11 @@ export const EditableCanvasLabel = (props: EditableCanvasLabelProps) => {
       className="field-sizing-content min-w-[2ch] max-w-full text-sm bg-transparent outline-none ring-1 
         ring-primary rounded-xs px-0.5 -mx-0.5" />
   ) : (
-    <span
+    <div
       className="truncate cursor-text text-sm"
       onClick={withStopPropagation(() => props.onIsEditingChange?.(true))}>
       {value}
-    </span>
+    </div>
   )
 
 }
