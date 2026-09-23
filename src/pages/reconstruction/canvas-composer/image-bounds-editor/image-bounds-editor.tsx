@@ -56,28 +56,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   // to use as an effect dependency for resetting drag state on (re)selection.
   const selectionKey = selectedImage ? getDraggableImageIdentity(selectedImage.image) : undefined;
 
-  const isValidDestination = useMemo(() => {
-    if (intersectingItems.length === 0 || !selectedImage) return false;
-
-    const hasChangedItem = intersectingItems.every(r => 
-      r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
-
-    if (hasChangedItem) {
-      if (!selectedImage.canChangeItem) return false;
-
-      const { imagesByCanvasId } = useComposerStore.getState();
-
-      const doesNotContainsThisSourceCanvas = intersectingItems.every(r => {
-        const sourceCanvasIds = new Set(
-          (imagesByCanvasId.get(r.reconstructionCanvasId) || []).map(d => d.sourceCanvasId));
-        return !sourceCanvasIds.has(selectedImage.image.sourceCanvasId);
-      });
-
-      return doesNotContainsThisSourceCanvas;
-    } else {
-      return true;
-    }
-  }, [intersectingItems, selectedImage]);
+  const [isValidDestination, setIsValidDestination] = useState(true);
 
   useEffect(() => {
     origin.current = undefined;
@@ -137,6 +116,37 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
 
     // For convenience
     return intersectingItems;
+  }
+
+  const checkDestination = (shape: InitialShape, intersecting: ComposerLayoutItem[]) => {
+    if (!selectedImage) return { hasChangedDestination: false };
+
+    const { item, image } = shape;
+
+    const destination = intersecting.find(i => 
+      i.reconstructionCanvasId === item.reconstructionCanvasId) 
+      || intersecting[0];
+
+    const hasChangedDestination = destination && 
+      destination.reconstructionCanvasId !== item.reconstructionCanvasId;
+
+    const isValidDestination = destination && 
+      (!hasChangedDestination || selectedImage.canChangeItem);
+
+    if (hasChangedDestination && isValidDestination) {
+      const { imagesByCanvasId } = useComposerStore.getState();
+
+      const imagesAtDestination = imagesByCanvasId.get(destination.reconstructionCanvasId) || [];
+
+      // We don't currently support adding the same source canvas twice!
+      const isConflict = imagesAtDestination.some(d => d.sourceCanvasId === image.sourceCanvasId);
+
+      setIsValidDestination(!isConflict);
+      return { hasChangedDestination, destination, isValidDestination: !isConflict };
+    } else {
+      setIsValidDestination(isValidDestination);
+      return { hasChangedDestination, destination, isValidDestination };
+    }
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
@@ -264,17 +274,12 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       new Point(viewportX, viewportY + viewportHeight)
     ]);
 
-    const destination = intersecting.find(i => 
-      i.reconstructionCanvasId === initialItem.reconstructionCanvasId) 
-      || intersecting[0];
+    const { 
+      destination, 
+      hasChangedDestination, 
+      isValidDestination 
+    } = checkDestination(initialShape.current, intersecting);
 
-    const hasChangedDestination = destination && 
-      destination.reconstructionCanvasId !== initialItem.reconstructionCanvasId;
-
-    // TODO adding same source canvas twice should be invalid
-    const isValidDestination = destination && 
-      (!hasChangedDestination || selectedImage.canChangeItem);
-      
     if (hasChangedDestination && isValidDestination) {
       const source = reconstruction.find(r => r.id === initialItem.reconstructionCanvasId);
       const target = reconstruction.find(r => r.id === destination.reconstructionCanvasId);
@@ -298,8 +303,6 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
         initialItem.reconstructionCanvasId,
         destination.reconstructionCanvasId,
         targetImage);
-
-      console.log('change success', success);
 
       if (success) {
         initialShape.current = {
