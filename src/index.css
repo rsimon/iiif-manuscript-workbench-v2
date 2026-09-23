@@ -134,6 +134,6 @@
 }
 
 .openseadragon-canvas:focus-visible {
-  outline: 3px solid color-mix(in oklab, var(--ring) 50%, transparent);
-  outline-offset: -6px; 
+  outline: 2px solid color-mix(in oklab, var(--ring) 80%, transparent);
+  outline-offset: -4px; 
 }

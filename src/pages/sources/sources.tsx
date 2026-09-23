@@ -31,14 +31,15 @@ export const Sources = () => {
         </Panel>
 
         <Separator 
-          className="focus-visible:outline-2 focus-visible:outline-primary" />
+          className="relative focus-visible:outline focus-visible:outline-primary" />
 
         <AnimatedPanel 
           open={isInspectorOpen}
           onOpenChange={setInspectorOpen}
           minSize={40}
           openSize={300}
-          className="bg-white border-l">
+          className="bg-white border-l"
+          inert={!isInspectorOpen}>
           <SourceMetadata />
         </AnimatedPanel>
       </AnimatedPanelGroup>
