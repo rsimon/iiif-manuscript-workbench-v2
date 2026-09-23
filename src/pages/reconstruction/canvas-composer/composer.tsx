@@ -205,7 +205,13 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     const previousSelectionKey = prevSelection ? 
       getCanvasImageKey(prevSelection.item.reconstructionCanvasId, prevSelection.image) : undefined;
 
-    const isEmptyOp = () => {
+    // Helper to catch a specific glitch in the architecture: if the
+    // the user drags the selection from one canvas into another, the
+    // selection will change its key! This results in a single "remove
+    // image" + "add image" operation for the same OSD TiledImage.
+    // This helper identifies exactly this situation, so we can later
+    // shortcut this op below, without touching OpenSeadragon.
+    const isSelectionKeyChange = () => {
       if (toAdd.length !== 1 || toRemove.length !== 1) return false;
 
       if (!prevSelection) return false;
@@ -220,7 +226,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       return false;
     }
 
-    if (isEmptyOp()) {
+    if (isSelectionKeyChange()) {
       tiledImages.set(selectedKey!, tiledImages.get(previousSelectionKey!)!);
       tiledImages.delete(previousSelectionKey!);
       return;
