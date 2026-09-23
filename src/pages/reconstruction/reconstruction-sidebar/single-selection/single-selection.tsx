@@ -51,8 +51,8 @@ export const SingleSelection = (props: SingleSelectionProps) => {
 
   return (
     <div className="space-y-2">
-      <div className="flex justify-between border-b py-1 pl-4 pr-1 items-center">
-        <h2 className="flex items-center gap-1.5">
+      <div className="flex justify-between border-b py-1 pl-4 pr-1 items-center overflow-hidden">
+        <h2 className="flex shrink min-w-0 items-center gap-1.5">
           {canvas.type === 'composite' && (
             <IconStack2 className="size-5 text-muted-foreground shrink-0" stroke={1.75} />
           )}
