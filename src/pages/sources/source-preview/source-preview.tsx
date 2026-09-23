@@ -122,7 +122,10 @@ export const SourcePreview = (props: SourcePreviewProps) => {
     <ViewerContext.Provider value={viewer}>
       <div 
         className="size-full relative bg-neutral-100 [&>.openseadragon-container]:z-10 shadow-[inset_0_0_80px_-5px_rgba(0,0,0,0.07)]">
-        <div ref={elementRef} className="size-full">
+        <div 
+          ref={elementRef} 
+          className="size-full"
+          tabIndex={-1}>
           <ViewerSvgOverlay
             viewer={viewer}
             topLayer={(

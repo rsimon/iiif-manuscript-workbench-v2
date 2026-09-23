@@ -19,7 +19,8 @@ export const Sources = () => {
           <SourceTree />
         </Panel>
 
-        <Separator />
+        <Separator 
+          className="focus-visible:outline-2 focus-visible:outline-primary" />
 
         <Panel>
           <MeasurementProvider>
@@ -29,7 +30,8 @@ export const Sources = () => {
           </MeasurementProvider>
         </Panel>
 
-        <Separator />
+        <Separator 
+          className="focus-visible:outline-2 focus-visible:outline-primary" />
 
         <AnimatedPanel 
           open={isInspectorOpen}

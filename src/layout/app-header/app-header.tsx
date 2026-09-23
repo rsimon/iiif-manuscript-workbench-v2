@@ -20,13 +20,17 @@ const NavItem = (props: NavItemProps) => {
   const [location] = useLocation();
 
   return (
-    <Link 
-      href={props.href}
-      className={cn(
-        'px-2.5 h-12 flex items-center border-b-4 border-transparent text-sm',
-        location === props.href ? 'border-b-primary' : 'text-muted-foreground/80',
-        props.className
-      )}>{props.children}</Link>
+    <div className={cn(
+      'px-0.5 py-1.25 h-12 border-b-4 border-transparent',
+      location === props.href ? 'border-b-primary' : 'text-muted-foreground/80',
+      props.className
+    )}>
+      <Link 
+        href={props.href}
+        className="px-2.5 h-full flex rounded-md items-center text-sm border border-transparent outline-none
+        focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50">
+        {props.children}</Link>
+    </div>
   )
 
 }
