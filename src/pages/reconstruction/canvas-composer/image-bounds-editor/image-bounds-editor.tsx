@@ -61,6 +61,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   useEffect(() => {
     origin.current = undefined;
     initialShape.current = undefined;
+    setIsValidDestination(true);
   }, [selectionKey]);
 
   useEffect(() => {
@@ -216,14 +217,17 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
     if (selectedImage && shape) {
       const { x, y, width } = shape.image;
 
-      // Revert position if dropped outside a canvas
-      if (intersectingItems.length === 0) {
+      const { isValidDestination } = checkDestination(shape, intersectingItems)
+
+      // Revert position if dropped at invalid destination
+      if (!isValidDestination) {
         updateImage(shape.item.reconstructionCanvasId, {
           ...selectedImage.image,
           x, y, width
         });
 
         const revertedCorners = getImageCorners(selectedImage, shape.canvas.width, x, y, width);
+        setIsValidDestination(true);
         updateIntersectingItems(revertedCorners);
       }
     }
