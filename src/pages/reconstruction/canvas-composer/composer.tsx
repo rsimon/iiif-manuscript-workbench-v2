@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow';
 import { ViewerSvgOverlay } from '@/components/viewer-svg-overlay';
 import { cn } from '@/shadcn/utils';
 import { useAppStore } from '@/store/app-store';
-import { getDraggableImageKey } from '../reconstruction-utils';
+import { getCanvasImageKey } from '../reconstruction-utils';
 import { ComposerSelectionControl } from './composer-selection-control';
 import { useComposerStore } from './composer-store';
 import { ComposerToolbar } from './composer-toolbar';
@@ -12,6 +12,7 @@ import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
 import { computeVisibleIds, useVisibleCanvases } from './use-visible-canvases';
 import { CanvasIndicatorLayer } from './canvas-indicator-layer';
+import { usePrevious } from './use-previous';
 
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
@@ -56,6 +57,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   const selectedImage = useComposerStore(state => state.selectedImage);
   const editMode = useComposerStore(state => state.editMode);
   const setViewer = useComposerStore(state => state.setViewer);
+
+  const previousSelection = usePrevious(selectedImage);
 
   useComposerSelection(viewer, layout);
 
@@ -139,6 +142,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
     const { tiledImages, pendingTiledImageKeys, isUserEdit, imagesByCanvasId } = useComposerStore.getState();
 
+    const selectedKey = selectedImage ? getCanvasImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image) : undefined;
+
     // Recompute directly - after `layout` change, `visibleIds` is stale. Otherwise, user
     // edits that change canvas IDs ('original' -> 'composite' canvas and vice versa) will
     // remove images, and then re-add them in the next effect run!
@@ -164,11 +169,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
 
         const scale = image.width / bounds.w;
 
-        const isSelected = selectedImage?.image &&
-          getDraggableImageKey(selectedImage.image) === getDraggableImageKey(image);
-
         const placement = {
-          key: getDraggableImageKey(image),
+          key: getCanvasImageKey(canvas.id, image),
           tileSource: image.tileSource,
           x: item.x + (image.x - bounds.x * scale) / canvas.width,
           y: item.y + (image.y - bounds.y * scale) / canvas.width,
@@ -176,6 +178,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
           clip: isCropped ? new OpenSeadragon.Rect(bounds.x, bounds.y, bounds.w, bounds.h) : undefined,
           opacity: 1
         };
+
+        const isSelected = getCanvasImageKey(canvas.id, image) === selectedKey;
 
         if (!isSelected || editMode !== 'CROP' || !isCropped) return [placement];
 
@@ -191,10 +195,47 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       });
     });
 
+    // Images to keep in OSD
     const toKeep = new Set(placements.map(p => p.key));
 
+    // All placements not yet recorded in tiledImages or pendingTiledImages
+    const toAdd = placements.filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key));
+
+    // Any tiledImages not in the 'toKeep' list
+    const toRemove = [...tiledImages.entries()].filter(([key, _]) => !toKeep.has(key));
+
+    const previousSelectionKey = previousSelection ? 
+      getCanvasImageKey(previousSelection.item.reconstructionCanvasId, previousSelection.image) : undefined;
+
+    // Helper to catch a specific glitch in the architecture: if the
+    // the user drags the selection from one canvas into another, the
+    // selection will change its key! This results in a single "remove
+    // image" + "add image" operation for the same OSD TiledImage.
+    // This helper identifies exactly this situation, so we can later
+    // shortcut this op below, without touching OpenSeadragon.
+    const isSelectionKeyChange = () => {
+      if (toAdd.length !== 1 || toRemove.length !== 1) return false;
+
+      if (!previousSelection) return false;
+
+      if (toAdd[0].key === selectedKey && toRemove[0][0] === previousSelectionKey) {
+        // This op would remove the previous selection and add the new selection -
+        // a no-op that only happens if the current selection changes association between
+        // canvases (and, hence, the key)
+        return true;
+      }
+
+      return false;
+    }
+
+    if (isSelectionKeyChange()) {
+      tiledImages.set(selectedKey!, tiledImages.get(previousSelectionKey!)!);
+      tiledImages.delete(previousSelectionKey!);
+      return;
+    }
+
     // 1. Remove images no longer present/visible
-    [...tiledImages.entries()].forEach(([key, tiledImage]) => {
+    toRemove.forEach(([key, tiledImage]) => {
       if (!toKeep.has(key)) {
         viewer.world.removeItem(tiledImage);
         tiledImages.delete(key);
@@ -216,7 +257,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       if (!selectedImage || editMode !== 'CROP') return;
       
       const maxIdx = viewer.world.getItemCount() - 1;
-      const selectedKey = getDraggableImageKey(selectedImage.image);
+      const selectedKey = getCanvasImageKey(selectedImage.item.reconstructionCanvasId, selectedImage.image);
 
       const foreground = tiledImages.get(selectedKey);
       const background = tiledImages.get(`${selectedKey}${CROP_BACKGROUND_SUFFIX}`);
@@ -231,23 +272,21 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     // In the initial phase, an image can be loading, but not yet in `tiledImages`:
     // Once `useVisibleCanvases` picks up the initial viewport change, this effect
     // runs again, and will cause duplicates otherwise.
-    placements
-      .filter(({ key }) => !tiledImages.has(key) && !pendingTiledImageKeys.has(key))
-      .forEach(({ key, tileSource, x, y, width, clip, opacity }) => {
-        pendingTiledImageKeys.add(key);
+    toAdd.forEach(({ key, tileSource, x, y, width, clip, opacity }) => {
+      pendingTiledImageKeys.add(key);
 
-        viewer.addTiledImage({
-          tileSource, x, y, width, clip, opacity,
-          // @types/openseadragon mistypes this as (event: Event) => void;
-          // OSD actually calls it with { item: TiledImage }.
-          success: (evt: Event) => {
-            const { item: tiledImage } = evt as unknown as { item: TiledImage };
-            pendingTiledImageKeys.delete(key);
-            tiledImages.set(key, tiledImage);
-            moveCropToFront();
-          }
-        });
+      viewer.addTiledImage({
+        tileSource, x, y, width, clip, opacity,
+        // @types/openseadragon mistypes this as (event: Event) => void;
+        // OSD actually calls it with { item: TiledImage }.
+        success: (evt: Event) => {
+          const { item: tiledImage } = evt as unknown as { item: TiledImage };
+          pendingTiledImageKeys.delete(key);
+          tiledImages.set(key, tiledImage);
+          moveCropToFront();
+        }
       });
+    });
   }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, editMode]);
 
   return (

@@ -1,4 +1,7 @@
 import type { DraggableImage } from './reconstruction-types';
 
-export const getDraggableImageKey = (image: DraggableImage): string =>
+export const getImageKey = (image: DraggableImage): string =>
   `${image.sourceCanvasId}:${image.index}`;
+
+export const getCanvasImageKey = (canvasId: string, image: DraggableImage): string =>
+  `${canvasId}:${getImageKey(image)}`;

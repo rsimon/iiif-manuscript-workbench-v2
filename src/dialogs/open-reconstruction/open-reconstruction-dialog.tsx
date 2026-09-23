@@ -155,7 +155,7 @@ export const OpenReconstructionDialog = (props: OpenReconstructionDialogProps) =
                   <div
                     {...getRootProps()}
                     className={cn(
-                      'rounded border border-dashed p-6 text-center transition-colors',
+                      'rounded-md border border-dashed p-6 text-center transition-colors',
                       isDragActive ? 'border-sky-600/80 bg-sky-600/20' : 'border-sky-800/30 bg-sky-800/5'
                     )}>
                     <input {...getInputProps()} />

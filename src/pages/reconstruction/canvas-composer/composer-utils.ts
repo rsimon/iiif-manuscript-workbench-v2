@@ -3,7 +3,7 @@ import type { CozyCanvas, CozyImageResource } from 'cozy-iiif';
 import { parseCanvas } from '@/store/app-store-utils';
 import type { ReconstructionCanvas, SourceCanvas } from '@/types';
 import type { ComposerLayout, ComposerLayoutItem, DraggableImage, DraggableImageSelection } from '../reconstruction-types';
-import { getDraggableImageKey } from '../reconstruction-utils';
+import { getCanvasImageKey } from '../reconstruction-utils';
 
 const DEFAULT_IMAGE_WIDTH = 0.4;
 const DEFAULT_IMAGE_STEP = 0.05; // rightward/downward shift per stacked image
@@ -186,8 +186,7 @@ export const findSourceCanvasById = (
 // Applies composer edits back into an app-level reconstruction
 export const applyEdits = (
   reconstruction: ReconstructionCanvas[],
-  imagesByCanvasId: Map<string, DraggableImage[]>,
-  baseURI: string
+  imagesByCanvasId: Map<string, DraggableImage[]>
 ): ReconstructionCanvas[] => {
   const sourceCanvases = new Map<string, SourceCanvas>();
   const currentImagesBySourceCanvasId = new Map<string, DraggableImage[]>();
@@ -221,6 +220,7 @@ export const applyEdits = (
         .filter(source => !!source);
 
       const applySourceEdits = (source: SourceCanvas) => applyEditsToSource(
+        r,
         source,
         composerImages,
         currentImagesBySourceCanvasId.get(source.canvas.id) ?? []
@@ -234,7 +234,7 @@ export const applyEdits = (
 
         return {
           type: 'composite',
-          id: `${baseURI}/${crypto.randomUUID()}`,
+          id: r.id,
           label: r.label,
           sources: sources.map(applySourceEdits),
           width: r.width,
@@ -249,7 +249,7 @@ export const applyEdits = (
           const source = nextSources[0];
           return {
             type: 'original',
-            id: source.canvas.id,
+            id: r.id,
             label: r.label,
             source,
             width: r.width,
@@ -315,16 +315,21 @@ const toAnnotationBodyItem = (image: DraggableImage) => {
 }
 
 // Applies composer edits onto one source canvas
-const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage[], currentImages: DraggableImage[]): SourceCanvas => {
+const applyEditsToSource = (
+  canvas: ReconstructionCanvas,
+  source: SourceCanvas, 
+  composerImages: DraggableImage[], 
+  currentImages: DraggableImage[]
+): SourceCanvas => {
   const canvasId = source.canvas.id;
 
   const composerImagesByKey = new Map(composerImages
     .filter(img => img.sourceCanvasId === canvasId)
-    .map(img => [getDraggableImageKey(img), img] as const));
+    .map(img => [getCanvasImageKey(canvas.id, img), img] as const));
 
   const currentImagesByKey = new Map(currentImages
     .filter(img => img.sourceCanvasId === canvasId)
-    .map(img => [getDraggableImageKey(img), img] as const));
+    .map(img => [getCanvasImageKey(canvas.id, img), img] as const));
 
   // Shorthands to original source canvas elements
   const canvasSource = source.canvas.source;
@@ -337,7 +342,7 @@ const applyEditsToSource = (source: SourceCanvas, composerImages: DraggableImage
 
   // Existing images: keep unchanged, patch the target, or drop
   const keptPaintAnnotations = source.canvas.images.flatMap((resource, index) => {
-    const key = getDraggableImageKey({ sourceCanvasId: canvasId, index } as DraggableImage);
+    const key = getCanvasImageKey(canvas.id, { sourceCanvasId: canvasId, index } as DraggableImage);
     seenKeys.add(key);
 
     const draggable = composerImagesByKey.get(key);

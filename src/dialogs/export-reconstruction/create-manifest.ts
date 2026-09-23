@@ -32,19 +32,11 @@ export const createManifest = (
         value: { en: [sources.map(s => s.url).join(', ')]},
       },
     ],
-    items: reconstruction.map(r => toCanvasItem(r, baseURI))
+    items: reconstruction.map(toCanvasItem)
   }
 }
 
-const normalizeFragmentTarget = (target: unknown) => {
-  if (typeof target !== 'string') return target;
-
-  return target.replace(/#xywh=([\d.]+),([\d.]+),([\d.]+),([\d.]+)$/, (_, x, y, w, h) =>
-    `#xywh=${Math.round(Number(x))},${Math.round(Number(y))},${Math.round(Number(w))},${Math.round(Number(h))}`
-  );
-}
-
-const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
+const toCanvasItem = (r: ReconstructionCanvas) => {
   const { width, height } = r;
 
   // https://iiif.io/api/annex/services/#physical-dimensions
@@ -57,47 +49,27 @@ const toCanvasItem = (r: ReconstructionCanvas, baseURI: string) => {
     }
   } : {};
 
-  if (r.type === 'original') {
-    return {
-      ...r.source.canvas.source,
-      items: r.source.canvas.source.items?.map(page => ({
-        ...page,
-        items: page.items?.map(annotation => ({
-          ...annotation,
-          target: normalizeFragmentTarget(annotation.target)
-        }))
-      })),
-      width,
-      height,
-      label: { en: [r.label] },
-      ...physdim
-    };
+  const sources = r.type === 'original' ? [r.source] : r.sources;
 
-  } else {
-    const canvasId = `${baseURI}/canvas/${crypto.randomUUID()}`;
-
-    console.log('serializing composite', r);
-
-    return {
-      id: canvasId,
-      type: 'Canvas',
-      label: { en: [ r.label ] },
-      width,
-      height,
-      ...physdim,
-      items: r.sources.length === 0 ? [] :[{
-        id: `${canvasId}/page/1`,
-        type: 'AnnotationPage',
-        items: r.sources.flatMap(sc => sc.canvas.images.map(image => ({
-          id: `${canvasId}/annotation/${crypto.randomUUID()}`,
-          type: 'Annotation',
-          motivation: 'painting',
-          body: image.source,
-          target: image.target 
-            ? `${canvasId}#xywh=${Math.round(image.target.x)},${Math.round(image.target.y)},${Math.round(image.target.w)},${Math.round(image.target.h)}`
-            : canvasId
-        })))
-      }]
-    };
-  }
+  return {
+    id: r.id,
+    type: 'Canvas',
+    label: { en: [ r.label ] },
+    width,
+    height,
+    ...physdim,
+    items: sources.length === 0 ? [] :[{
+      id: `${r.id}/page/1`,
+      type: 'AnnotationPage',
+      items: sources.flatMap(sc => sc.canvas.images.map(image => ({
+        id: `${r.id}/annotation/${crypto.randomUUID()}`,
+        type: 'Annotation',
+        motivation: 'painting',
+        body: image.source,
+        target: image.target 
+          ? `${r.id}#xywh=${Math.round(image.target.x)},${Math.round(image.target.y)},${Math.round(image.target.w)},${Math.round(image.target.h)}`
+          : r.id
+      })))
+    }]
+  };
 }

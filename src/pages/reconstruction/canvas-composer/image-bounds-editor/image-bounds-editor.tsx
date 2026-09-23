@@ -3,7 +3,7 @@ import { Point, Viewer } from 'openseadragon';
 import { useAppStore } from '@/store/app-store';
 import { useReconstructionStore } from '../../reconstruction-store';
 import type { ComposerLayoutItem, DraggableImage } from '../../reconstruction-types';
-import { getDraggableImageKey } from '../../reconstruction-utils';
+import { getImageKey } from '../../reconstruction-utils';
 import { useComposerStore } from '../composer-store';
 import { getIntersectingItems } from '../composer-utils';
 import { CornerHandle } from './corner-handle';
@@ -54,16 +54,9 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
   // Stable identity for the current selection - unlike `selectedImage` itself,
   // this does NOT change on every drag-driven position update, so it's safe
   // to use as an effect dependency for resetting drag state on (re)selection.
-  const selectionKey = selectedImage ? getDraggableImageKey(selectedImage.image) : undefined;
+  const selectionKey = selectedImage ? getImageKey(selectedImage.image) : undefined;
 
-  const isValidDestination = useMemo(() => {
-    if (intersectingItems.length === 0 || !selectedImage) return false;
-
-    const hasChangedItem = intersectingItems.every(r => 
-      r.reconstructionCanvasId !== selectedImage.item.reconstructionCanvasId);
-
-    return !hasChangedItem || selectedImage.canChangeItem;
-  }, [intersectingItems, selectedImage]);
+  const [isValidDestination, setIsValidDestination] = useState(true);
 
   useEffect(() => {
     origin.current = undefined;
@@ -123,6 +116,37 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
 
     // For convenience
     return intersectingItems;
+  }
+
+  const checkDestination = (shape: InitialShape, intersecting: ComposerLayoutItem[]) => {
+    if (!selectedImage) return { hasChangedDestination: false };
+
+    const { item, image } = shape;
+
+    const destination = intersecting.find(i => 
+      i.reconstructionCanvasId === item.reconstructionCanvasId) 
+      || intersecting[0];
+
+    const hasChangedDestination = destination && 
+      destination.reconstructionCanvasId !== item.reconstructionCanvasId;
+
+    const isValidDestination = destination && 
+      (!hasChangedDestination || selectedImage.canChangeItem);
+
+    if (hasChangedDestination && isValidDestination) {
+      const { imagesByCanvasId } = useComposerStore.getState();
+
+      const imagesAtDestination = imagesByCanvasId.get(destination.reconstructionCanvasId) || [];
+
+      // We don't currently support adding the same source canvas twice!
+      const isConflict = imagesAtDestination.some(d => d.sourceCanvasId === image.sourceCanvasId);
+
+      setIsValidDestination(!isConflict);
+      return { hasChangedDestination, destination, isValidDestination: !isConflict };
+    } else {
+      setIsValidDestination(isValidDestination);
+      return { hasChangedDestination, destination, isValidDestination };
+    }
   }
 
   const onPointerDown = (evt: React.PointerEvent) => {
@@ -239,6 +263,7 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       w: initialImg.resource.width,
       h: initialImg.resource.height
     };
+
     const aspect = crop.h / crop.w;
     const viewportHeight = initialPos.width * aspect;
 
@@ -249,16 +274,12 @@ export const ImageBoundsEditor = (props: ImageBoundsEditorProps) => {
       new Point(viewportX, viewportY + viewportHeight)
     ]);
 
-    const destination = intersecting.find(i => 
-      i.reconstructionCanvasId === initialItem.reconstructionCanvasId) 
-      || intersecting[0];
+    const { 
+      destination, 
+      hasChangedDestination, 
+      isValidDestination 
+    } = checkDestination(initialShape.current, intersecting);
 
-    const hasChangedDestination = destination && 
-      destination.reconstructionCanvasId !== initialItem.reconstructionCanvasId;
-
-    const isValidDestination = destination && 
-      (!hasChangedDestination || selectedImage.canChangeItem);
-      
     if (hasChangedDestination && isValidDestination) {
       const source = reconstruction.find(r => r.id === initialItem.reconstructionCanvasId);
       const target = reconstruction.find(r => r.id === destination.reconstructionCanvasId);
