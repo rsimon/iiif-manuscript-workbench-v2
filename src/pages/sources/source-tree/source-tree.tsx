@@ -134,7 +134,7 @@ export const SourceTree = () => {
                 'h-10 gap-1.5 px-2.5',
                 canContinue ? undefined : 'pointer-events-none opacity-30'
               )}>
-              Continue to Reconstruction
+              <span className="truncate">Continue to Reconstruction</span>
               <Badge 
                 className="bg-white/25">
                 {sourceCanvasesInReconstruction}

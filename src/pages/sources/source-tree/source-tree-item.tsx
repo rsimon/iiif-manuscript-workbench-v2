@@ -137,9 +137,9 @@ export const CanvasTreeItem = (props: CanvasTreeItemProps) => {
         <LazyThumbnail
           src={props.canvas.getThumbnailURL(80)}
           alt={`${props.canvas.getLabel()} preview image`}
-          className="w-9 h-11 rounded-xs shadow-xs object-cover ring-1 ring-foreground/10" />
+          className="w-9 h-11 shrink-0 rounded-xs shadow-xs object-cover ring-1 ring-foreground/10" />
 
-        <div className="space-y-px">
+        <div className="space-y-px overflow-hidden">
           <div className="flex-1 min-w-0 truncate text-xs">{props.canvas.getLabel()}</div>
           {physicalSize && (
             <div className="text-[11px] tracking-wide text-muted-foreground">
