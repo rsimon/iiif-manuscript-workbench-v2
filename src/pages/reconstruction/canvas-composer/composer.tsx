@@ -12,6 +12,7 @@ import { ImageBoundsEditor } from './image-bounds-editor';
 import { useComposerSelection } from './use-composer-selection';
 import { computeVisibleIds, useVisibleCanvases } from './use-visible-canvases';
 import { CanvasIndicatorLayer } from './canvas-indicator-layer';
+import { usePrevious } from './use-previous';
 
 export const OSD_SPRING_STIFFNESS = 10;
 export const OSD_ANIMATION_TIME = 0.5;
@@ -56,6 +57,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
   const selectedImage = useComposerStore(state => state.selectedImage);
   const editMode = useComposerStore(state => state.editMode);
   const setViewer = useComposerStore(state => state.setViewer);
+
+  const previousSelection = usePrevious(selectedImage);
 
   useComposerSelection(viewer, layout);
 
@@ -201,9 +204,8 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     // Any tiledImages not in the 'toKeep' list
     const toRemove = [...tiledImages.entries()].filter(([key, _]) => !toKeep.has(key));
 
-    const prevSelection = previousSelectedImageRef.current;
-    const previousSelectionKey = prevSelection ? 
-      getCanvasImageKey(prevSelection.item.reconstructionCanvasId, prevSelection.image) : undefined;
+    const previousSelectionKey = previousSelection ? 
+      getCanvasImageKey(previousSelection.item.reconstructionCanvasId, previousSelection.image) : undefined;
 
     // Helper to catch a specific glitch in the architecture: if the
     // the user drags the selection from one canvas into another, the
@@ -214,7 +216,7 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
     const isSelectionKeyChange = () => {
       if (toAdd.length !== 1 || toRemove.length !== 1) return false;
 
-      if (!prevSelection) return false;
+      if (!previousSelection) return false;
 
       if (toAdd[0].key === selectedKey && toRemove[0][0] === previousSelectionKey) {
         // This op would remove the previous selection and add the new selection -
@@ -286,12 +288,6 @@ export const CanvasComposer = (props: CanvasComposerProps) => {
       });
     });
   }, [viewer, layout, images, visibleIds, reconstructionById, selectedImage, editMode]);
-
-  const previousSelectedImageRef = useRef(selectedImage);
-    useEffect(() => {
-    previousSelectedImageRef.current = selectedImage;
-  }, [selectedImage?.item.reconstructionCanvasId, selectedImage?.image.index, selectedImage?.image.sourceCanvasId]);
-
 
   return (
     <div className="size-full relative bg-neutral-100 bg-[radial-gradient(#e0e0e0_1px,transparent_1px)] bg-size-[16px_16px]
