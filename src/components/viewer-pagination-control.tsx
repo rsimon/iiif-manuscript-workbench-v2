@@ -22,7 +22,7 @@ export const ViewerPaginationControl = (props: ViewerPaginationControlProps) => 
   const hasPrev = props.selectedPageIndex > 0;
 
   return (
-    <div className="flex items-center gap-1.5">
+    <div className="shrink min-w-18 flex items-center gap-1.5 overflow-hidden">
       <Button
         disabled={!hasPrev}
         variant="ghost"
@@ -31,8 +31,8 @@ export const ViewerPaginationControl = (props: ViewerPaginationControlProps) => 
         <IconChevronLeft />
       </Button>
 
-      <div className="text-xs flex gap-1.5 items-center">
-        <span>{props.selectedPageLabel}</span>
+      <div className="text-xs flex gap-1.5 items-center shrink min-w-16">
+        <span className="whitespace-nowrap truncate">{props.selectedPageLabel}</span>
         {props.displayAsFiltered ? (
           <div className="ml-0.5 flex items-center gap-1 bg-accent py-1 px-2 pr-2.5 rounded-full text-primary">
             <IconFilter className="size-3.5" /> 
