@@ -28,8 +28,8 @@ interface AppStore {
   removeAllSources: () => void;
 
   // Actions: reconstruction
-  addCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
-  addCanvasesToReconstruction: (sources: { sourceId: string, canvas: CozyCanvas}[]) => void;
+  addSourceCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
+  addSourceCanvasesToReconstruction: (sources: { sourceId: string, canvas: CozyCanvas}[]) => void;
   appendEmptyCanvas: (width?: number, height?: number) => void;
   duplicateCanvas: (canvasId: string) => void;
   mergeCanvases: (toMerge: ReconstructionCanvas[]) => void;
@@ -76,7 +76,7 @@ export const useAppStore = create<AppStore>()(
 
       removeAllSources: () => set({ sources: [] }),
 
-      addCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction, sizes, baseURI }) => {
+      addSourceCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction, sizes, baseURI }) => {
         // Don't re-add
         if (reconstruction.find(r => r.id === canvas.id)) return {};
 
@@ -103,7 +103,7 @@ export const useAppStore = create<AppStore>()(
         };
       }),
 
-      addCanvasesToReconstruction: sources => set(({ reconstruction, sizes, baseURI }) => {
+      addSourceCanvasesToReconstruction: sources => set(({ reconstruction, sizes, baseURI }) => {
         const toAdd = sources.filter(s => !reconstruction.some(r => r.id === s.canvas.id));
         if (toAdd.length === 0) return {};
 

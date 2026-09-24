@@ -30,7 +30,7 @@ export const ManifestTreeItem = (props: ManifestTreeItemProps) => {
   const allChecked = props.inReconstruction === manifest.canvases.length;
   const someChecked = props.inReconstruction > 0 && !allChecked;
 
-  const addCanvases = useAppStore(state => state.addCanvasesToReconstruction);
+  const addCanvases = useAppStore(state => state.addSourceCanvasesToReconstruction);
   const removeCanvases = useAppStore(state => state.removeCanvasesFromReconstruction);
 
   const onClickCheckbox = () => {

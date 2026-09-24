@@ -19,7 +19,7 @@ import { useSourceNavigation } from '../use-source-navigation';
 export const SourceTree = () => {
   const sources = useAppStore(state => state.sources);
 
-  const addCanvas = useAppStore(state => state.addCanvasToReconstruction);
+  const addCanvas = useAppStore(state => state.addSourceCanvasToReconstruction);
   const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
 
   const collapsed = useSourcesStore(state => state.collapsed);
