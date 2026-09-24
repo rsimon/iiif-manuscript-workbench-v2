@@ -154,7 +154,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
                     className="py-1.5 px-0 flex flex-col gap-2">
                     {item.sources.map(source => (
                       <CompositeChildItem
-                        key={source.canvas.id}
+                        key={source.instanceId}
                         compositeId={item.id}
                         source={source} />
                     ))}

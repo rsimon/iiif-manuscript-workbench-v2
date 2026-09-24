@@ -109,14 +109,11 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
   moveImageToCanvas: (fromId, toId, image) => {
     const { imagesByCanvasId, layout, selectedImage } = get();
 
-    const fromKey = getCanvasImageKey(fromId, image);
-    const toKey = getCanvasImageKey(toId, image);
+    const key = getCanvasImageKey(fromId, image);
 
-    // Make sure the from/to info is valid
-    const isValidSource = imagesByCanvasId.get(fromId)?.some(i => getCanvasImageKey(fromId, i) === fromKey);
-    const isValidTarget = imagesByCanvasId.get(toId)?.every(i => getCanvasImageKey(toId, i) !== toKey);
-
-    if (!isValidSource || !isValidTarget) return false;
+    // Basic integrity check
+    const isValidSource = imagesByCanvasId.get(fromId)?.some(i => getCanvasImageKey(fromId, i) === key);
+    if (!isValidSource) return false;
 
     // Next, make sure the image can be moved, without splitting a source canvas!
     const { reconstruction } = useAppStore.getState();
@@ -127,14 +124,14 @@ export const useComposerStore = create<ComposerState>((set, get) => ({
     // All good - now update the imagesByCanvas map and schedule the app store sync
     const updatedImagesByCanvasId = new Map(imagesByCanvasId);
 
-    const nextFrom = (updatedImagesByCanvasId.get(fromId) || []).filter(i => getCanvasImageKey(fromId,i) !== fromKey);
+    const nextFrom = (updatedImagesByCanvasId.get(fromId) || []).filter(i => getCanvasImageKey(fromId,i) !== key);
     const nextTo = [...(updatedImagesByCanvasId.get(toId) || []), image];
 
     updatedImagesByCanvasId.set(fromId, nextFrom);
     updatedImagesByCanvasId.set(toId, nextTo);
 
     const updatedSelectedImage =
-      selectedImage && getCanvasImageKey(fromId, selectedImage.image) === fromKey ? {
+      selectedImage && getCanvasImageKey(fromId, selectedImage.image) === key ? {
         image,
         canChangeItem: selectedImage.canChangeItem,
         item: layout.items.find(i => i.reconstructionCanvasId === toId)!
@@ -157,6 +154,7 @@ const scheduleAppStoreSync = pDebounce(() => {
   const { imagesByCanvasId } = useComposerStore.getState();
 
   const next = applyEdits(reconstruction, imagesByCanvasId);
+
   const changed = next.length !== reconstruction.length || next.some((r, i) => r !== reconstruction[i]);
   if (!changed) return;
 
