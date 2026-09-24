@@ -44,6 +44,7 @@ export const getEmptyCanvasLabel = (reconstruction: ReconstructionCanvas[]) => {
   return max === 0 ? 'New Composite (1)' : `New Composite (${max + 1})`;
 }
 
+// Removes a **reconstruction** canvas
 export const removeCanvasFromReconstruction = (reconstruction: ReconstructionCanvas[], toRemove: string | string[]) => {
   const canvasIds = Array.isArray(toRemove) ? new Set(toRemove) : new Set([toRemove]);
   return reconstruction
@@ -59,6 +60,27 @@ export const removeCanvasFromReconstruction = (reconstruction: ReconstructionCan
           sources: r.sources.filter(s => !canvasIds.has(s.canvas.id))
         }
       }
+    });
+}
+
+// Removes a **source** canvas (also removing the corresponding reconstruction canvas
+// in case it contains only this source canvas
+export const removeSourceCanvasFromReconstruction = (
+  reconstruction: ReconstructionCanvas[],
+  toRemove: string | string[]
+): ReconstructionCanvas[] => {
+  const toRemoveIds = Array.isArray(toRemove) ? new Set(toRemove) : new Set([toRemove]);
+
+  return reconstruction
+    .filter(r => r.type !== 'original' || !toRemoveIds.has(r.source.canvas.id))
+    .map(r => {
+      if (r.type === 'original') return r;
+
+      const isAffected = r.sources.some(s => toRemoveIds.has(s.canvas.id));
+      return isAffected ? {
+        ...r,
+        sources: r.sources.filter(s => !toRemoveIds.has(s.canvas.id))
+      } : r
     });
 }
 

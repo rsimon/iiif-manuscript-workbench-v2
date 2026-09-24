@@ -8,7 +8,8 @@ import {
   moveCanvas,
   parseCanvas,
   parseManifest,
-  removeCanvasFromReconstruction
+  removeCanvasFromReconstruction,
+  removeSourceCanvasFromReconstruction
 } from './app-store-utils';
 
 interface AppStore {
@@ -24,12 +25,14 @@ interface AppStore {
 
   // Actions: sources
   addSource: (url: string, manifest: CozyManifest) => void;
-  removeSource: (manifestId: string) => void;
-  removeAllSources: () => void;
-
-  // Actions: reconstruction
   addSourceCanvasToReconstruction: (sourceId: string, canvas: CozyCanvas) => void;
   addSourceCanvasesToReconstruction: (sources: { sourceId: string, canvas: CozyCanvas}[]) => void;
+  removeAllSources: () => void;
+  removeSource: (manifestId: string) => void;
+  removeSourceCanvasFromReconstruction: (sourceId: string) => void;
+  removeSourceCanvasesFromReconstruction: (sourceIds: string[]) => void;
+
+  // Actions: reconstruction
   appendEmptyCanvas: (width?: number, height?: number) => void;
   duplicateCanvas: (canvasId: string) => void;
   mergeCanvases: (toMerge: ReconstructionCanvas[]) => void;
@@ -69,12 +72,6 @@ export const useAppStore = create<AppStore>()(
           sources: [...sources, { url, manifest }]
         };
       }),
-
-      removeSource: manifestId => set(({ sources }) => ({
-        sources: sources.filter(s => s.manifest.id !== manifestId)
-      })),
-
-      removeAllSources: () => set({ sources: [] }),
 
       addSourceCanvasToReconstruction: (sourceId, canvas) => set(({ reconstruction, sizes, baseURI }) => {
         // Don't re-add
@@ -126,6 +123,20 @@ export const useAppStore = create<AppStore>()(
           ]
         }
       }),
+
+      removeAllSources: () => set({ sources: [] }),
+
+      removeSource: manifestId => set(({ sources }) => ({
+        sources: sources.filter(s => s.manifest.id !== manifestId)
+      })),
+
+      removeSourceCanvasFromReconstruction: (sourceId: string) => set(({ reconstruction }) => ({
+        reconstruction: removeSourceCanvasFromReconstruction(reconstruction, sourceId)
+      })),
+
+      removeSourceCanvasesFromReconstruction: (sourceIds: string[]) => set(({ reconstruction }) => ({
+        reconstruction: removeSourceCanvasFromReconstruction(reconstruction, sourceIds)
+      })),
 
       appendEmptyCanvas: (fallbackWidth = 2000, fallbackHeight = 3000) => set(({ baseURI, reconstruction }) => ({
         reconstruction: appendEmptyCanvas(reconstruction, baseURI, fallbackWidth, fallbackHeight)

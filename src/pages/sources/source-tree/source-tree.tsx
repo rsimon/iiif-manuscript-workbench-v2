@@ -20,7 +20,7 @@ export const SourceTree = () => {
   const sources = useAppStore(state => state.sources);
 
   const addCanvas = useAppStore(state => state.addSourceCanvasToReconstruction);
-  const removeCanvas = useAppStore(state => state.removeCanvasFromReconstruction);
+  const removeCanvas = useAppStore(state => state.removeSourceCanvasFromReconstruction);
 
   const collapsed = useSourcesStore(state => state.collapsed);
   const toggle = useSourcesStore(state => state.toggleSourceExpanded);
