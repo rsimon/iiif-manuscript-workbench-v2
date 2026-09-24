@@ -125,7 +125,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
             </div>
           ) : (
             <div className="px-1.5 pt-2.5 pb-1 pr-2 grow overflow-hidden">
-              <div className="flex justify-between items-start min-w-16">
+              <div className="flex gap-1 justify-between items-start min-w-16">
                 <div className="flex gap-2 items-center pb-1 min-w-16">
                   <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
 
@@ -289,7 +289,7 @@ const TreeItemContent = (props: TreeItemContentProps) => {
 const EmptyCanvasHint = () => (
   <Tooltip>
     <TooltipTrigger>
-      <IconAlertTriangle className="size-4" />
+      <IconAlertTriangle className="size-4 mr-1" />
     </TooltipTrigger>
 
     <TooltipContent>
