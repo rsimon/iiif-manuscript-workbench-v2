@@ -97,15 +97,15 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
           {size ? (
             <Button
               variant="ghost"
-              className="rounded-full font-normal text-xs text-muted-foreground">
+              className="rounded-full shrink min-w-12 font-normal text-xs text-muted-foreground">
               <IconDimensions /> 
-              <span>{size.width} x {size.height} {size.unit}</span>
+              <span className="min-w-0 shrink truncate">{size.width} x {size.height} {size.unit}</span>
             </Button>
           ) : (
             <Button
               variant="outline"
-              className="rounded-full border-primary/50 border-dashed font-normal text-primary hover:text-primary aria-expanded:text-primary">
-              <IconPlus /> Set dimensions
+              className="rounded-full shrink min-w-12 border-primary/50 border-dashed font-normal text-primary hover:text-primary aria-expanded:text-primary">
+              <IconPlus /> <span className="min-w-0 shrink truncate">Set dimensions</span>
             </Button>
           )}
         </PhysicalDimensionsDialog>
@@ -122,16 +122,16 @@ export const SourcePreviewToolbar = (props: SourcePreviewToolbarProps) => {
 
         {props.isInReconstruction ? (
           <Button
-            className="rounded-full font-normal pr-3"
+            className="rounded-full font-normal pr-3 shrink min-w-12"
             onClick={() => removeFromReconstruction(props.selectedCanvas.id)}>
-            <IconCheck /> In Reconstruction
+            <IconCheck /> <span className="min-w-0 shrink truncate">In Reconstruction</span>
           </Button>
         ) : (
           <Button
             variant="outline"
-            className="rounded-full font-normal pr-3 shadow-none border-primary/50 text-primary hover:bg-accent/40 hover:text-primary"
+            className="rounded-full font-normal pr-3 shrink min-w-12 shadow-none border-primary/50 text-primary hover:bg-accent/40 hover:text-primary"
             onClick={() => addToReconstruction(props.selectedManifest.id, props.selectedCanvas)}>
-            <IconPlus /> Add to Reconstruction
+            <IconPlus /> <span className="min-w-0 shrink truncate">Add to Reconstruction</span>
           </Button>
         )}
       </div>

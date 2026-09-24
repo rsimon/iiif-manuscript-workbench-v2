@@ -22,7 +22,7 @@ export const ViewerPaginationControl = (props: ViewerPaginationControlProps) => 
   const hasPrev = props.selectedPageIndex > 0;
 
   return (
-    <div className="shrink min-w-18 flex items-center gap-1.5 overflow-hidden">
+    <div className="shrink min-w-18 flex items-center gap-1.5">
       <Button
         disabled={!hasPrev}
         variant="ghost"
