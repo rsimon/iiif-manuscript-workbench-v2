@@ -125,7 +125,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
             </div>
           ) : (
             <div className="px-1.5 pt-2.5 pb-1 pr-2 grow overflow-hidden">
-              <div className="flex gap-1 justify-between items-start min-w-16">
+              <div className="flex gap-2 justify-between items-start min-w-16">
                 <div className="flex gap-2 items-center pb-1 min-w-16">
                   <IconStack2 className="size-4.5 text-muted-foreground/80" stroke={1.5} /> 
 
@@ -135,7 +135,7 @@ export const ReconstructionTreeItem = (props: ReconstructionTreeItemProps) => {
                     onIsEditingChange={setIsEditingLabel}
                     onCommit={label => renameCanvas(item.id, label)} />
 
-                  <span className="shrink min-w-12 whitespace-nowrap text-xs text-muted-foreground ml-0.5 flex gap-1.5 items-center">
+                  <span className="shrink min-w-12 whitespace-nowrap text-xs text-muted-foreground ml-0.5 flex gap-1.5 items-cente pr-0.5">
                     <span className="min-w-12 truncate">{item.sources.length} canvases</span>
                     {item.sources.length === 0 && (
                       <EmptyCanvasHint />
@@ -205,7 +205,7 @@ const CompositeChildItem = (props: CompositeChildItemProps) => {
       element,
       dragHandle: handleRef.current ?? undefined,
       getInitialData: (): DragPayload =>
-        ({ kind: 'child', compositeId, canvasId: source.canvas.id }),
+        ({ kind: 'child', compositeId, canvasId: source.canvas.id, instanceId: source.instanceId }),
       onDragStart: () => setIsDragging(true),
       onDrop: () => setIsDragging(false)
     });

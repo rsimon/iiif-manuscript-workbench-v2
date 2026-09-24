@@ -8,7 +8,7 @@ import type { OriginalCanvas, ReconstructionCanvas, SourceCanvas } from '@/types
 
 export type DragPayload =
   | { kind: 'root'; id: string; index: number; itemType: ReconstructionCanvas['type'] }
-  | { kind: 'child'; compositeId: string; canvasId: string };
+  | { kind: 'child'; compositeId: string; canvasId: string; instanceId: string };
 
 export type FallbackDropTarget = { kind: 'list-fallback'; id: string; index: number; edge: 'top' | 'bottom' };
 
@@ -37,8 +37,8 @@ export const useDragAndDrop = () => {
       const next = list.map(c => {
         if (c.type !== 'composite' || c.id !== payload.compositeId) return c;
 
-        child = c.sources.find(s => s.canvas.id === payload.canvasId);
-        const remaining = c.sources.filter(s => s.canvas.id !== payload.canvasId);
+        child = c.sources.find(s => s.instanceId === payload.instanceId);
+        const remaining = c.sources.filter(s => s.instanceId !== payload.instanceId);
 
         // Just one source left - revert to OriginalCanvas, same as the composer's applyEdits
         if (remaining.length === 1) {
