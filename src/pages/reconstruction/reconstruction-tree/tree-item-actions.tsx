@@ -48,7 +48,7 @@ export const ReconstructionTreeItemActions = (props: ReconstructionTreeItemProps
       <DropdownMenuTrigger
         onClick={withStopPropagation(e => e.preventDefault())}
         className={cn(
-          'rounded-full relative -top-0.5 p-1 opacity-0 group-hover:opacity-100 data-popup-open:opacity-100 text-muted-foreground/80 hover:text-foreground cursor-pointer',
+          'rounded-full relative -top-0.5 p-1 opacity-0 focus-visible:opacity-100 group-hover:opacity-100 data-popup-open:opacity-100 text-muted-foreground/80 hover:text-foreground cursor-pointer',
           props.className
         )}>
         <IconDots className="size-4" />

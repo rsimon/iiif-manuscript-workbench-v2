@@ -18,7 +18,8 @@ export const Reconstruction = () => {
           <ReconstructionTree />
         </Panel>
 
-        <Separator />
+        <Separator 
+          className="focus-visible:outline-2 focus-visible:outline-primary" />
 
         <Panel>
           <CanvasComposer 
@@ -26,14 +27,17 @@ export const Reconstruction = () => {
             onChangeSidebarOpen={setSidebarOpen} />
         </Panel>
 
-        <Separator />
+        <Separator 
+          className="relative focus-visible:outline focus-visible:outline-primary" 
+          inert={!isSidebarOpen}/>
 
         <AnimatedPanel 
           open={isSidebarOpen}
           onOpenChange={setSidebarOpen}
           minSize={40}
           openSize={220}
-          className="bg-white border-l">
+          className="bg-white border-l"
+          inert={!isSidebarOpen}>
           <ReconstructionSidebar 
             onClose={() => setSidebarOpen(false)} />
         </AnimatedPanel>
