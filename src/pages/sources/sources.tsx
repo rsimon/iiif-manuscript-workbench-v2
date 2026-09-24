@@ -31,7 +31,8 @@ export const Sources = () => {
         </Panel>
 
         <Separator 
-          className="relative focus-visible:outline focus-visible:outline-primary" />
+          className="relative focus-visible:outline focus-visible:outline-primary" 
+          inert={!isInspectorOpen} />
 
         <AnimatedPanel 
           open={isInspectorOpen}
