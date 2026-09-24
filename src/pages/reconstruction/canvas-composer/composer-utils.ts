@@ -36,6 +36,7 @@ export const toDraggableImages = (r: ReconstructionCanvas): DraggableImage[] => 
 
         return {
           sourceCanvasId: source.canvas.id,
+          sourceCanvasInstanceId: source.instanceId,
           resource: image,
           tileSource: image.type === 'dynamic' || image.type === 'level0' ? image.serviceUrl : {
             type: 'image',
@@ -188,18 +189,22 @@ export const applyEdits = (
   reconstruction: ReconstructionCanvas[],
   imagesByCanvasId: Map<string, DraggableImage[]>
 ): ReconstructionCanvas[] => {
-  const sourceCanvases = new Map<string, SourceCanvas>();
-  const currentImagesBySourceCanvasId = new Map<string, DraggableImage[]>();
+  const sourceCanvasInstances = new Map<string, SourceCanvas>();
 
+  // Indexed current images (before edit)
+  const currentImagesBySourceInstanceId = new Map<string, DraggableImage[]>();
+  
   reconstruction.forEach(r => {
-    const images = toDraggableImages(r);
-    const sources = r.type === 'original' ? [r.source] : r.sources;
+    // Images before edit
+    const currentImagees = toDraggableImages(r);
 
+    const sources = r.type === 'original' ? [r.source] : r.sources;
+  
     sources.forEach(source => {
-      sourceCanvases.set(source.canvas.id, source);
-      currentImagesBySourceCanvasId.set(
-        source.canvas.id,
-        images.filter(image => image.sourceCanvasId === source.canvas.id)
+      sourceCanvasInstances.set(source.instanceId, source);
+      currentImagesBySourceInstanceId.set(
+        source.instanceId,
+        currentImagees.filter(image => image.sourceCanvasInstanceId === source.instanceId)
       );
     });
   });
@@ -209,31 +214,24 @@ export const applyEdits = (
     .map(r => {
       // Images in the composer (with user edits)
       const composerImages = imagesByCanvasId.get(r.id)!;
-      const sourceCanvasIdSet = new Set(composerImages.map(image => image.sourceCanvasId));
-
-      if (r.type === 'original' && composerImages.length > 0)
-        sourceCanvasIdSet.add(r.source.canvas.id);
-
-      const sourceCanvasIds = [...sourceCanvasIdSet];
-      const sources = sourceCanvasIds
-        .map(sourceCanvasId => sourceCanvases.get(sourceCanvasId))
-        .filter(source => !!source);
+      const sources = composerImages.flatMap(i => 
+        sourceCanvasInstances.get(i.sourceCanvasInstanceId)).filter(s => !!s);
 
       const applySourceEdits = (source: SourceCanvas) => applyEditsToSource(
         r,
         source,
         composerImages,
-        currentImagesBySourceCanvasId.get(source.canvas.id) ?? []
+        currentImagesBySourceInstanceId.get(source.instanceId) ?? []
       );
 
       if (r.type === 'original') {
-        if (sourceCanvasIds.length === 1 && sourceCanvasIds[0] === r.source.canvas.id) {
+        if (sources.length === 1 && sources[0].instanceId === r.source.instanceId) {
           const nextSource = applySourceEdits(r.source);
           return nextSource === r.source ? r : { ...r, source: nextSource };
         }
 
         return {
-          type: 'composite',
+          type: 'composite' as const,
           id: r.id,
           label: r.label,
           sources: sources.map(applySourceEdits),
@@ -248,7 +246,7 @@ export const applyEdits = (
         if (nextSources.length === 1) {
           const source = nextSources[0];
           return {
-            type: 'original',
+            type: 'original' as const,
             id: r.id,
             label: r.label,
             source,
@@ -321,14 +319,12 @@ const applyEditsToSource = (
   composerImages: DraggableImage[], 
   currentImages: DraggableImage[]
 ): SourceCanvas => {
-  const canvasId = source.canvas.id;
-
   const composerImagesByKey = new Map(composerImages
-    .filter(img => img.sourceCanvasId === canvasId)
+    .filter(img => img.sourceCanvasInstanceId === source.instanceId)
     .map(img => [getCanvasImageKey(canvas.id, img), img] as const));
 
   const currentImagesByKey = new Map(currentImages
-    .filter(img => img.sourceCanvasId === canvasId)
+    .filter(img => img.sourceCanvasInstanceId === source.instanceId)
     .map(img => [getCanvasImageKey(canvas.id, img), img] as const));
 
   // Shorthands to original source canvas elements
@@ -342,7 +338,7 @@ const applyEditsToSource = (
 
   // Existing images: keep unchanged, patch the target, or drop
   const keptPaintAnnotations = source.canvas.images.flatMap((resource, index) => {
-    const key = getCanvasImageKey(canvas.id, { sourceCanvasId: canvasId, index } as DraggableImage);
+    const key = getCanvasImageKey(canvas.id, { sourceCanvasId: source.canvas.id, sourceCanvasInstanceId: source.instanceId, index } as DraggableImage);
     seenKeys.add(key);
 
     const draggable = composerImagesByKey.get(key);
@@ -379,7 +375,7 @@ const applyEditsToSource = (
       const h = draggable.width * bounds.h / bounds.w;
 
       return {
-        id: `${canvasId}/annotation/${crypto.randomUUID()}`,
+        id: `${source.canvas.id}/annotation/${crypto.randomUUID()}`,
         type: 'Annotation',
         motivation: 'painting',
         body: toAnnotationBodyItem(draggable),
@@ -399,7 +395,7 @@ const applyEditsToSource = (
           ...addedAnnotations
         ] 
       } : { 
-        id: `${canvasId}/page/${crypto.randomUUID()}`, 
+        id: `${source.canvas.id}/page/${crypto.randomUUID()}`, 
         type: 'AnnotationPage', 
         items: [
           ...keptPaintAnnotations, 

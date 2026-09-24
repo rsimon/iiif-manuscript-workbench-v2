@@ -28,6 +28,8 @@ export interface DraggableImage {
 
   sourceCanvasId: string;
 
+  sourceCanvasInstanceId: string;
+
   resource: CozyImageResource;
 
   tileSource: object | string;
