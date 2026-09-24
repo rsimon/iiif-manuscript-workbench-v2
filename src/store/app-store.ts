@@ -151,12 +151,10 @@ export const useAppStore = create<AppStore>()(
             instanceId: crypto.randomUUID()
           }
         } else {
-          duplicate.sources = {
-            ...duplicate.sources.map(s => ({
-              ...s,
-              instanceId: crypto.randomUUID()
-            }))
-          }
+          duplicate.sources = duplicate.sources.map(s => ({
+            ...s,
+            instanceId: crypto.randomUUID()
+          }));
         }
 
         const updatedReconstruction = [...reconstruction];
