@@ -89,10 +89,10 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
 
     // The export flattens all source canvases into one canvas. Group the
     // exported images back by the resolved source canvas they came from.
-    const groups = new Map<string, {
+    const groups: {
       source: SourceCanvas;
       images: CozyImageResource[]
-    }>();
+    }[] = [];
 
     canvas.images.forEach(image => {
       const imageId = getIdentifier(image);
@@ -110,14 +110,12 @@ const parseReconstructionManifest = async (manifest: CozyManifest): Promise<Reco
 
       if (!source) return;
 
-      const group = groups.get(source.canvas.id);
-      if (group)
-        group.images.push(image);
-      else
-        groups.set(source.canvas.id, { source, images: [image] });
+      // Not ideal - but holds under the assumption that imported sources
+      // are manifests with single-image canvases
+      groups.push({ source, images: [image]});
     });
 
-    return [...groups.values()].map(({ source, images }) => {
+    return groups.map(({ source, images }) => {
       const sourceCanvas = {
         ...source.canvas.source,
         items: (source.canvas.source.items || []).map(page => ({
